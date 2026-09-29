@@ -1,0 +1,80 @@
+{
+  "players": {
+    "1": {
+      "id": "1",
+      "name": "Joueur 1",
+      "club": "FC Streamer",
+      "avatar": "⚽",
+      "pin": "1111",
+      "color": "#3b82f6",
+      "checked": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    },
+    "2": {
+      "id": "2",
+      "name": "Joueur 2",
+      "club": "Rival FC",
+      "avatar": "🔥",
+      "pin": "2222",
+      "color": "#ef4444",
+      "checked": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false
+      ]
+    }
+  },
+  "settings": {
+    "lineBonus": 5,
+    "grandChelemBonus": 10,
+    "requirePin": false
+  },
+  "history": []
+}

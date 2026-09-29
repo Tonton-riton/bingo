@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BINGO CARRIÈRE MANAGER | Overlay OBS Studio</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/audio.js"></script>
+  <script src="/js/confetti.js"></script>
+  <style>
+    body.obs-mode {
+      background: transparent !important;
+      background-image: none !important;
+      overflow: hidden;
+      margin: 0;
+      padding: 16px;
+    }
+
+    /* OBS Top HUD Bar */
+    .obs-hud-bar {
+      background: rgba(10, 15, 29, 0.88);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 14px;
+      padding: 10px 18px;
+      display: inline-flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    }
+
+    .obs-player-hud {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .obs-score {
+      font-size: 1.7rem;
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+    }
+
+    /* Compact OBS Grid */
+    .obs-compact-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 78px);
+      gap: 5px;
+      background: rgba(10, 15, 29, 0.88);
+      backdrop-filter: blur(12px);
+      padding: 8px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      width: fit-content;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
+    }
+
+    .obs-tile {
+      height: 70px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 4px;
+      position: relative;
+      transition: all 0.2s;
+    }
+
+    .obs-tile.checked {
+      background: rgba(16, 185, 129, 0.25);
+      border-color: #10b981;
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+    }
+
+    .obs-tile.theme-p1.checked {
+      background: rgba(59, 130, 246, 0.28);
+      border-color: #3b82f6;
+      box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+    }
+
+    .obs-tile.theme-p2.checked {
+      background: rgba(239, 68, 68, 0.28);
+      border-color: #ef4444;
+      box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+    }
+
+    .obs-tile.in-line {
+      border-color: #fbbf24 !important;
+      box-shadow: 0 0 12px rgba(245, 158, 11, 0.6) !important;
+    }
+
+    .obs-tile-icon {
+      font-size: 20px;
+      line-height: 1;
+      margin-bottom: 2px;
+    }
+
+    .obs-tile-title {
+      font-size: 9px;
+      font-weight: 700;
+      color: #e2e8f0;
+      line-height: 1.1;
+      max-height: 20px;
+      overflow: hidden;
+    }
+
+    .obs-tile-pts {
+      font-size: 8px;
+      font-weight: 800;
+      color: #fbbf24;
+      margin-top: 2px;
+    }
+
+    /* OBS Stream Alert Popup */
+    #obs-alert-banner {
+      position: fixed;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-150%);
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(16px);
+      border: 2px solid var(--gold);
+      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.8), 0 0 25px rgba(245, 158, 11, 0.4);
+      border-radius: 14px;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      z-index: 10000;
+      transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+    }
+
+    #obs-alert-banner.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* On-Screen Mode Selector Switch (Hidden in OBS if url param present) */
+    .obs-controls-panel {
+      position: fixed;
+      bottom: 12px;
+      right: 12px;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 6px 10px;
+      display: flex;
+      gap: 6px;
+      font-size: 0.75rem;
+      z-index: 9999;
+    }
+  </style>
+</head>
+<body class="obs-mode">
+
+  <!-- Alert Banner Pop-up on stream -->
+  <div id="obs-alert-banner">
+    <div id="obs-alert-icon" style="font-size: 38px;">🎯</div>
+    <div>
+      <div id="obs-alert-tag" style="font-size: 0.75rem; font-weight: 800; color: var(--gold); text-transform: uppercase; letter-spacing: 0.08em;">
+        ⚡ DÉFI CARRIÈRE VALIDÉ !
+      </div>
+      <div id="obs-alert-title" style="font-size: 1.15rem; font-weight: 800; color: #ffffff;">
+        Attaque Mitraillette
+      </div>
+      <div id="obs-alert-points" style="font-size: 0.85rem; color: #94a3b8; font-weight: 600;">
+        +2 PTS • JOUEUR 1
+      </div>
+    </div>
+  </div>
+
+  <!-- Container for selected OBS overlay mode -->
+  <div id="obs-content">
+    
+    <!-- Mode HUD Bar -->
+    <div id="hud-container" class="obs-hud-bar" style="display: none;">
+      <!-- P1 -->
+      <div class="obs-player-hud">
+        <span id="hud-p1-avatar" style="font-size: 26px;">⚽</span>
+        <div>
+          <div id="hud-p1-name" style="font-size: 0.85rem; font-weight: 800; color: #60a5fa;">JOUEUR 1</div>
+          <div id="hud-p1-details" style="font-size: 0.7rem; color: var(--text-muted);">0/25 défis • 0 ligne</div>
+        </div>
+        <div id="hud-p1-score" class="obs-score" style="color: #38bdf8;">0</div>
+      </div>
+
+      <!-- Center VS -->
+      <div style="padding: 0 10px; text-align: center;">
+        <span style="font-size: 0.75rem; font-weight: 900; color: var(--gold); letter-spacing: 0.1em;">VS</span>
+        <div style="width: 60px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 4px; margin-top: 2px; overflow: hidden; display: flex;">
+          <div id="hud-bar-p1" style="width: 50%; background: #3b82f6;"></div>
+          <div id="hud-bar-p2" style="width: 50%; background: #ef4444;"></div>
+        </div>
+      </div>
+
+      <!-- P2 -->
+      <div class="obs-player-hud" style="flex-direction: row-reverse; text-align: right;">
+        <span id="hud-p2-avatar" style="font-size: 26px;">🔥</span>
+        <div>
+          <div id="hud-p2-name" style="font-size: 0.85rem; font-weight: 800; color: #f87171;">JOUEUR 2</div>
+          <div id="hud-p2-details" style="font-size: 0.7rem; color: var(--text-muted);">0/25 défis • 0 ligne</div>
+        </div>
+        <div id="hud-p2-score" class="obs-score" style="color: #f87171;">0</div>
+      </div>
+    </div>
+
+    <!-- Mode Compact Grid -->
+    <div id="grid-container" style="display: none;">
+      <div style="background: rgba(10, 15, 29, 0.9); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px 12px 0 0; padding: 6px 12px; display: flex; justify-content: space-between; align-items: center; width: 410px;">
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span id="grid-avatar" style="font-size: 18px;">⚽</span>
+          <strong id="grid-player-title" style="font-size: 0.85rem; color: #60a5fa;">JOUEUR 1</strong>
+        </div>
+        <div style="font-size: 0.85rem; font-weight: 800; color: #fbbf24;">
+          <span id="grid-score-badge">0 PTS</span>
+        </div>
+      </div>
+      <div class="obs-compact-grid" id="compact-grid" style="border-radius: 0 0 12px 12px; border-top: none;">
+        <!-- 25 compact tiles -->
+      </div>
+    </div>
+
+  </div>
+
+  <!-- OBS Layout Switcher (Helper visible in browser, transparent URL shortcuts) -->
+  <div class="obs-controls-panel" id="obs-controls">
+    <span style="color: var(--text-muted);">Mode OBS :</span>
+    <a href="/obs.html?mode=hud" class="nav-btn" style="padding: 2px 6px; font-size: 0.75rem;">Scoreboard HUD</a>
+    <a href="/obs.html?mode=grid&p=1" class="nav-btn" style="padding: 2px 6px; font-size: 0.75rem;">Grille Joueur 1</a>
+    <a href="/obs.html?mode=grid&p=2" class="nav-btn" style="padding: 2px 6px; font-size: 0.75rem;">Grille Joueur 2</a>
+    <a href="/obs.html?mode=alerts" class="nav-btn" style="padding: 2px 6px; font-size: 0.75rem;">Alertes Seules</a>
+  </div>
+
+  <script>
+    const socket = io();
+    const urlParams = new URLSearchParams(window.location.search);
+    const mode = urlParams.get('mode') || 'hud'; // 'hud', 'grid', 'alerts'
+    const targetPlayer = urlParams.get('p') || '1';
+    const enableSound = urlParams.get('sound') !== '0';
+
+    if (!enableSound) {
+      window.soundFx.muted = true;
+    }
+
+    // Hide controls if specified or in iframe
+    if (urlParams.has('nocontrols')) {
+      document.getElementById('obs-controls').style.display = 'none';
+    }
+
+    const hudContainer = document.getElementById('hud-container');
+    const gridContainer = document.getElementById('grid-container');
+
+    if (mode === 'hud') {
+      hudContainer.style.display = 'inline-flex';
+    } else if (mode === 'grid') {
+      gridContainer.style.display = 'block';
+    }
+
+    let localGameState = null;
+
+    function renderCompactGrid(challenges, checkedArray, completedLines, playerId) {
+      const grid = document.getElementById('compact-grid');
+      grid.innerHTML = '';
+
+      const activeLineIndices = new Set();
+      completedLines.forEach(l => {
+        if (l.type === 'row') for (let c = 0; c < 5; c++) activeLineIndices.add(l.index * 5 + c);
+        if (l.type === 'col') for (let r = 0; r < 5; r++) activeLineIndices.add(r * 5 + l.index);
+        if (l.type === 'diag') {
+          if (l.index === 0) [0, 6, 12, 18, 24].forEach(i => activeLineIndices.add(i));
+          if (l.index === 1) [4, 8, 12, 16, 20].forEach(i => activeLineIndices.add(i));
+        }
+      });
+
+      challenges.forEach((ch, idx) => {
+        const isChecked = !!checkedArray[idx];
+        const isInLine = activeLineIndices.has(idx);
+
+        const tileEl = document.createElement('div');
+        tileEl.className = `obs-tile theme-p${playerId} ${isChecked ? 'checked' : ''} ${isInLine ? 'in-line' : ''}`;
+
+        tileEl.innerHTML = `
+          <div class="obs-tile-icon">${ch.icon}</div>
+          <div class="obs-tile-title">${ch.title}</div>
+          <div class="obs-tile-pts">+${ch.points}</div>
+        `;
+
+        grid.appendChild(tileEl);
+      });
+    }
+
+    function updateObsUI(data) {
+      localGameState = data;
+      const p1 = data.players['1'];
+      const p2 = data.players['2'];
+      const s1 = data.stats['1'];
+      const s2 = data.stats['2'];
+
+      // HUD Mode
+      if (mode === 'hud') {
+        document.getElementById('hud-p1-avatar').textContent = p1.avatar;
+        document.getElementById('hud-p1-name').textContent = p1.name.toUpperCase();
+        document.getElementById('hud-p1-details').textContent = `${s1.tilesCompleted}/25 défis • ${s1.completedLines.length} lig.`;
+        document.getElementById('hud-p1-score').textContent = s1.totalPoints;
+
+        document.getElementById('hud-p2-avatar').textContent = p2.avatar;
+        document.getElementById('hud-p2-name').textContent = p2.name.toUpperCase();
+        document.getElementById('hud-p2-details').textContent = `${s2.tilesCompleted}/25 défis • ${s2.completedLines.length} lig.`;
+        document.getElementById('hud-p2-score').textContent = s2.totalPoints;
+
+        const total = (s1.totalPoints + s2.totalPoints) || 1;
+        const pct1 = Math.round((s1.totalPoints / total) * 100);
+        document.getElementById('hud-bar-p1').style.width = `${pct1}%`;
+        document.getElementById('hud-bar-p2').style.width = `${100 - pct1}%`;
+      }
+
+      // Compact Grid Mode
+      if (mode === 'grid') {
+        const player = data.players[targetPlayer];
+        const stats = data.stats[targetPlayer];
+        document.getElementById('grid-avatar').textContent = player.avatar;
+        document.getElementById('grid-player-title').textContent = `${player.name.toUpperCase()} (${stats.tilesCompleted}/25)`;
+        document.getElementById('grid-score-badge').textContent = `${stats.totalPoints} PTS`;
+        renderCompactGrid(data.challenges, player.checked, stats.completedLines, targetPlayer);
+      }
+    }
+
+    // Alert Banner Popup
+    let alertTimer = null;
+    function triggerStreamAlert(playerName, challenge, isLine, isGrandChelem) {
+      const banner = document.getElementById('obs-alert-banner');
+      const icon = document.getElementById('obs-alert-icon');
+      const tag = document.getElementById('obs-alert-tag');
+      const title = document.getElementById('obs-alert-title');
+      const pts = document.getElementById('obs-alert-points');
+
+      icon.textContent = isGrandChelem ? '🏆' : (isLine ? '⭐' : challenge.icon);
+      tag.textContent = isGrandChelem ? '👑 GRAND CHELEM SUPRÊME !' : (isLine ? '⭐ BINGO ! LIGNE COMPLÉTÉE (+5 PTS)' : '⚡ DÉFI CARRIÈRE VALIDÉ !');
+      title.textContent = challenge.title;
+      pts.textContent = isGrandChelem ? '+10 PTS • GRAND CHELEM !' : (isLine ? `+${challenge.points} PTS & BONUS LIGNE • ${playerName.toUpperCase()}` : `+${challenge.points} PTS • ${playerName.toUpperCase()}`);
+
+      banner.classList.add('show');
+      clearTimeout(alertTimer);
+      alertTimer = setTimeout(() => {
+        banner.classList.remove('show');
+      }, 5000);
+    }
+
+    socket.on('stateUpdate', (data) => {
+      updateObsUI(data);
+    });
+
+    socket.on('tileToggled', (data) => {
+      if (data.checked) {
+        triggerStreamAlert(data.playerName, data.challenge, data.newLineAchieved, data.newGrandChelem);
+        if (data.newGrandChelem) {
+          window.soundFx.playGrandChelem();
+          window.launchConfetti({ count: 200 });
+        } else if (data.newLineAchieved) {
+          window.soundFx.playBingo();
+          window.launchConfetti({ count: 120 });
+        } else {
+          window.soundFx.playCheck();
+        }
+      }
+    });
+  </script>
+</body>
+</html>

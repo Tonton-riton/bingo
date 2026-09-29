@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BINGO CARRIÈRE MANAGER | Grille Joueur</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/audio.js"></script>
+  <script src="/js/confetti.js"></script>
+</head>
+<body id="player-page-body" class="theme-p1">
+  <header class="app-header">
+    <a href="/" class="logo-area">
+      <span class="logo-icon" id="header-avatar">⚽</span>
+      <div class="logo-text">
+        <h1 id="header-player-name">JOUEUR 1</h1>
+        <span id="header-player-club">FC STREAMER</span>
+      </div>
+    </a>
+    <div class="nav-links">
+      <button id="btn-toggle-sound" class="nav-btn" title="Activer / Désactiver les sons">
+        <span id="sound-icon">🔊</span>
+      </button>
+      <button id="btn-edit-profile" class="nav-btn">
+        <span>✏️</span> Profil & Club
+      </button>
+      <div style="display: flex; gap: 4px; background: rgba(255,255,255,0.05); padding: 3px; border-radius: 8px;">
+        <button id="btn-switch-p1" class="nav-btn active" style="padding: 6px 12px; font-size: 0.8rem;">⚽ Joueur 1</button>
+        <button id="btn-switch-p2" class="nav-btn" style="padding: 6px 12px; font-size: 0.8rem;">🔥 Joueur 2</button>
+      </div>
+      <a href="/spectator.html" target="_blank" class="nav-btn">📺 Spectateur</a>
+      <a href="/obs.html" target="_blank" class="nav-btn">🎥 OBS</a>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Player Score & Stats Ribbon -->
+    <div class="duel-banner">
+      <div class="player-score-card">
+        <div class="player-avatar p1" id="banner-avatar">⚽</div>
+        <div class="player-info">
+          <h3 id="banner-player-name">Joueur 1</h3>
+          <span class="club-tag" id="banner-club-name">FC Streamer</span>
+        </div>
+        <div class="score-badge p1" id="banner-total-points">0</div>
+        <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 700; align-self: flex-end; margin-bottom: 4px;">PTS</span>
+      </div>
+
+      <!-- Stats pills inside ribbon -->
+      <div style="display: flex; gap: 14px; flex-wrap: wrap;">
+        <div class="stat-pill">
+          <span class="icon">🎯</span>
+          <div>
+            <div class="label">Défis Validés</div>
+            <div class="value" id="stat-tiles-count">0 / 25</div>
+          </div>
+        </div>
+
+        <div class="stat-pill">
+          <span class="icon">⚡</span>
+          <div>
+            <div class="label">Lignes & Bonus</div>
+            <div class="value" id="stat-lines-count">0 (+0 pts)</div>
+          </div>
+        </div>
+
+        <div class="stat-pill" id="stat-rival-pill" style="border-color: rgba(239, 68, 68, 0.3);">
+          <span class="icon" id="rival-avatar">🔥</span>
+          <div>
+            <div class="label" id="rival-label">Rival (Joueur 2)</div>
+            <div class="value" id="rival-score" style="color: #f87171;">0 pts</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <button id="btn-reset-grid" class="btn-danger" style="padding: 8px 12px; font-size: 0.8rem;">
+          🔄 Réinitialiser
+        </button>
+      </div>
+    </div>
+
+    <!-- Completed Lines Active Banner (shows which lines/columns/diagonals are made) -->
+    <div id="completed-lines-container" class="completed-lines-bar" style="margin-bottom: 16px; display: none;">
+      <span style="font-size: 0.8rem; font-weight: 700; color: var(--gold);">LIGNES ACTIVES (+5 PTS) :</span>
+      <div id="lines-tags-list" style="display: inline-flex; gap: 6px; flex-wrap: wrap;"></div>
+    </div>
+
+    <!-- 5x5 Interactive Bingo Grid -->
+    <div class="bingo-grid-container">
+      <div class="bingo-grid" id="bingo-grid">
+        <!-- 25 cards dynamically rendered -->
+      </div>
+    </div>
+  </main>
+
+  <!-- Live Toast Alert for OBS & Spectators -->
+  <div id="live-alert-toast">
+    <div class="toast-icon" id="toast-icon">🎯</div>
+    <div class="toast-content">
+      <h4 id="toast-subtitle">DÉFI VALIDÉ !</h4>
+      <div class="toast-title" id="toast-title">Attaque Mitraillette</div>
+      <div class="toast-subtitle" id="toast-points">+2 points</div>
+    </div>
+  </div>
+
+  <!-- Profile Edit Modal -->
+  <div class="modal-overlay" id="profile-modal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h2>✏️ Personnaliser le profil</h2>
+        <button class="modal-close" id="btn-close-modal">&times;</button>
+      </div>
+      <form id="profile-form">
+        <div class="form-group">
+          <label>Pseudo / Nom du Joueur</label>
+          <input type="text" id="input-player-name" class="form-input" required maxlength="25">
+        </div>
+        <div class="form-group">
+          <label>Nom du Club / Équipe</label>
+          <input type="text" id="input-club-name" class="form-input" required maxlength="30">
+        </div>
+        <div class="form-group">
+          <label>Émoji / Logo (ex: ⚽, 🦁, 👑, 🔥, ⚡, 🚀)</label>
+          <input type="text" id="input-avatar" class="form-input" required maxlength="4">
+        </div>
+        <div class="form-group">
+          <label>Code PIN de sécurité (optionnel, 4 chiffres)</label>
+          <input type="password" id="input-pin" class="form-input" maxlength="6" placeholder="ex: 1111">
+        </div>
+        <button type="submit" class="btn-primary" style="margin-top: 10px;">Enregistrer les modifications</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const socket = io();
+    const urlParams = new URLSearchParams(window.location.search);
+    let currentPlayerId = urlParams.get('p') || '1';
+
+    let localGameState = null;
+    let localChallenges = [];
+
+    // Switch between player 1 and player 2
+    function setPlayer(id) {
+      currentPlayerId = id;
+      window.history.replaceState({}, '', `/player.html?p=${id}`);
+      
+      const body = document.getElementById('player-page-body');
+      const btn1 = document.getElementById('btn-switch-p1');
+      const btn2 = document.getElementById('btn-switch-p2');
+
+      if (id === '1') {
+        body.className = 'theme-p1';
+        btn1.className = 'nav-btn active';
+        btn2.className = 'nav-btn';
+      } else {
+        body.className = 'theme-p2';
+        btn1.className = 'nav-btn';
+        btn2.className = 'nav-btn p2-active';
+      }
+
+      if (localGameState) {
+        renderUI(localGameState);
+      }
+    }
+
+    document.getElementById('btn-switch-p1').addEventListener('click', () => setPlayer('1'));
+    document.getElementById('btn-switch-p2').addEventListener('click', () => setPlayer('2'));
+
+    // Sound toggle
+    const soundBtn = document.getElementById('btn-toggle-sound');
+    const soundIcon = document.getElementById('sound-icon');
+    function updateSoundIcon() {
+      soundIcon.textContent = window.soundFx.isMuted() ? '🔇' : '🔊';
+    }
+    soundBtn.addEventListener('click', () => {
+      window.soundFx.toggleMute();
+      updateSoundIcon();
+    });
+    updateSoundIcon();
+
+    // Toggle tile handler
+    function handleTileClick(index) {
+      if (!localGameState) return;
+      const player = localGameState.players[currentPlayerId];
+      if (!player) return;
+
+      const currentChecked = player.checked[index];
+      const newChecked = !currentChecked;
+
+      // Play sound
+      if (newChecked) {
+        window.soundFx.playCheck();
+      } else {
+        window.soundFx.playUncheck();
+      }
+
+      // Optimistic local update
+      player.checked[index] = newChecked;
+      renderGrid(localChallenges, player.checked, localGameState.stats[currentPlayerId].completedLines);
+
+      // Emit through socket
+      socket.emit('toggleTile', {
+        playerId: currentPlayerId,
+        tileIndex: index,
+        checked: newChecked
+      });
+    }
+
+    // Render Bingo Grid
+    function renderGrid(challenges, checkedArray, completedLines = []) {
+      const grid = document.getElementById('bingo-grid');
+      grid.innerHTML = '';
+
+      // Find which tile indices are part of a completed line
+      const activeLineIndices = new Set();
+      completedLines.forEach(l => {
+        if (l.type === 'row') {
+          for (let c = 0; c < 5; c++) activeLineIndices.add(l.index * 5 + c);
+        } else if (l.type === 'col') {
+          for (let r = 0; r < 5; r++) activeLineIndices.add(r * 5 + l.index);
+        } else if (l.type === 'diag') {
+          if (l.index === 0) [0, 6, 12, 18, 24].forEach(i => activeLineIndices.add(i));
+          if (l.index === 1) [4, 8, 12, 16, 20].forEach(i => activeLineIndices.add(i));
+        }
+      });
+
+      challenges.forEach((ch, idx) => {
+        const isChecked = !!checkedArray[idx];
+        const isInLine = activeLineIndices.has(idx);
+
+        const tileEl = document.createElement('div');
+        tileEl.className = `bingo-tile ${isChecked ? 'checked' : ''} ${isInLine ? 'in-line' : ''}`;
+        tileEl.onclick = () => handleTileClick(idx);
+
+        tileEl.innerHTML = `
+          <div class="tile-top">
+            <span class="tile-icon">${ch.icon}</span>
+            <span class="pts-badge pts-${ch.points}">+${ch.points} ${ch.points > 1 ? 'PTS' : 'PT'}</span>
+          </div>
+          <div class="tile-title">${ch.title}</div>
+          <div class="tile-desc">${ch.description}</div>
+          <div class="tile-bottom">
+            <span class="tile-constraint" title="${ch.constraint}">${ch.constraint}</span>
+            <div class="tile-checkbox">${isChecked ? '✓' : ''}</div>
+          </div>
+        `;
+
+        grid.appendChild(tileEl);
+      });
+    }
+
+    // Render full UI
+    function renderUI(data) {
+      localGameState = data;
+      localChallenges = data.challenges;
+
+      const player = data.players[currentPlayerId];
+      const stats = data.stats[currentPlayerId];
+      const rivalId = currentPlayerId === '1' ? '2' : '1';
+      const rival = data.players[rivalId];
+      const rivalStats = data.stats[rivalId];
+
+      if (!player || !stats) return;
+
+      // Update header
+      document.getElementById('header-avatar').textContent = player.avatar;
+      document.getElementById('header-player-name').textContent = player.name.toUpperCase();
+      document.getElementById('header-player-club').textContent = player.club.toUpperCase();
+
+      // Update banner
+      const bannerAvatar = document.getElementById('banner-avatar');
+      bannerAvatar.textContent = player.avatar;
+      bannerAvatar.className = `player-avatar p${currentPlayerId}`;
+
+      document.getElementById('banner-player-name').textContent = player.name;
+      document.getElementById('banner-club-name').textContent = player.club;
+      
+      const bannerScore = document.getElementById('banner-total-points');
+      bannerScore.textContent = stats.totalPoints;
+      bannerScore.className = `score-badge p${currentPlayerId}`;
+
+      // Update stats
+      document.getElementById('stat-tiles-count').textContent = `${stats.tilesCompleted} / 25`;
+      document.getElementById('stat-lines-count').textContent = `${stats.completedLines.length} (+${stats.lineBonus} pts)`;
+
+      // Update rival
+      document.getElementById('rival-avatar').textContent = rival.avatar;
+      document.getElementById('rival-label').textContent = `${rival.name} (${rival.club})`;
+      document.getElementById('rival-score').textContent = `${rivalStats.totalPoints} pts (${rivalStats.tilesCompleted}/25)`;
+
+      // Completed lines bar
+      const linesContainer = document.getElementById('completed-lines-container');
+      const linesList = document.getElementById('lines-tags-list');
+      if (stats.completedLines.length > 0) {
+        linesContainer.style.display = 'flex';
+        linesList.innerHTML = stats.completedLines.map(l => `<span class="line-tag">⭐ ${l.name}</span>`).join('');
+      } else {
+        linesContainer.style.display = 'none';
+      }
+
+      // Render grid
+      renderGrid(data.challenges, player.checked, stats.completedLines);
+    }
+
+    // Socket listeners
+    socket.on('stateUpdate', (data) => {
+      const prevStats = localGameState && localGameState.stats ? localGameState.stats[currentPlayerId] : null;
+      renderUI(data);
+
+      // Check if current player just unlocked a line or grand chelem
+      const currentStats = data.stats[currentPlayerId];
+      if (prevStats && currentStats) {
+        if (currentStats.completedLines.length > prevStats.completedLines.length) {
+          window.soundFx.playBingo();
+          window.launchConfetti({ count: 120 });
+        }
+        if (currentStats.isGrandChelem && !prevStats.isGrandChelem) {
+          window.soundFx.playGrandChelem();
+          window.launchConfetti({ count: 250 });
+        }
+      }
+    });
+
+    // Alert toast on tile check
+    socket.on('tileToggled', (data) => {
+      if (data.checked) {
+        showToast(data.playerName, data.challenge, data.newLineAchieved, data.newGrandChelem);
+      }
+    });
+
+    let toastTimer = null;
+    function showToast(playerName, challenge, isLine, isGrandChelem) {
+      const toast = document.getElementById('live-alert-toast');
+      const toastIcon = document.getElementById('toast-icon');
+      const toastSubtitle = document.getElementById('toast-subtitle');
+      const toastTitle = document.getElementById('toast-title');
+      const toastPoints = document.getElementById('toast-points');
+
+      toastIcon.textContent = isGrandChelem ? '🏆' : (isLine ? '⭐' : challenge.icon);
+      toastSubtitle.textContent = isGrandChelem ? '🎉 GRAND CHELEM !' : (isLine ? `⭐ BINGO LIGNE ! (${playerName})` : `DÉFI VALIDÉ PAR ${playerName.toUpperCase()}`);
+      toastTitle.textContent = challenge.title;
+      toastPoints.textContent = isGrandChelem ? '+10 PTS GRAND CHELEM !' : (isLine ? `+${challenge.points} PTS & BONUS LIGNE (+5 PTS)` : `+${challenge.points} ${challenge.points > 1 ? 'points' : 'point'}`);
+
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.remove('show');
+      }, 4000);
+    }
+
+    // Reset grid
+    document.getElementById('btn-reset-grid').addEventListener('click', () => {
+      const player = localGameState ? localGameState.players[currentPlayerId] : null;
+      const name = player ? player.name : `Joueur ${currentPlayerId}`;
+      if (confirm(`Voulez-vous vraiment réinitialiser toutes les coches pour ${name} ?`)) {
+        socket.emit('resetGrid', { target: currentPlayerId });
+      }
+    });
+
+    // Profile modal
+    const modal = document.getElementById('profile-modal');
+    document.getElementById('btn-edit-profile').addEventListener('click', () => {
+      const player = localGameState.players[currentPlayerId];
+      document.getElementById('input-player-name').value = player.name;
+      document.getElementById('input-club-name').value = player.club;
+      document.getElementById('input-avatar').value = player.avatar;
+      document.getElementById('input-pin').value = player.pin || '';
+      modal.classList.add('open');
+    });
+
+    document.getElementById('btn-close-modal').addEventListener('click', () => {
+      modal.classList.remove('open');
+    });
+
+    document.getElementById('profile-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const name = document.getElementById('input-player-name').value;
+      const club = document.getElementById('input-club-name').value;
+      const avatar = document.getElementById('input-avatar').value;
+      const pin = document.getElementById('input-pin').value;
+
+      await fetch('/api/profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ playerId: currentPlayerId, name, club, avatar, pin })
+      });
+
+      modal.classList.remove('open');
+    });
+
+    // Initialize with current player
+    setPlayer(currentPlayerId);
+  </script>
+</body>
+</html>
