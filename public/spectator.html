@@ -9,6 +9,7 @@
   <script src="/js/audio.js"></script>
   <script src="/js/confetti.js"></script>
   <script src="/js/avatar.js"></script>
+  <script src="/js/social.js"></script>
   <style>
     .spec-grids-wrap {
       display: grid;
@@ -26,21 +27,21 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 10px 14px;
-      border-radius: 10px;
+      padding: 12px 16px;
+      border-radius: 0px;
       margin-bottom: 10px;
       border: 1px solid var(--border);
-      background: rgba(255,255,255,0.03);
+      border-left: 4px solid var(--accent);
+      background: #11131c;
     }
 
     .lead-tag {
-      background: rgba(245,166,35,0.18);
-      border: 1px solid rgba(245,166,35,0.4);
-      color: #fbbf24;
+      background: var(--accent);
+      color: #ffffff;
       font-size: 0.68rem;
-      font-weight: 800;
-      padding: 2px 8px;
-      border-radius: 6px;
+      font-weight: 900;
+      padding: 3px 8px;
+      border-radius: 0px;
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
@@ -49,14 +50,14 @@
 <body>
   <header class="app-header">
     <a href="/" class="logo-link">
-      <div class="logo-icon-wrap">📺</div>
+      <div class="logo-icon-wrap" style="background:#ff5500;border-radius:0px;">📺</div>
       <div class="logo-text">
         <div class="t1">VUE SPECTATEUR LIVE</div>
         <div class="t2">BINGO CARRIÈRE MANAGER • EN DIRECT</div>
       </div>
     </a>
     <div class="header-nav">
-      <div class="tabs" style="margin:0;">
+      <div class="tabs" style="margin:0;border-radius:0px;">
         <button class="tab active" onclick="setViewMode(this,'auto')">⚔️ Auto</button>
         <button class="tab" onclick="setViewMode(this,'all')">👥 Tous</button>
         <button class="tab" id="tab-p1" onclick="setViewMode(this,'single-0')">Joueur 1</button>
@@ -64,6 +65,7 @@
       </div>
       <button class="btn btn-icon" id="btn-sound">🔊</button>
       <button class="btn btn-icon" onclick="toggleFullscreen()" title="Plein écran">⛶</button>
+      <div id="auth-nav-slot"></div>
       <a href="/obs.html" target="_blank" class="btn">🎥 OBS</a>
     </div>
   </header>

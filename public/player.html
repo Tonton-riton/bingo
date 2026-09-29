@@ -9,12 +9,13 @@
   <script src="/js/audio.js"></script>
   <script src="/js/confetti.js"></script>
   <script src="/js/avatar.js"></script>
+  <script src="/js/social.js"></script>
 </head>
 <body>
   <!-- HEADER -->
   <header class="app-header">
     <a href="/" class="logo-link">
-      <div class="logo-icon-wrap" id="hdr-avatar" style="background:none;font-size:22px;">⚽</div>
+      <div class="logo-icon-wrap" id="hdr-avatar" style="background:#ff5500;font-size:20px;border-radius:0px;">⚽</div>
       <div class="logo-text">
         <div class="t1" id="hdr-name">Chargement…</div>
         <div class="t2" id="hdr-club"></div>
@@ -22,12 +23,14 @@
     </a>
     <div class="header-nav">
       <button class="btn btn-icon" id="btn-sound" title="Son">🔊</button>
-      <button class="btn" onclick="openModal('modal-profile')">✏️ Profil</button>
-      <div style="display:flex;gap:2px;background:rgba(255,255,255,0.04);padding:3px;border-radius:8px;border:1px solid var(--border);" id="player-switcher">
+      <button class="btn btn-sm" onclick="SocialHub.openFriendsModal()" title="Mes Amis" style="border-color:var(--accent);color:var(--accent);font-weight:800;">👥 Mes Amis</button>
+      <button class="btn btn-sm" onclick="openModal('modal-profile')">✏️ Profil</button>
+      <div style="display:flex;gap:4px;background:#10121a;padding:4px;border:1px solid var(--border);" id="player-switcher">
         <!-- filled by JS -->
       </div>
-      <a href="/spectator.html" target="_blank" class="btn">📺</a>
-      <a href="/admin.html" class="btn btn-primary btn-sm">🔐 Admin</a>
+      <div id="auth-nav-slot"></div>
+      <a href="/spectator.html" target="_blank" class="btn btn-sm">📺</a>
+      <a href="/admin.html" class="btn btn-sm" style="border-color:rgba(255,255,255,0.2);">🔐 Admin</a>
     </div>
   </header>
 
@@ -37,27 +40,27 @@
     <div class="scoreboard mb-4">
       <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;">
         <div style="display:flex;align-items:center;gap:12px;">
-          <div id="banner-avatar" style="font-size:36px;width:52px;height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center;border:2px solid;background:rgba(255,255,255,0.05);">⚽</div>
+          <div id="banner-avatar" style="font-size:36px;width:52px;height:52px;border-radius:0px;display:flex;align-items:center;justify-content:center;border:2px solid;background:#161924;">⚽</div>
           <div>
-            <div style="font-size:1.2rem;font-weight:900;" id="banner-name">Joueur</div>
-            <div class="text-sm text-muted" id="banner-club"></div>
+            <div style="font-size:1.3rem;font-weight:900;color:#ffffff;" id="banner-name">Joueur</div>
+            <div class="text-sm" style="color:#d1d5db;" id="banner-club"></div>
           </div>
         </div>
         <div>
           <div style="font-size:2.5rem;font-weight:900;line-height:1;font-variant-numeric:tabular-nums;" id="banner-score">0</div>
           <div class="text-xs text-muted">points</div>
         </div>
-        <div style="display:flex;gap:14px;flex-wrap:wrap;margin-left:10px;">
+        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-left:10px;">
           <div>
-            <div style="font-size:1.1rem;font-weight:800;" id="stat-tiles">0/25</div>
+            <div style="font-size:1.15rem;font-weight:900;color:#ffffff;" id="stat-tiles">0/25</div>
             <div class="text-xs text-muted">Défis validés</div>
           </div>
           <div>
-            <div style="font-size:1.1rem;font-weight:800;" id="stat-lines">0</div>
+            <div style="font-size:1.15rem;font-weight:900;color:var(--gold);" id="stat-lines">0</div>
             <div class="text-xs text-muted">Lignes (+<span id="stat-line-bonus">0</span> pts)</div>
           </div>
           <div>
-            <div style="font-size:1.1rem;font-weight:800;" id="stat-base">0</div>
+            <div style="font-size:1.15rem;font-weight:900;color:#ffffff;" id="stat-base">0</div>
             <div class="text-xs text-muted">Pts de base</div>
           </div>
         </div>
@@ -67,9 +70,17 @@
       </div>
     </div>
 
+    <!-- FRIENDS DUEL BAR -->
+    <div id="friends-duel-bar" style="display:none;background:#10121a;border:1px solid var(--border);border-left:4px solid var(--accent);padding:10px 14px;margin-bottom:14px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <div style="font-size:0.75rem;font-weight:900;color:var(--accent);text-transform:uppercase;letter-spacing:0.06em;">⭐ MES AMIS EN DIRECT :</div>
+        <div id="friends-duel-pills" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+      </div>
+    </div>
+
     <!-- RIVAL BANNER (compact) -->
-    <div id="rival-bar" style="display:none;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:8px 14px;margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-      <div class="text-xs text-muted fw-700">ADVERSAIRES :</div>
+    <div id="rival-bar" style="display:none;background:#10121a;border:1px solid var(--border);border-left:4px solid #ffaa00;padding:8px 14px;margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <div class="text-xs fw-800" style="color:var(--gold);">AUTRES JOUEURS :</div>
       <div id="rival-pills" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
     </div>
 
@@ -86,7 +97,7 @@
     </div>
 
     <!-- BINGO GRID -->
-    <div style="background:var(--bg-3);border:1px solid var(--border);border-radius:16px;padding:14px;" class="mb-4">
+    <div style="background:#0e1017;border:1px solid var(--border);border-radius:0px;padding:14px;" class="mb-4">
       <div class="bingo-grid" id="bingo-grid"></div>
     </div>
 
@@ -167,7 +178,7 @@
     let state = null;
     const COLOR_MAP = {
       blue:'#4f8ef7',red:'#ef4444',purple:'#8b5cf6',green:'#10b981',
-      gold:'#f5a623',pink:'#ec4899',cyan:'#06b6d4',orange:'#f97316'
+      gold:'#ffaa00',pink:'#ec4899',cyan:'#06b6d4',orange:'#ff5500'
     };
 
     // Pick first player if none specified
@@ -175,9 +186,14 @@
       const prevState = state;
       state = data;
       if (!playerId || !data.players[playerId]) {
-        const ids = Object.keys(data.players);
-        if (!ids.length) return;
-        playerId = ids[0];
+        const cu = window.SocialHub?.getCurrentUser();
+        if (cu && data.players[cu.id]) {
+          playerId = cu.id;
+        } else {
+          const ids = Object.keys(data.players);
+          if (!ids.length) return;
+          playerId = ids[0];
+        }
         window.history.replaceState({}, '', `/player.html?p=${playerId}`);
       }
 
@@ -197,6 +213,7 @@
       }
 
       renderUI(data);
+      if (window.SocialHub) SocialHub.renderAuthNav();
     });
 
     socket.on('tileToggled', (ev) => {
@@ -208,7 +225,7 @@
       const stats = data.stats?.[playerId];
       if (!player) return;
 
-      const colorHex = COLOR_MAP[player.color] || '#4f8ef7';
+      const colorHex = COLOR_MAP[player.color] || '#ff5500';
 
       // Header
       document.getElementById('hdr-avatar').innerHTML = renderAvatar(player.avatar);
@@ -220,7 +237,7 @@
       const bannerAvatar = document.getElementById('banner-avatar');
       bannerAvatar.innerHTML = renderAvatar(player.avatar);
       bannerAvatar.style.borderColor = colorHex;
-      bannerAvatar.style.background = colorHex + '18';
+      bannerAvatar.style.background = '#151722';
       const activeGrid = data.grids?.find(g => g.id === data.activeGrid);
       const challenges = activeGrid?.challenges || data.challenges || [];
       const totalTiles = stats?.totalTiles || challenges.length || 25;
@@ -237,15 +254,41 @@
       // Grid title
       document.getElementById('grid-title').textContent = activeGrid?.name || 'Grille Bingo';
 
+      // Friends Duel Bar
+      const cu = window.SocialHub?.getCurrentUser();
+      const myFriends = player.friends || cu?.friends || [];
+      const fBar = document.getElementById('friends-duel-bar');
+      const fPills = document.getElementById('friends-duel-pills');
+      if (fBar && fPills) {
+        if (myFriends.length > 0) {
+          fBar.style.display = 'block';
+          fPills.innerHTML = myFriends.map(fid => {
+            const fp = data.players[fid];
+            if (!fp) return '';
+            const fs = data.stats?.[fid];
+            const fc = COLOR_MAP[fp.color] || '#ff5500';
+            const fTotal = fs?.totalTiles || challenges.length || 25;
+            return `<button onclick="switchPlayer('${fid}')" class="btn btn-sm" style="background:#161924;border:1px solid ${fc};color:#fff;display:flex;align-items:center;gap:6px;padding:4px 10px;">
+              <span>${renderAvatar(fp.avatar)}</span>
+              <span style="font-weight:800;">${fp.name}</span>
+              <span style="color:${fc};font-weight:900;">${fs?.totalPoints||0} pts</span>
+              <span style="font-size:0.7rem;color:#9ca3af;">(${fs?.tilesCompleted||0}/${fTotal})</span>
+            </button>`;
+          }).filter(Boolean).join('');
+        } else {
+          fBar.style.display = 'none';
+        }
+      }
+
       // Rival bar
-      const rivals = Object.keys(data.players).filter(id => id !== playerId);
+      const rivals = Object.keys(data.players).filter(id => id !== playerId && !myFriends.includes(id));
       if (rivals.length > 0) {
         document.getElementById('rival-bar').style.display = 'flex';
         document.getElementById('rival-pills').innerHTML = rivals.map(rid => {
           const rp = data.players[rid], rs = data.stats?.[rid];
-          const rc = COLOR_MAP[rp.color] || '#ef4444';
+          const rc = COLOR_MAP[rp.color] || '#ff5500';
           const rTotal = rs?.totalTiles || challenges.length || 25;
-          return `<div style="display:flex;align-items:center;gap:6px;background:${rc}12;border:1px solid ${rc}33;border-radius:8px;padding:4px 10px;font-size:0.8rem;">
+          return `<div style="display:flex;align-items:center;gap:6px;background:#141722;border:1px solid ${rc}33;padding:4px 10px;font-size:0.8rem;">
             <span>${renderAvatar(rp.avatar)}</span>
             <span style="font-weight:700;">${rp.name}</span>
             <span style="color:${rc};font-weight:900;">${rs?.totalPoints||0} pts</span>

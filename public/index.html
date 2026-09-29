@@ -3,10 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BINGO CARRIÈRE | Accueil</title>
+  <title>BINGO CARRIÈRE | Accueil & Communauté</title>
   <link rel="stylesheet" href="/css/style.css">
   <script src="/socket.io/socket.io.js"></script>
   <script src="/js/avatar.js"></script>
+  <script src="/js/social.js"></script>
 </head>
 <body>
   <!-- HEADER -->
@@ -15,261 +16,131 @@
       <div class="logo-icon-wrap">⚽</div>
       <div class="logo-text">
         <div class="t1">BINGO CARRIÈRE</div>
-        <div class="t2">100% Simulation • Mode Manager</div>
+        <div class="t2">Mode Manager Simulation</div>
       </div>
     </a>
     <div class="header-nav">
       <span class="live-dot"><span class="pulse"></span>LIVE</span>
       <a href="/spectator.html" class="btn">📺 Spectateur</a>
-      <a href="/obs.html" class="btn">🎥 Overlay OBS</a>
-      <a href="/admin.html" class="btn btn-primary">🔐 Admin</a>
+      <a href="/obs.html" class="btn">🎥 OBS</a>
+      <div id="auth-nav-slot">
+        <!-- Rendu dynamique par social.js -->
+      </div>
+      <a href="/admin.html" class="btn" style="border-color:rgba(255,255,255,0.2);">🔐 Admin</a>
     </div>
   </header>
 
   <main class="container">
 
+    <!-- HERO SECTION (SHARP ESPORT ORANGE & BLACK) -->
+    <div class="card mb-4" style="background:linear-gradient(135deg, #10121a 0%, #161824 100%); border:2px solid var(--accent); padding:32px 28px; position:relative; overflow:hidden;">
+      <div style="position:absolute; right:-40px; top:-40px; font-size:180px; opacity:0.04; pointer-events:none; font-weight:900;">⚽</div>
+      <div style="display:inline-block; background:rgba(255,85,0,0.15); border:1px solid var(--accent); color:#ff9955; font-size:0.75rem; font-weight:900; padding:4px 12px; margin-bottom:12px; text-transform:uppercase; letter-spacing:0.08em;">
+        🔥 Saison 2026 • Esport Manager Bingo
+      </div>
+      <h1 style="font-size:2.2rem; font-weight:900; line-height:1.15; margin-bottom:12px; color:#ffffff; text-transform:uppercase; letter-spacing:0.02em;">
+        Valide tes objectifs de carrière <br><span style="color:var(--accent);">en live stream avec tes amis</span>
+      </h1>
+      <p style="font-size:0.95rem; color:#d1d5db; max-width:680px; line-height:1.55; margin-bottom:24px;">
+        Crée ton compte joueur en 10 secondes, ajoute tes potes ou adversaires en amis, choisis une grille <strong>(3x3, 4x4 ou 5x5)</strong> et coche tes succès en temps réel pendant tes matchs !
+      </p>
+      <div style="display:flex; gap:12px; flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="SocialHub.openModal('modal-social-register')" style="padding:12px 22px; font-size:0.9rem; font-weight:900;">
+          ✨ CRÉER MON COMPTE GRATUIT
+        </button>
+        <button class="btn" onclick="SocialHub.openFriendsModal()" style="padding:12px 20px; font-size:0.9rem; font-weight:800; border-color:var(--accent); color:var(--accent);">
+          👥 MES AMIS & COMMUNAUTÉ
+        </button>
+        <a href="/spectator.html" class="btn" style="padding:12px 20px; font-size:0.9rem;">
+          📺 VUE SPECTATEUR LIVE
+        </a>
+      </div>
+    </div>
+
     <!-- SCOREBOARD BANNER -->
     <div class="scoreboard mb-4" id="scoreboard">
+      <div class="flex-between mb-2">
+        <div class="section-title">🏆 Classement en direct</div>
+        <div class="live-dot"><span class="pulse"></span> <span id="grid-active-label">Grille active</span></div>
+      </div>
       <div class="scoreboard-inner" id="scoreboard-players">
         <div class="text-muted text-sm" style="padding: 12px;">Chargement des joueurs…</div>
       </div>
     </div>
 
-    <!-- PAGE INTRO + QUICK LINKS -->
+    <!-- JOUEURS ACTIFS / COMMUNAUTÉ -->
     <div class="section-head">
-      <div class="section-title">🕹️ Accès Rapide</div>
-      <div class="live-dot"><span class="pulse"></span> <span id="grid-active-label">Grille active</span></div>
+      <div class="section-title">👥 Joueurs & Adversaires</div>
+      <button class="btn btn-sm btn-primary" onclick="SocialHub.openModal('modal-social-register')">+ Nouveau Joueur</button>
     </div>
 
     <div class="home-cards-grid" id="player-cards-grid">
       <!-- Cartes joueurs injectées ici -->
     </div>
 
-    <!-- Static action cards -->
-    <div class="home-cards-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+    <!-- ACCÈS RAPIDES -->
+    <div class="section-head" style="margin-top:12px;">
+      <div class="section-title">⚡ Outils de Stream & Gestion</div>
+    </div>
 
-      <a href="/spectator.html" class="home-card" style="border-color: rgba(16,185,129,0.25); background: linear-gradient(145deg, var(--card), rgba(16,185,129,0.06));">
+    <div class="home-cards-grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
+
+      <a href="/spectator.html" class="home-card" style="border-left: 3px solid var(--green);">
         <div class="home-card-icon">📺</div>
-        <div class="home-card-title">Vue Spectateur</div>
-        <div class="home-card-desc">Écran grand format avec toutes les grilles, le duel et le feed en temps réel. Parfait pour votre 2ème écran.</div>
+        <div class="home-card-title">Écran Spectateur</div>
+        <div class="home-card-desc">Vue grand angle avec l'ensemble des grilles des joueurs, le duel en temps réel et l'historique des actions. Idéal pour le 2ème écran.</div>
         <div class="home-card-footer">
-          <span style="color: var(--green);">Ouvrir →</span>
-          <span class="line-tag">Temps réel</span>
+          <span style="color: var(--green);">Ouvrir le flux →</span>
+          <span class="line-tag" style="background:var(--green); color:#000;">Live Sync</span>
         </div>
       </a>
 
-      <a href="/obs.html" class="home-card" style="border-color: rgba(245,166,35,0.25); background: linear-gradient(145deg, var(--card), rgba(245,166,35,0.05));">
+      <a href="/obs.html" class="home-card" style="border-left: 3px solid var(--accent);">
         <div class="home-card-icon">🎥</div>
         <div class="home-card-title">Overlay OBS Studio</div>
-        <div class="home-card-desc">Source navigateur transparente avec alertes animées. Intégrez le bingo directement dans votre stream.</div>
+        <div class="home-card-desc">Source navigateur transparente avec HUD de score, mini-grille et alertes animées lors des victoires et des lignes de bingo.</div>
         <div class="home-card-footer">
-          <span style="color: var(--gold);">Configurer →</span>
-          <span class="line-tag" style="color: #fbbf24; border-color: rgba(245,166,35,0.35);">Transparent</span>
+          <span style="color: var(--accent);">Intégrer à OBS →</span>
+          <span class="line-tag" style="background:var(--accent); color:#fff;">Transparent</span>
         </div>
       </a>
 
-      <a href="/admin.html" class="home-card" style="border-color: rgba(79,142,247,0.25); background: linear-gradient(145deg, var(--card), rgba(79,142,247,0.05));">
+      <a href="/admin.html" class="home-card" style="border-left: 3px solid #ffaa00;">
         <div class="home-card-icon">🔐</div>
-        <div class="home-card-title">Panneau Admin</div>
-        <div class="home-card-desc">Ajouter / supprimer des joueurs, créer de nouvelles grilles bingo personnalisées, gérer les paramètres et réinitialiser la partie.</div>
+        <div class="home-card-title">Créateur de Grilles & Admin</div>
+        <div class="home-card-desc">Générateur IA d'objectifs selon la difficulté, création de grilles 3x3, 4x4 ou 5x5 avec cartes éditables et gestion complète des joueurs.</div>
         <div class="home-card-footer">
-          <span style="color: var(--accent);">Accéder →</span>
-          <span class="line-tag" style="color: #93c5fd; border-color: rgba(79,142,247,0.35);">Connexion requise</span>
+          <span style="color: #ffaa00;">Gérer les grilles →</span>
+          <span class="line-tag" style="background:#ffaa00; color:#000;">IA Intégrée</span>
         </div>
       </a>
 
     </div>
 
-    <!-- RÈGLES -->
-    <div class="card" style="padding: 20px; margin-top: 4px;">
-      <div class="section-title mb-3">📋 Règles & Système de points</div>
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; font-size: 0.84rem; color: var(--muted2);">
-        <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 9px; border: 1px solid var(--border);">
-          <strong style="color: #93c5fd; display: block; margin-bottom: 4px;">🎯 25 Défis</strong>
-          1 à 5 pts selon la difficulté. 20/25 faisables dès la D2.
+    <!-- RÈGLES DU JEU -->
+    <div class="card" style="padding: 24px; margin-top: 10px; border-left: 3px solid var(--accent);">
+      <div class="section-title mb-3">📋 Règles & Système de Points</div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; font-size: 0.85rem; color: #d1d5db;">
+        <div style="background: #151722; padding: 14px; border: 1px solid var(--border);">
+          <strong style="color: #ffffff; display: block; margin-bottom: 4px; font-size:0.95rem;">🎯 Défis Carrière</strong>
+          De 1 à 5 pts selon la difficulté. Progression équilibrée adaptée aux divisions inférieures et d'élite.
         </div>
-        <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 9px; border: 1px solid var(--border);">
-          <strong style="color: var(--gold); display: block; margin-bottom: 4px;">⚡ Bonus Sprint +5 pts</strong>
-          Chaque ligne, colonne ou diagonale complétée rapporte +5 pts bonus.
+        <div style="background: #151722; padding: 14px; border: 1px solid var(--border);">
+          <strong style="color: var(--gold); display: block; margin-bottom: 4px; font-size:0.95rem;">⚡ Bonus Ligne +5 pts</strong>
+          Chaque ligne horizontale, colonne verticale ou diagonale complétée rapporte un bonus immédiat.
         </div>
-        <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 9px; border: 1px solid var(--border);">
-          <strong style="color: #c4b5fd; display: block; margin-bottom: 4px;">🏆 Grand Chelem +10 pts</strong>
-          Tous les 25 défis validés déclenchent la célébration suprême !
+        <div style="background: #151722; padding: 14px; border: 1px solid var(--border);">
+          <strong style="color: #ff9955; display: block; margin-bottom: 4px; font-size:0.95rem;">👑 Grand Chelem +10 pts</strong>
+          Valider l'intégralité des cases de la grille déclenche la victoire et l'animation spéciale !
         </div>
-        <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 9px; border: 1px solid var(--border);">
-          <strong style="color: var(--green); display: block; margin-bottom: 4px;">🔴 Temps Réel</strong>
-          Chaque coche se synchronise instantanément sur tous les écrans.
+        <div style="background: #151722; padding: 14px; border: 1px solid var(--border);">
+          <strong style="color: var(--green); display: block; margin-bottom: 4px; font-size:0.95rem;">🔴 Synchronisation Live</strong>
+          Toutes les coches s'actualisent instantanément sur les écrans joueurs, spectateurs et OBS.
         </div>
       </div>
     </div>
 
   </main>
-
-  <!-- ======================= ADMIN MODAL ======================= -->
-  <div class="modal-overlay" id="modal-admin">
-    <div class="modal-box" style="max-width: 700px;">
-      <div class="modal-header">
-        <div class="modal-title">⚙️ Panneau Administrateur</div>
-        <button class="modal-close" onclick="closeModal('modal-admin')">✕</button>
-      </div>
-
-      <!-- TABS -->
-      <div class="tabs mb-4" style="margin-bottom: 20px;">
-        <button class="tab active" data-tab="tab-players" onclick="switchTab(this)">👥 Joueurs</button>
-        <button class="tab" data-tab="tab-grids" onclick="switchTab(this)">📋 Grilles Bingo</button>
-        <button class="tab" data-tab="tab-settings" onclick="switchTab(this)">🔧 Paramètres</button>
-      </div>
-
-      <!-- PLAYERS TAB -->
-      <div id="tab-players">
-        <div class="flex-between mb-3">
-          <div class="section-title">Joueurs actifs</div>
-          <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-player')">+ Ajouter un joueur</button>
-        </div>
-        <div id="admin-player-list">
-          <div class="text-muted text-sm">Chargement…</div>
-        </div>
-        <div class="divider"></div>
-        <div class="flex-between">
-          <span class="text-sm text-muted">Réinitialiser toutes les coches (partie) :</span>
-          <button class="btn btn-danger btn-sm" onclick="resetAll()">🔄 Reset Partie</button>
-        </div>
-      </div>
-
-      <!-- GRIDS TAB -->
-      <div id="tab-grids" class="hidden">
-        <div class="flex-between mb-3">
-          <div class="section-title">Grilles Bingo disponibles</div>
-          <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-grid')">+ Créer une grille</button>
-        </div>
-        <div id="admin-grid-list">
-          <div class="text-muted text-sm">Chargement…</div>
-        </div>
-      </div>
-
-      <!-- SETTINGS TAB -->
-      <div id="tab-settings" class="hidden">
-        <div class="section-title mb-3">Bonus de score</div>
-        <div class="form-row mb-3">
-          <div class="form-group">
-            <label class="form-label">Bonus par ligne/colonne/diagonale (pts)</label>
-            <input type="number" class="form-input" id="input-line-bonus" value="5" min="0" max="50">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Bonus Grand Chelem (25/25) (pts)</label>
-            <input type="number" class="form-input" id="input-grand-bonus" value="10" min="0" max="100">
-          </div>
-        </div>
-        <button class="btn btn-primary btn-full" onclick="saveSettings()">💾 Enregistrer les paramètres</button>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- ======================= ADD PLAYER MODAL ======================= -->
-  <div class="modal-overlay" id="modal-add-player">
-    <div class="modal-box">
-      <div class="modal-header">
-        <div class="modal-title">👤 Ajouter un joueur</div>
-        <button class="modal-close" onclick="closeModal('modal-add-player')">✕</button>
-      </div>
-      <form onsubmit="submitAddPlayer(event)">
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Pseudo / Nom</label>
-            <input type="text" class="form-input" id="new-p-name" required maxlength="25" placeholder="ex: Tonton-riton">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Nom du Club</label>
-            <input type="text" class="form-input" id="new-p-club" required maxlength="30" placeholder="ex: AS Monaco">
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Emoji / Avatar (ou lien image)</label>
-          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-            <div id="new-p-avatar-preview" style="width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:24px;background:rgba(255,255,255,0.06);border:2px solid var(--accent);overflow:hidden;flex-shrink:0;">⚽</div>
-            <input type="text" class="form-input" id="new-p-avatar" value="⚽" placeholder="Cliquez un emoji ou tapez/collez un emoji/lien" style="flex:1;">
-          </div>
-          <div class="emoji-row" id="emoji-picker">
-            <span class="emoji-opt selected" data-v="⚽">⚽</span>
-            <span class="emoji-opt" data-v="🔥">🔥</span>
-            <span class="emoji-opt" data-v="⚡">⚡</span>
-            <span class="emoji-opt" data-v="👑">👑</span>
-            <span class="emoji-opt" data-v="🦁">🦁</span>
-            <span class="emoji-opt" data-v="🚀">🚀</span>
-            <span class="emoji-opt" data-v="🐺">🐺</span>
-            <span class="emoji-opt" data-v="🎯">🎯</span>
-            <span class="emoji-opt" data-v="🏆">🏆</span>
-            <span class="emoji-opt" data-v="⚔️">⚔️</span>
-            <span class="emoji-opt" data-v="💎">💎</span>
-            <span class="emoji-opt" data-v="🌟">🌟</span>
-            <span class="emoji-opt" data-v="🦅">🦅</span>
-            <span class="emoji-opt" data-v="🐉">🐉</span>
-            <span class="emoji-opt" data-v="🦊">🦊</span>
-            <span class="emoji-opt" data-v="🛡️">🛡️</span>
-            <span class="emoji-opt" data-v="🧤">🧤</span>
-            <span class="emoji-opt" data-v="🥊">🥊</span>
-            <span class="emoji-opt" data-v="🎮">🎮</span>
-            <span class="emoji-opt" data-v="🥇">🥇</span>
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Couleur du joueur</label>
-          <div class="color-picker-row" id="color-picker">
-            <div class="color-swatch selected" data-v="blue" style="background:#4f8ef7;color:#4f8ef7;" title="Bleu"></div>
-            <div class="color-swatch" data-v="red" style="background:#ef4444;color:#ef4444;" title="Rouge"></div>
-            <div class="color-swatch" data-v="purple" style="background:#8b5cf6;color:#8b5cf6;" title="Violet"></div>
-            <div class="color-swatch" data-v="green" style="background:#10b981;color:#10b981;" title="Vert"></div>
-            <div class="color-swatch" data-v="gold" style="background:#f5a623;color:#f5a623;" title="Or"></div>
-            <div class="color-swatch" data-v="pink" style="background:#ec4899;color:#ec4899;" title="Rose"></div>
-            <div class="color-swatch" data-v="cyan" style="background:#06b6d4;color:#06b6d4;" title="Cyan"></div>
-            <div class="color-swatch" data-v="orange" style="background:#f97316;color:#f97316;" title="Orange"></div>
-          </div>
-          <input type="hidden" id="new-p-color" value="blue">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Code PIN (optionnel, 4-6 chiffres)</label>
-          <input type="password" class="form-input" id="new-p-pin" maxlength="6" placeholder="ex: 1234 (laissez vide si non requis)">
-        </div>
-        <div class="form-actions">
-          <button type="button" class="btn btn-full" onclick="closeModal('modal-add-player')">Annuler</button>
-          <button type="submit" class="btn btn-primary btn-full">✅ Ajouter le joueur</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- ======================= ADD GRID MODAL ======================= -->
-  <div class="modal-overlay" id="modal-add-grid">
-    <div class="modal-box">
-      <div class="modal-header">
-        <div class="modal-title">📋 Créer une nouvelle grille Bingo</div>
-        <button class="modal-close" onclick="closeModal('modal-add-grid')">✕</button>
-      </div>
-      <form onsubmit="submitAddGrid(event)">
-        <div class="form-group">
-          <label class="form-label">Nom de la grille</label>
-          <input type="text" class="form-input" id="new-grid-name" required maxlength="50" placeholder="ex: Bingo Saison 2 - D1">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Description (optionnel)</label>
-          <textarea class="form-input" id="new-grid-desc" placeholder="ex: Défis pour la saison 2 en Ligue 1…" rows="2"></textarea>
-        </div>
-        <div class="divider"></div>
-        <div class="section-title mb-3" style="margin-bottom: 12px;">🃏 25 Défis personnalisés</div>
-        <div style="font-size: 0.78rem; color: var(--muted2); margin-bottom: 10px;">
-          Entrez les 25 défis de votre grille. Format : <strong>Emoji | Titre | Points | Description | Contrainte</strong>
-        </div>
-        <div id="grid-challenges-inputs" style="max-height: 380px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 4px;">
-          <!-- Generated dynamically -->
-        </div>
-        <div class="form-actions" style="margin-top: 16px;">
-          <button type="button" class="btn btn-full" onclick="closeModal('modal-add-grid')">Annuler</button>
-          <button type="submit" class="btn btn-primary btn-full">✅ Créer la grille</button>
-        </div>
-      </form>
-    </div>
-  </div>
 
   <!-- TOAST CONTAINER -->
   <div id="toast-container"></div>
@@ -278,344 +149,153 @@
     const socket = io();
     let state = null;
 
-    // ==== Socket ====
+    const COLOR_MAP = {
+      blue: '#4f8ef7', red: '#ef4444', purple: '#8b5cf6', green: '#10b981',
+      gold: '#ffaa00', pink: '#ec4899', cyan: '#06b6d4', orange: '#ff5500'
+    };
+
     socket.on('stateUpdate', (data) => {
       state = data;
-      renderScoreboard(data);
-      renderPlayerCards(data);
-      renderAdminPlayerList(data);
-      renderAdminGridList(data);
-      if (data.settings) {
-        document.getElementById('input-line-bonus').value = data.settings.lineBonus ?? 5;
-        document.getElementById('input-grand-bonus').value = data.settings.grandChelemBonus ?? 10;
-      }
-      if (data.activeGrid) {
-        const grid = data.grids ? data.grids.find(g => g.id === data.activeGrid) : null;
-        document.getElementById('grid-active-label').textContent = grid ? grid.name : 'Grille active';
-      }
+      renderUI(data);
+      if (window.SocialHub) SocialHub.renderAuthNav();
     });
 
     socket.on('tileToggled', (ev) => {
       if (ev.checked) showToast(ev.playerName, ev.challenge, ev.newLineAchieved, ev.newGrandChelem);
     });
 
-    // ==== Scoreboard ====
+    function renderUI(data) {
+      const activeGrid = data.grids?.find(g => g.id === data.activeGrid);
+      const gridLabel = document.getElementById('grid-active-label');
+      if (gridLabel) {
+        const size = activeGrid?.size || Math.round(Math.sqrt(activeGrid?.challenges?.length || 25)) || 5;
+        gridLabel.textContent = `${activeGrid?.name || 'Grille active'} (${size}x${size})`;
+      }
+
+      renderScoreboard(data);
+      renderPlayerCards(data);
+    }
+
     function renderScoreboard(data) {
-      const { players, stats, activeGrid } = data;
+      const el = document.getElementById('scoreboard-players');
+      const { players, stats } = data;
       const ids = Object.keys(players || {});
+
       if (!ids.length) {
-        document.getElementById('scoreboard-players').innerHTML = '<div class="text-muted text-sm" style="padding: 12px;">Aucun joueur — Ajoutez-en via Admin.</div>';
+        el.innerHTML = '<div class="text-muted text-sm" style="padding:12px;">Aucun joueur inscrit. Créez votre compte pour commencer !</div>';
         return;
       }
-      // Sort by score desc
-      const sorted = ids
-        .map(id => ({ id, p: players[id], s: stats?.[id] }))
+
+      const sorted = ids.map(id => ({ id, p: players[id], s: stats?.[id] }))
         .sort((a, b) => (b.s?.totalPoints || 0) - (a.s?.totalPoints || 0));
 
       const total = sorted.reduce((acc, x) => acc + (x.s?.totalPoints || 0), 0) || 1;
-      const maxScore = sorted[0]?.s?.totalPoints || 0;
 
-      let html = '<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;width:100%;">';
+      let html = '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px;">';
       sorted.forEach((item, idx) => {
-        const { p, s } = item;
-        const colorHex = COLOR_MAP[p.color] || '#4f8ef7';
-        const isLeader = idx === 0 && maxScore > 0;
-        const pct = total > 0 ? Math.round(((s?.totalPoints||0)/total)*100) : Math.round(100/sorted.length);
+        const { id, p, s } = item;
+        const c = COLOR_MAP[p.color] || '#ff5500';
+        const isLeader = idx === 0 && (s?.totalPoints || 0) > 0;
         html += `
-          <div class="player-chip ${isLeader ? 'leader' : ''}" style="border-color: ${colorHex}22;">
-            ${isLeader ? '<div class="leader-crown">👑</div>' : ''}
-            <div class="player-chip-avatar" style="border-color:${colorHex};background:${colorHex}18;font-size:20px;">${renderAvatar(p.avatar)}</div>
-            <div class="player-chip-info">
-              <div class="player-chip-name">${p.name}</div>
-              <div class="player-chip-club">${p.club}</div>
-              <div class="player-chip-meta">${s?.tilesCompleted||0}/25 défis · ${s?.completedLines?.length||0} ligne(s)</div>
-            </div>
+          <div style="display:flex;align-items:center;gap:10px;background:#141722;border:1px solid ${c};padding:8px 14px;border-left:4px solid ${c};">
+            <div style="font-size:20px;width:32px;height:32px;display:flex;align-items:center;justify-content:center;background:#1d2130;border:1px solid ${c};">${renderAvatar(p.avatar)}</div>
             <div>
-              <div class="player-chip-score" style="color:${colorHex}">${s?.totalPoints||0}</div>
-              <div class="text-xs text-muted" style="text-align:right;">pts</div>
+              <div style="font-weight:900;font-size:0.9rem;color:#ffffff;">${p.name} ${isLeader ? '👑' : ''}</div>
+              <div style="font-size:0.7rem;color:#9ca3af;">${p.club} · ${s?.tilesCompleted || 0}/${s?.totalTiles || 25} défis</div>
+            </div>
+            <div style="margin-left:8px;text-align:right;">
+              <div style="font-size:1.3rem;font-weight:900;color:${c};line-height:1;">${s?.totalPoints || 0}</div>
+              <div style="font-size:0.65rem;color:#9ca3af;">pts</div>
             </div>
           </div>
         `;
       });
+      html += '</div>';
 
-      // Progress bar if 2+ players
       if (sorted.length >= 2) {
-        html += '<div class="scoreboard-center" style="min-width:160px;flex:1;">';
-        html += '<div class="vs-label">Score comparatif</div>';
         html += '<div class="scoreboard-bar">';
         sorted.forEach(item => {
-          const pct = Math.round(((item.s?.totalPoints||0)/total)*100);
-          const colorHex = COLOR_MAP[item.p.color] || '#4f8ef7';
-          html += `<div class="scoreboard-bar-fill" style="width:${pct}%;background:${colorHex};"></div>`;
+          const pct = Math.round(((item.s?.totalPoints || 0) / total) * 100);
+          const c = COLOR_MAP[item.p.color] || '#ff5500';
+          html += `<div class="scoreboard-bar-fill" style="width:${pct}%;background:${c};"></div>`;
         });
         html += '</div>';
-        html += `<div class="text-xs text-muted" style="text-align:center;">${sorted.map(x=>`${x.p.name}: ${x.s?.totalPoints||0} pts`).join(' · ')}</div>`;
-        html += '</div>';
       }
 
-      html += '</div>';
-      document.getElementById('scoreboard-players').innerHTML = html;
+      el.innerHTML = html;
     }
 
-    // ==== Player Cards ====
     function renderPlayerCards(data) {
+      const container = document.getElementById('player-cards-grid');
       const { players, stats } = data;
       const ids = Object.keys(players || {});
-      const grid = document.getElementById('player-cards-grid');
-      if (!ids.length) {
-        grid.innerHTML = '<div class="text-muted text-sm card" style="padding:20px;grid-column:1/-1;">Aucun joueur. Cliquez sur <strong>Admin → Ajouter un joueur</strong> pour commencer !</div>';
-        return;
-      }
-      grid.innerHTML = ids.map(id => {
-        const p = players[id], s = stats?.[id];
-        const colorHex = COLOR_MAP[p.color] || '#4f8ef7';
-        return `
-          <a href="/player.html?p=${id}" class="home-card" style="border-color:${colorHex}33;background:linear-gradient(145deg,var(--card),${colorHex}08);">
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
-              <div style="width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;border:2px solid ${colorHex};background:${colorHex}18;overflow:hidden;">${renderAvatar(p.avatar)}</div>
-              <div>
-                <div class="home-card-title" style="margin-bottom:2px;">${p.name}</div>
-                <div class="text-xs text-muted">${p.club}</div>
-              </div>
-              <div style="margin-left:auto;text-align:right;">
-                <div style="font-size:2rem;font-weight:900;line-height:1;color:${colorHex};">${s?.totalPoints||0}</div>
-                <div class="text-xs text-muted">pts</div>
-              </div>
-            </div>
-            <div style="height:4px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden;margin-bottom:10px;">
-              <div style="height:100%;width:${Math.round((s?.tilesCompleted||0)/25*100)}%;background:${colorHex};border-radius:4px;transition:width 0.4s;"></div>
-            </div>
-            <div class="home-card-footer">
-              <span style="color:${colorHex};font-size:0.82rem;">Ouvrir ma grille →</span>
-              <span class="line-tag" style="color:${colorHex};border-color:${colorHex}44;">${s?.tilesCompleted||0}/25 défis</span>
-            </div>
-          </a>
-        `;
-      }).join('');
-    }
+      const currentUser = window.SocialHub?.getCurrentUser();
+      const myFriends = new Set(currentUser?.friends || []);
 
-    // ==== Admin Panels ====
-    function renderAdminPlayerList(data) {
-      const { players, stats } = data;
-      const ids = Object.keys(players || {});
-      const container = document.getElementById('admin-player-list');
       if (!ids.length) {
-        container.innerHTML = '<div class="text-muted text-sm">Aucun joueur. Ajoutez-en ci-dessus.</div>';
+        container.innerHTML = `
+          <div class="card" style="grid-column:1/-1;text-align:center;padding:32px;">
+            <div style="font-size:36px;margin-bottom:10px;">👥</div>
+            <div style="font-size:1.1rem;font-weight:900;color:#ffffff;margin-bottom:6px;">Aucun joueur pour le moment</div>
+            <div style="font-size:0.85rem;color:#9ca3af;margin-bottom:18px;">Sois le premier à créer ton compte et lance ton bingo !</div>
+            <button class="btn btn-primary" onclick="SocialHub.openModal('modal-social-register')">✨ Créer mon compte</button>
+          </div>
+        `;
         return;
       }
+
       container.innerHTML = ids.map(id => {
-        const p = players[id], s = stats?.[id];
-        const colorHex = COLOR_MAP[p.color] || '#4f8ef7';
+        const p = players[id];
+        const s = stats?.[id];
+        const c = COLOR_MAP[p.color] || '#ff5500';
+        const isMe = currentUser && currentUser.id === id;
+        const isFriend = myFriends.has(id);
+
         return `
-          <div class="player-admin-item">
-            <div class="player-admin-avatar" style="border-color:${colorHex};background:${colorHex}18;overflow:hidden;">${renderAvatar(p.avatar)}</div>
-            <div style="flex:1;min-width:0;">
-              <div class="fw-700">${p.name}</div>
-              <div class="text-xs text-muted">${p.club} · ${s?.totalPoints||0} pts · ${s?.tilesCompleted||0}/25</div>
+          <div class="home-card" style="border-left: 4px solid ${c}; background:#10131d;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+              <div style="display:flex;align-items:center;gap:12px;">
+                <div style="font-size:26px;width:48px;height:48px;border:2px solid ${c};background:#181b28;display:flex;align-items:center;justify-content:center;">
+                  ${renderAvatar(p.avatar)}
+                </div>
+                <div>
+                  <div style="font-size:1.05rem;font-weight:900;color:#ffffff;display:flex;align-items:center;gap:6px;">
+                    ${p.name}
+                    ${isMe ? '<span style="background:var(--accent);color:#fff;font-size:0.62rem;padding:2px 6px;font-weight:900;">MOI</span>' : ''}
+                    ${isFriend ? '<span style="background:#10b981;color:#000;font-size:0.62rem;padding:2px 6px;font-weight:900;">AMI</span>' : ''}
+                  </div>
+                  <div style="font-size:0.75rem;color:#9ca3af;">${p.club}</div>
+                </div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:1.8rem;font-weight:900;color:${c};line-height:1;">${s?.totalPoints || 0}</div>
+                <div style="font-size:0.68rem;color:#9ca3af;">POINTS</div>
+              </div>
             </div>
-            <a href="/player.html?p=${id}" class="btn btn-sm" title="Ouvrir la grille">🎮</a>
-            <button class="btn btn-sm" onclick="editPlayer('${id}')" title="Modifier">✏️</button>
-            <button class="btn btn-danger btn-sm" onclick="deletePlayer('${id}','${p.name}')" title="Supprimer">🗑️</button>
+
+            <div style="background:#090b10;padding:10px 12px;margin-bottom:14px;border:1px solid rgba(255,255,255,0.06);display:flex;justify-content:space-between;font-size:0.78rem;">
+              <span>Défis complétés : <strong style="color:#ffffff;">${s?.tilesCompleted || 0}/${s?.totalTiles || 25}</strong></span>
+              <span>Lignes : <strong style="color:var(--gold);">⭐ ${s?.completedLines?.length || 0}</strong></span>
+            </div>
+
+            <div class="home-card-footer" style="padding-top:12px;">
+              <a href="/player.html?p=${id}" class="btn btn-primary btn-sm" style="font-weight:900;">
+                🎮 Ouvrir la grille →
+              </a>
+              ${!isMe ? (
+                isFriend
+                  ? `<button class="btn btn-sm" onclick="SocialHub.removeFriend('${id}')" style="border-color:rgba(255,255,255,0.15);color:#9ca3af;">Retirer ami</button>`
+                  : `<button class="btn btn-sm" onclick="SocialHub.addFriend('${id}')" style="border-color:var(--accent);color:var(--accent);">+ Ajouter ami</button>`
+              ) : ''}
+            </div>
           </div>
         `;
       }).join('');
     }
 
-    function renderAdminGridList(data) {
-      const { grids, activeGrid } = data;
-      const container = document.getElementById('admin-grid-list');
-      if (!grids || !grids.length) {
-        container.innerHTML = '<div class="text-muted text-sm">Aucune grille. Créez-en une ci-dessus.</div>';
-        return;
-      }
-      container.innerHTML = grids.map(g => `
-        <div class="grid-item ${g.id === activeGrid ? 'active-grid' : ''}">
-          <div>
-            <div class="fw-700">${g.name} ${g.id === activeGrid ? '<span class="line-tag" style="margin-left:6px;font-size:0.65rem;">ACTIVE</span>' : ''}</div>
-            <div class="text-xs text-muted">${g.description || ''} · ${g.challenges?.length || 0} défis</div>
-          </div>
-          <div style="display:flex;gap:6px;">
-            ${g.id !== activeGrid ? `<button class="btn btn-primary btn-sm" onclick="activateGrid('${g.id}')">▶ Activer</button>` : ''}
-            ${grids.length > 1 ? `<button class="btn btn-danger btn-sm" onclick="deleteGrid('${g.id}','${g.name}')">🗑️</button>` : ''}
-          </div>
-        </div>
-      `).join('');
-    }
-
-    // ==== Tab switching ====
-    function switchTab(btn) {
-      document.querySelectorAll('#modal-admin .tab').forEach(t => t.classList.remove('active'));
-      btn.classList.add('active');
-      ['tab-players','tab-grids','tab-settings'].forEach(id => {
-        document.getElementById(id).classList.add('hidden');
-      });
-      document.getElementById(btn.dataset.tab).classList.remove('hidden');
-    }
-
-    // ==== Actions ====
-    async function submitAddPlayer(e) {
-      e.preventDefault();
-      await fetch('/api/players', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({
-          name: document.getElementById('new-p-name').value.trim(),
-          club: document.getElementById('new-p-club').value.trim(),
-          avatar: document.getElementById('new-p-avatar').value,
-          color: document.getElementById('new-p-color').value,
-          pin: document.getElementById('new-p-pin').value
-        })
-      });
-      closeModal('modal-add-player');
-      e.target.reset();
-      document.getElementById('new-p-avatar').value = '⚽';
-      const prev = document.getElementById('new-p-avatar-preview');
-      if (prev) prev.innerHTML = '⚽';
-      document.querySelectorAll('#emoji-picker .emoji-opt').forEach(x => x.classList.toggle('selected', x.dataset.v === '⚽'));
-      document.getElementById('new-p-color').value = 'blue';
-      document.querySelectorAll('#color-picker .color-swatch').forEach(x => x.classList.toggle('selected', x.dataset.v === 'blue'));
-    }
-
-    async function deletePlayer(id, name) {
-      if (!confirm(`Supprimer ${name} ? Toutes ses coches seront perdues.`)) return;
-      await fetch(`/api/players/${id}`, { method: 'DELETE' });
-    }
-
-    function editPlayer(id) {
-      if (!state) return;
-      const p = state.players[id];
-      // Reuse profile modal on player page or quick-edit here
-      alert(`Pour modifier le profil de ${p.name}, accédez à sa grille via le bouton 🎮 puis utilisez "Profil".`);
-    }
-
-    async function activateGrid(id) {
-      await fetch('/api/grid/activate', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ gridId: id })
-      });
-    }
-
-    async function deleteGrid(id, name) {
-      if (!confirm(`Supprimer la grille "${name}" ? Les coches associées seront perdues.`)) return;
-      await fetch(`/api/grids/${id}`, { method: 'DELETE' });
-    }
-
-    async function resetAll() {
-      if (!confirm('Réinitialiser toutes les coches de tous les joueurs ?')) return;
-      const gid = state?.activeGrid;
-      await fetch('/api/reset', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ target: 'all', gridId: gid })
-      });
-    }
-
-    async function saveSettings() {
-      await fetch('/api/settings', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({
-          lineBonus: parseInt(document.getElementById('input-line-bonus').value) || 5,
-          grandChelemBonus: parseInt(document.getElementById('input-grand-bonus').value) || 10
-        })
-      });
-      showSimpleToast('Paramètres enregistrés !', '✅');
-    }
-
-    // ==== Add Grid ====
-    function buildGridChallengeInputs() {
-      const defaultChallenges = [
-        {icon:'🛡️',title:'Invincibilité Domicile',pts:2,desc:'0 défaite à domicile en championnat',c:'1 saison | D2'},
-        {icon:'💰',title:'Balance Positive',pts:1,desc:'Bénéfice transferts >= +10M€',c:'1 saison | D2'},
-        {icon:'🌱',title:'Éclosion Académie',pts:1,desc:'3 jeunes promus (10+ matchs)',c:'1 saison | D2'},
-        {icon:'📋',title:'Tactique Immuable',pts:1,desc:'Même dispositif 100% des matchs',c:'1 saison | D2'},
-        {icon:'🟥',title:'Discipline & Podium',pts:2,desc:'5+ cartons rouges & Top 5',c:'1 saison | D2'},
-        {icon:'🎯',title:'Attaque Mitraillette',pts:2,desc:'80+ buts en championnat',c:'1 saison | D2'},
-        {icon:'📈',title:'Plus-Value x3',pts:3,desc:'Revendre un joueur >= 3x son achat',c:'1-3 saisons | D2'},
-        {icon:'⭐',title:'Pépite Générationnelle',pts:3,desc:'Amener un jeune à 80+ GEN',c:'2-4 saisons | D2'},
-        {icon:'🧱',title:'Forteresse Défensive',pts:2,desc:'Meilleure défense (< 30 buts)',c:'1 saison | D2'},
-        {icon:'🔒',title:'Mercato Gelé',pts:2,desc:'0 achat et 0 prêt entrant',c:'1 saison | D2'},
-        {icon:'🚀',title:'Montée Directe',pts:2,desc:'Promotion en D1 (1er ou 2ème)',c:'1-2 saisons | D2'},
-        {icon:'💎',title:'Vente Galactique',pts:2,desc:'Vente sèche >= 50M€',c:'1-3 saisons | D2/D1'},
-        {icon:'🃏',title:'JOKER ADVERSAIRE',pts:2,desc:'Défi imposé par le rival',c:'1 saison | Choix rival'},
-        {icon:'🎓',title:'Onze 100% Formation',pts:3,desc:'Titulariser 7+ jeunes',c:'1-3 saisons | D2'},
-        {icon:'👑',title:'Sacrifice du Capitaine',pts:1,desc:'Vendre son meilleur GEN sans chuter',c:'1 saison | D2'},
-        {icon:'🏆',title:'Épopée en Coupe',pts:3,desc:'Atteindre la demi-finale',c:'1-2 saisons | D2/D1'},
-        {icon:'📉',title:'Rigueur Salariale',pts:1,desc:'Baisser masse salariale de 20%',c:'1 saison | D2'},
-        {icon:'🌍',title:'Vocation Internationale',pts:1,desc:'Un formé appelé en sélection',c:'1-3 saisons | D2'},
-        {icon:'👟',title:'Roi de la Passe',pts:1,desc:'Meilleur passeur (15+ passes)',c:'1 saison | D2'},
-        {icon:'👔',title:'Confiance Totale',pts:1,desc:"Note Conseil d'Admin > 85",c:'1 saison | D2'},
-        {icon:'🥇',title:'Titre Suprême D1',pts:5,desc:'Champion de D1',c:'2-4 saisons | D1'},
-        {icon:'🏦',title:'Coffre-Fort 100M€',pts:2,desc:'100M€ budget disponible',c:'2-4 saisons | D2/D1'},
-        {icon:'🌟',title:'Trophée Continental',pts:5,desc:'Joueur dans Équipe de l\'Année',c:'2-4 saisons | D1'},
-        {icon:'⚽',title:"Soulier d'Or Club",pts:2,desc:'Meilleur buteur (25+ buts)',c:'1 saison | D2'},
-        {icon:'⚔️',title:'Maître du Derby',pts:3,desc:'Battre son rival historique x2',c:'1 saison | D2'}
-      ];
-
-      const container = document.getElementById('grid-challenges-inputs');
-      container.innerHTML = defaultChallenges.map((ch, i) => `
-        <div style="display:grid;grid-template-columns:44px 1fr 60px 1fr 1fr;gap:5px;align-items:center;background:rgba(255,255,255,0.02);border-radius:7px;padding:6px;">
-          <div style="font-size:0.65rem;color:var(--muted);text-align:center;font-weight:700;">${i+1}</div>
-          <input type="text" class="form-input" style="padding:5px 8px;font-size:0.78rem;" placeholder="Titre" value="${ch.title}" data-ci="${i}" data-field="title" required>
-          <input type="number" class="form-input" style="padding:5px 8px;font-size:0.78rem;" placeholder="Pts" value="${ch.pts}" min="1" max="10" data-ci="${i}" data-field="points" required>
-          <input type="text" class="form-input" style="padding:5px 8px;font-size:0.78rem;" placeholder="Description" value="${ch.desc}" data-ci="${i}" data-field="description">
-          <input type="text" class="form-input" style="padding:5px 8px;font-size:0.78rem;" placeholder="Contrainte" value="${ch.c}" data-ci="${i}" data-field="constraint">
-        </div>
-      `).join('');
-    }
-
-    async function submitAddGrid(e) {
-      e.preventDefault();
-      const name = document.getElementById('new-grid-name').value.trim();
-      const desc = document.getElementById('new-grid-desc').value.trim();
-      const container = document.getElementById('grid-challenges-inputs');
-      const rows = container.querySelectorAll('[data-ci]');
-      const map = {};
-      rows.forEach(el => {
-        const ci = el.dataset.ci;
-        if (!map[ci]) map[ci] = { id: parseInt(ci), row: Math.floor(ci/5), col: parseInt(ci)%5, icon: '🎯', category: 'Défi' };
-        map[ci][el.dataset.field] = el.dataset.field === 'points' ? parseInt(el.value) : el.value;
-      });
-      const challenges = Object.values(map).map((c, i) => ({...c, id: i}));
-
-      await fetch('/api/grids', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({ name, description: desc, challenges })
-      });
-      closeModal('modal-add-grid');
-      e.target.reset();
-    }
-
-    // ==== Modal helpers ====
-    function openModal(id) {
-      document.getElementById(id).classList.add('open');
-      if (id === 'modal-add-grid') buildGridChallengeInputs();
-    }
-    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-
-    // Close on overlay click
-    document.querySelectorAll('.modal-overlay').forEach(overlay => {
-      overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
-    });
-
-    // ==== Emoji + color pickers ====
-    setupEmojiPicker('emoji-picker', 'new-p-avatar', 'new-p-avatar-preview');
-
-    document.getElementById('color-picker').addEventListener('click', e => {
-      const sw = e.target.closest('.color-swatch');
-      if (!sw) return;
-      document.querySelectorAll('#color-picker .color-swatch').forEach(x => x.classList.remove('selected'));
-      sw.classList.add('selected');
-      document.getElementById('new-p-color').value = sw.dataset.v;
-    });
-
-    // ==== Toast ====
     function showToast(playerName, challenge, isLine, isGrandChelem) {
       const container = document.getElementById('toast-container');
       const toast = document.createElement('div');
-      const dur = 4000;
       let cls = 'toast toast-check';
       if (isGrandChelem) cls = 'toast toast-grand';
       else if (isLine) cls = 'toast toast-bingo';
@@ -623,35 +303,15 @@
       toast.innerHTML = `
         <div class="toast-big-icon">${isGrandChelem ? '🏆' : isLine ? '⭐' : renderAvatar(challenge?.icon || '🎯')}</div>
         <div>
-          <div class="toast-label">${isGrandChelem ? '👑 GRAND CHELEM !' : isLine ? '⭐ BINGO ! LIGNE COMPLÉTÉE' : 'DÉFI VALIDÉ'}</div>
+          <div class="toast-label">${isGrandChelem ? '👑 GRAND CHELEM !' : isLine ? '⭐ BINGO ! LIGNE' : 'DÉFI VALIDÉ'}</div>
           <div class="toast-title">${challenge?.title || '?'}</div>
-          <div class="toast-sub">${playerName} · +${challenge?.points || 0} pts${isLine ? ' + bonus ligne (+5)' : ''}</div>
+          <div class="toast-sub">${playerName} · +${challenge?.points || 0} pts${isLine ? ' + bonus ligne' : ''}</div>
         </div>
       `;
       container.appendChild(toast);
       requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.add('in')));
-      setTimeout(() => {
-        toast.classList.remove('in');
-        toast.classList.add('out');
-        setTimeout(() => toast.remove(), 350);
-      }, dur);
+      setTimeout(() => { toast.classList.remove('in'); toast.classList.add('out'); setTimeout(() => toast.remove(), 350); }, 4000);
     }
-
-    function showSimpleToast(msg, icon = '✅') {
-      const container = document.getElementById('toast-container');
-      const toast = document.createElement('div');
-      toast.className = 'toast toast-check';
-      toast.innerHTML = `<div class="toast-big-icon">${icon}</div><div><div class="toast-title">${msg}</div></div>`;
-      container.appendChild(toast);
-      requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.add('in')));
-      setTimeout(() => { toast.classList.remove('in'); toast.classList.add('out'); setTimeout(() => toast.remove(), 350); }, 3000);
-    }
-
-    // Color map helper
-    const COLOR_MAP = {
-      blue: '#4f8ef7', red: '#ef4444', purple: '#8b5cf6', green: '#10b981',
-      gold: '#f5a623', pink: '#ec4899', cyan: '#06b6d4', orange: '#f97316'
-    };
   </script>
 </body>
 </html>

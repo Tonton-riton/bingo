@@ -126,6 +126,7 @@ function loadState() {
       } else if (Array.isArray(p.checked)) {
         delete p.checked; // can't associate without a grid
       }
+      if (!Array.isArray(p.friends)) p.friends = [];
       if (!p.createdAt) p.createdAt = new Date().toISOString();
     }
     return raw;
@@ -314,6 +315,7 @@ function getComputedState() {
       club:      player.club,
       avatar:    player.avatar,
       color:     player.color,
+      friends:   player.friends || [],
       createdAt: player.createdAt,
       // Include all grids checked data (so client can switch grids if needed)
       grids:     player.grids || {}
@@ -504,27 +506,153 @@ app.delete('/api/players/:id', (req, res) => {
   res.json({ success: true });
 });
 
+// ─── REST: Auth & Registration ───────────────────────────────────────────────
+
+app.post(['/api/auth/register', '/api/register'], (req, res) => {
+  const { name, club, avatar, color, pin } = req.body;
+  if (!name || !String(name).trim()) {
+    return res.status(400).json({ success: false, message: 'Le pseudo est obligatoire.' });
+  }
+
+  const cleanName = String(name).trim();
+  const duplicate = Object.values(gameState.players).find(
+    p => p.name.toLowerCase() === cleanName.toLowerCase()
+  );
+  if (duplicate) {
+    return res.status(409).json({ success: false, message: `Le pseudo "${cleanName}" est déjà pris. Choisis-en un autre !` });
+  }
+
+  const playerId = `player_${makeId()}`;
+  const player = {
+    id:        playerId,
+    name:      cleanName,
+    club:      (club || 'FC Simulation').trim(),
+    avatar:    sanitizeAvatar(avatar),
+    color:     (color || 'orange').trim(),
+    pin:       (pin || '0000').trim(),
+    friends:   [],
+    grids:     {},
+    createdAt: new Date().toISOString()
+  };
+
+  // Initialise checked array for active grid
+  if (gameState.activeGridId) {
+    getChecked(player, gameState.activeGridId);
+  }
+
+  gameState.players[playerId] = player;
+  saveState();
+
+  const state = getComputedState();
+  io.emit('stateUpdate', state);
+  io.emit('playerAdded', { playerId, playerName: player.name, avatar: player.avatar, color: player.color });
+
+  res.json({ success: true, player, state });
+});
+
 // ─── REST: Login ──────────────────────────────────────────────────────────────
 
-app.post('/api/login', (req, res) => {
-  const { playerId, pin } = req.body;
-  const player = gameState.players[playerId];
+app.post(['/api/auth/login', '/api/login'], (req, res) => {
+  const { playerId, username, name, pin } = req.body;
+  const lookup = (playerId || username || name || '').trim().toLowerCase();
+
+  let player = null;
+  if (playerId && gameState.players[playerId]) {
+    player = gameState.players[playerId];
+  } else if (lookup) {
+    player = Object.values(gameState.players).find(
+      p => p.id === lookup || p.name.toLowerCase() === lookup
+    );
+  }
+
   if (!player) {
-    return res.status(404).json({ success: false, message: 'Joueur introuvable.' });
+    return res.status(404).json({ success: false, message: 'Aucun compte trouvé avec ce pseudo.' });
   }
-  if (player.pin && player.pin !== String(pin)) {
-    return res.status(401).json({ success: false, message: 'Code PIN incorrect.' });
+
+  if (player.pin && player.pin !== String(pin || '').trim()) {
+    return res.status(401).json({ success: false, message: 'Code PIN ou mot de passe incorrect.' });
   }
+
   res.json({
     success: true,
     player: {
-      id:     player.id,
-      name:   player.name,
-      club:   player.club,
-      avatar: player.avatar,
-      color:  player.color
+      id:      player.id,
+      name:    player.name,
+      club:    player.club,
+      avatar:  player.avatar,
+      color:   player.color,
+      friends: player.friends || []
     }
   });
+});
+
+// ─── REST: Friends & Community ────────────────────────────────────────────────
+
+app.get('/api/community/players', (req, res) => {
+  const state = getComputedState();
+  const list = Object.values(state.players).map(p => ({
+    id:        p.id,
+    name:      p.name,
+    club:      p.club,
+    avatar:    p.avatar,
+    color:     p.color,
+    friends:   p.friends || [],
+    stats:     state.stats?.[p.id] || null,
+    createdAt: p.createdAt
+  }));
+  res.json({ success: true, players: list, activeGrid: state.activeGrid });
+});
+
+app.post('/api/friends/add', (req, res) => {
+  const { playerId, friendId } = req.body;
+  if (!playerId || !friendId) {
+    return res.status(400).json({ success: false, message: 'Identifiants joueur manquants.' });
+  }
+  if (playerId === friendId) {
+    return res.status(400).json({ success: false, message: 'Impossible de s’ajouter soi-même en ami.' });
+  }
+
+  const p = gameState.players[playerId];
+  const f = gameState.players[friendId];
+  if (!p || !f) {
+    return res.status(404).json({ success: false, message: 'Joueur ou ami introuvable.' });
+  }
+
+  if (!Array.isArray(p.friends)) p.friends = [];
+  if (!p.friends.includes(friendId)) {
+    p.friends.push(friendId);
+  }
+
+  // Also reciprocal friend addition so both see each other
+  if (!Array.isArray(f.friends)) f.friends = [];
+  if (!f.friends.includes(playerId)) {
+    f.friends.push(playerId);
+  }
+
+  saveState();
+  io.emit('stateUpdate', getComputedState());
+  res.json({ success: true, friends: p.friends, friendName: f.name });
+});
+
+app.post('/api/friends/remove', (req, res) => {
+  const { playerId, friendId } = req.body;
+  const p = gameState.players[playerId];
+  if (!p) {
+    return res.status(404).json({ success: false, message: 'Joueur introuvable.' });
+  }
+
+  if (Array.isArray(p.friends)) {
+    p.friends = p.friends.filter(id => id !== friendId);
+  }
+
+  const f = gameState.players[friendId];
+  if (f && Array.isArray(f.friends)) {
+    f.friends = f.friends.filter(id => id !== playerId);
+  }
+
+  saveState();
+  io.emit('stateUpdate', getComputedState());
+  res.json({ success: true, friends: p.friends });
 });
 
 // ─── REST: Profile ────────────────────────────────────────────────────────────

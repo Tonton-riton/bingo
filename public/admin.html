@@ -7,15 +7,15 @@
   <link rel="stylesheet" href="/css/style.css">
   <script src="/socket.io/socket.io.js"></script>
   <script src="/js/avatar.js"></script>
+  <script src="/js/social.js"></script>
   <style>
     /* Login screen */
     #login-screen {
       position: fixed;
       inset: 0;
-      background: var(--bg);
+      background: #08090c;
       background-image:
-        radial-gradient(ellipse 80% 60% at 10% 5%, rgba(79,142,247,0.1) 0%, transparent 60%),
-        radial-gradient(ellipse 60% 50% at 90% 90%, rgba(139,92,246,0.08) 0%, transparent 60%);
+        radial-gradient(ellipse 70% 50% at 50% 0%, rgba(255,85,0,0.12) 0%, transparent 60%);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -23,35 +23,36 @@
     }
 
     .login-card {
-      background: #111827;
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 20px;
-      padding: 40px 36px;
-      max-width: 380px;
+      background: #10121a;
+      border: 2px solid var(--accent);
+      border-radius: 0px;
+      padding: 36px 32px;
+      max-width: 400px;
       width: 100%;
-      box-shadow: 0 30px 80px rgba(0,0,0,0.8);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.9), 0 0 30px rgba(255,85,0,0.25);
       text-align: center;
     }
 
     .login-logo {
-      width: 60px; height: 60px;
-      background: linear-gradient(135deg, #4f8ef7, #8b5cf6);
-      border-radius: 16px;
+      width: 58px; height: 58px;
+      background: var(--accent);
+      border-radius: 0px;
       display: flex; align-items: center; justify-content: center;
       font-size: 28px;
       margin: 0 auto 20px;
-      box-shadow: 0 0 30px rgba(79,142,247,0.4);
+      box-shadow: 0 0 25px var(--accent-glow);
     }
 
     #login-error {
-      background: rgba(239,68,68,0.12);
-      border: 1px solid rgba(239,68,68,0.3);
-      color: #f87171;
-      border-radius: 8px;
+      background: rgba(239,68,68,0.18);
+      border: 1px solid var(--red);
+      color: #fca5a5;
+      border-radius: 0px;
       padding: 8px 12px;
       font-size: 0.83rem;
       margin-top: 10px;
       display: none;
+      font-weight: 700;
     }
 
     /* Admin content */
@@ -61,28 +62,31 @@
     .admin-tabs {
       display: flex;
       gap: 0;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 2px solid var(--border);
       margin-bottom: 24px;
       overflow-x: auto;
     }
 
     .admin-tab {
-      padding: 12px 20px;
+      padding: 12px 22px;
       font-size: 0.85rem;
-      font-weight: 700;
+      font-weight: 800;
       border: none;
       background: transparent;
-      color: var(--muted2);
+      color: #9ca3af;
       cursor: pointer;
-      border-bottom: 2px solid transparent;
+      border-bottom: 3px solid transparent;
       white-space: nowrap;
       transition: all 0.15s;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
     }
 
-    .admin-tab:hover { color: var(--text); }
+    .admin-tab:hover { color: #ffffff; }
     .admin-tab.active {
       color: var(--accent);
       border-bottom-color: var(--accent);
+      background: rgba(255,85,0,0.06);
     }
 
     /* Content panels */
@@ -91,9 +95,10 @@
 
     /* Player cards in admin */
     .player-card {
-      background: rgba(255,255,255,0.03);
+      background: #11131c;
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-left: 3px solid var(--accent);
+      border-radius: 0px;
       padding: 16px;
       margin-bottom: 12px;
       display: flex;
@@ -102,15 +107,16 @@
       transition: border-color 0.2s;
     }
 
-    .player-card:hover { border-color: rgba(255,255,255,0.15); }
+    .player-card:hover { border-color: var(--accent); }
 
     .player-card-avatar {
       width: 48px; height: 48px;
-      border-radius: 12px;
+      border-radius: 0px;
       display: flex; align-items: center; justify-content: center;
       font-size: 24px;
       border: 2px solid;
       flex-shrink: 0;
+      background: #181b28;
     }
 
     .player-card-actions {
@@ -121,17 +127,19 @@
 
     /* Grid cards */
     .grid-card {
-      background: rgba(255,255,255,0.03);
+      background: #11131c;
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-left: 4px solid #475569;
+      border-radius: 0px;
       padding: 16px;
       margin-bottom: 12px;
       transition: border-color 0.2s;
     }
 
     .grid-card.active {
-      border-color: rgba(79,142,247,0.4);
-      background: rgba(79,142,247,0.04);
+      border-left-color: var(--accent);
+      background: #161824;
+      box-shadow: 0 0 20px rgba(255,85,0,0.12);
     }
 
     .grid-card-header {
@@ -141,59 +149,61 @@
       gap: 10px;
     }
 
-    /* Challenge cards in grid editor (style "voir la grille") */
+    /* Challenge cards in grid editor */
     .challenge-card-edit {
-      background: rgba(255,255,255,0.025);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 12px;
-      padding: 12px 14px;
-      margin-bottom: 10px;
+      background: #10121a;
+      border: 1px solid #2e3344;
+      border-left: 3px solid var(--accent);
+      border-radius: 0px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
       transition: all 0.2s;
     }
     .challenge-card-edit:hover {
-      border-color: rgba(79,142,247,0.3);
-      background: rgba(255,255,255,0.045);
+      border-color: var(--accent);
+      background: #151722;
     }
     .ch-card-header {
       display: flex;
-      align-items: center;
+      align-items: flex-end;
       gap: 10px;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
     }
     .ch-badge {
-      font-size: 0.75rem;
-      font-weight: 800;
-      color: var(--accent);
-      background: rgba(79,142,247,0.12);
-      border: 1px solid rgba(79,142,247,0.3);
-      padding: 3px 8px;
-      border-radius: 6px;
-      min-width: 36px;
+      font-size: 0.8rem;
+      font-weight: 900;
+      color: #000000;
+      background: var(--accent);
+      padding: 6px 10px;
+      border-radius: 0px;
+      min-width: 38px;
       text-align: center;
       flex-shrink: 0;
     }
     .ch-card-body {
       display: flex;
-      gap: 10px;
+      gap: 12px;
+      flex-wrap: wrap;
     }
     .ci {
-      width: 100%;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.09);
-      border-radius: 8px;
-      padding: 7px 10px;
-      color: var(--text);
-      font-size: 0.82rem;
+      background: #090a10 !important;
+      border: 1px solid #383e52 !important;
+      border-radius: 0px !important;
+      padding: 9px 12px;
+      color: #ffffff !important;
+      font-size: 0.88rem;
       outline: none;
       font-family: inherit;
+      font-weight: 600;
     }
-    .ci:focus { border-color: var(--accent); background: rgba(79,142,247,0.06); }
-    .ci-icon { width: 46px; text-align: center; font-size: 1.2rem; flex-shrink: 0; }
-    .ci-title { font-weight: 700; font-size: 0.9rem; color: #fff; }
-    .ci-desc { color: var(--text); font-size: 0.82rem; }
-    .ci-constraint { color: var(--muted2); font-size: 0.8rem; }
-    .ci-pts { width: 145px; font-weight: 700; font-size: 0.8rem; flex-shrink: 0; }
-    select.ci option { background: #111827; color: #fff; }
+    .ci:focus { border-color: var(--accent) !important; box-shadow: 0 0 0 1px var(--accent) !important; }
+    .ci-icon { width: 50px; text-align: center; font-size: 1.25rem; flex-shrink: 0; }
+    .ci-title { font-weight: 800; font-size: 0.95rem; color: #ffffff !important; }
+    .ci-desc { color: #ffffff !important; font-size: 0.85rem; }
+    .ci-constraint { color: #ffaa66 !important; font-size: 0.82rem; font-weight: 700; }
+    .ci-pts { width: 165px; font-weight: 800; font-size: 0.82rem; flex-shrink: 0; }
+    select.ci option { background: #0f1016; color: #fff; }
 
     /* Size selector buttons */
     .grid-size-selector {
@@ -203,22 +213,22 @@
     }
     .btn-size-opt {
       flex: 1;
-      padding: 12px 14px;
-      border-radius: 12px;
+      padding: 14px 16px;
+      border-radius: 0px;
       border: 1px solid var(--border);
-      background: rgba(255,255,255,0.03);
+      background: #11131b;
       cursor: pointer;
       text-align: center;
       transition: all 0.2s;
     }
     .btn-size-opt:hover {
-      background: rgba(255,255,255,0.06);
-      border-color: rgba(255,255,255,0.15);
+      background: #171a26;
+      border-color: var(--accent);
     }
     .btn-size-opt.active {
       border-color: var(--accent);
-      background: rgba(79,142,247,0.14);
-      box-shadow: 0 0 16px rgba(79,142,247,0.18);
+      background: rgba(255,85,0,0.18);
+      box-shadow: 0 0 20px rgba(255,85,0,0.25);
     }
 
     /* Notification */
@@ -226,20 +236,20 @@
       position: fixed;
       bottom: 24px;
       right: 24px;
-      background: #111827;
-      border: 1px solid rgba(16,185,129,0.4);
-      color: #34d399;
-      border-radius: 10px;
-      padding: 12px 18px;
-      font-size: 0.85rem;
-      font-weight: 700;
+      background: #0f1118;
+      border: 2px solid var(--accent);
+      color: #ffffff;
+      border-radius: 0px;
+      padding: 14px 20px;
+      font-size: 0.88rem;
+      font-weight: 800;
       z-index: 9999;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
       transform: translateY(100px);
       transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-      box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.8), 0 0 20px rgba(255,85,0,0.3);
     }
 
     .notif.show { transform: translateY(0); }
@@ -1008,25 +1018,36 @@
           <div class="challenge-card-edit" id="ch-card-${i}">
             <div class="ch-card-header">
               <div class="ch-badge">#${i + 1}</div>
-              <input class="ci ci-icon" type="text" data-ci="${i}" data-field="icon" value="${icon}" placeholder="🎯" title="Emoji du défi">
-              <div style="flex:1;">
-                <input class="ci ci-title" type="text" data-ci="${i}" data-field="title" value="${title}" placeholder="Titre du défi (ex: Invincibilité Domicile)" required>
+              <div style="display:flex;flex-direction:column;gap:3px;flex-shrink:0;">
+                <label style="font-size:0.65rem;font-weight:900;color:#ff9955;text-transform:uppercase;">ICÔNE</label>
+                <input class="ci ci-icon" type="text" data-ci="${i}" data-field="icon" value="${icon}" placeholder="🎯" title="Emoji du défi">
               </div>
-              <select class="ci ci-pts" data-ci="${i}" data-field="points">
-                <option value="1" ${pts===1?'selected':''}>⭐ 1 pt (Facile)</option>
-                <option value="2" ${pts===2?'selected':''}>⭐⭐ 2 pts (Moyen)</option>
-                <option value="3" ${pts===3?'selected':''}>⭐⭐⭐ 3 pts (Difficile)</option>
-                <option value="4" ${pts===4?'selected':''}>🔥 4 pts (Hardcore)</option>
-                <option value="5" ${pts===5?'selected':''}>👑 5 pts (Légendaire)</option>
-              </select>
-              <button type="button" class="btn btn-sm" onclick="rerollSingleChallenge(${i})" title="Régénérer ce défi avec l'IA" style="background:rgba(139,92,246,0.15);border-color:rgba(139,92,246,0.3);color:#c084fc;padding:6px 10px;flex-shrink:0;">🎲 IA</button>
+              <div style="flex:2;min-width:180px;">
+                <label style="font-size:0.65rem;font-weight:900;color:#ffffff;text-transform:uppercase;display:block;margin-bottom:3px;">TITRE DU DÉFI *</label>
+                <input class="ci ci-title" type="text" data-ci="${i}" data-field="title" value="${title}" placeholder="Titre (ex: Invincibilité Domicile)" required>
+              </div>
+              <div style="flex:1;min-width:145px;">
+                <label style="font-size:0.65rem;font-weight:900;color:#ffffff;text-transform:uppercase;display:block;margin-bottom:3px;">POINTS</label>
+                <select class="ci ci-pts" data-ci="${i}" data-field="points">
+                  <option value="1" ${pts===1?'selected':''}>⭐ 1 pt (Facile)</option>
+                  <option value="2" ${pts===2?'selected':''}>⭐⭐ 2 pts (Moyen)</option>
+                  <option value="3" ${pts===3?'selected':''}>⭐⭐⭐ 3 pts (Difficile)</option>
+                  <option value="4" ${pts===4?'selected':''}>🔥 4 pts (Hardcore)</option>
+                  <option value="5" ${pts===5?'selected':''}>👑 5 pts (Légendaire)</option>
+                </select>
+              </div>
+              <div style="align-self:flex-end;">
+                <button type="button" class="btn btn-sm" onclick="rerollSingleChallenge(${i})" title="Régénérer ce défi avec l'IA" style="background:#ff5500;border-color:#ff5500;color:#ffffff;padding:8px 12px;font-weight:900;flex-shrink:0;">🎲 IA</button>
+              </div>
             </div>
-            <div class="ch-card-body">
-              <div style="flex:2;">
-                <input class="ci ci-desc" type="text" data-ci="${i}" data-field="description" value="${desc}" placeholder="Description détaillée (ex: 0 défaite à domicile en championnat)" required>
+            <div class="ch-card-body" style="margin-top:8px;">
+              <div style="flex:2;min-width:200px;">
+                <label style="font-size:0.65rem;font-weight:900;color:#e5e7eb;text-transform:uppercase;display:block;margin-bottom:3px;">📝 DESCRIPTION DÉTAILLÉE DU DÉFI *</label>
+                <input class="ci ci-desc" type="text" data-ci="${i}" data-field="description" value="${desc}" placeholder="Ex: 0 défaite à domicile en championnat sur toute la saison" required>
               </div>
-              <div style="flex:1;">
-                <input class="ci ci-constraint" type="text" data-ci="${i}" data-field="constraint" value="${constraint}" placeholder="Contrainte (ex: 1 saison | D2)">
+              <div style="flex:1;min-width:140px;">
+                <label style="font-size:0.65rem;font-weight:900;color:#ffaa66;text-transform:uppercase;display:block;margin-bottom:3px;">⏱ CONTRAINTE / CONDITION</label>
+                <input class="ci ci-constraint" type="text" data-ci="${i}" data-field="constraint" value="${constraint}" placeholder="Ex: 1 saison | D2">
               </div>
             </div>
           </div>

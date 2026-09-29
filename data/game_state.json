@@ -372,7 +372,10 @@
           false
         ]
       },
-      "createdAt": "2026-09-29T21:15:47.784Z"
+      "createdAt": "2026-09-29T21:15:47.784Z",
+      "friends": [
+        "player_1790724686984_25paox"
+      ]
     },
     "player_1790716547802_jbzzbl": {
       "id": "player_1790716547802_jbzzbl",
@@ -421,7 +424,49 @@
           false
         ]
       },
-      "createdAt": "2026-09-29T21:15:47.802Z"
+      "createdAt": "2026-09-29T21:15:47.802Z",
+      "friends": []
+    },
+    "player_1790724686984_25paox": {
+      "id": "player_1790724686984_25paox",
+      "name": "Alex_Streamer",
+      "club": "Olympique Lyonnais",
+      "avatar": "🦁",
+      "color": "orange",
+      "pin": "1234",
+      "friends": [
+        "player_1790716547784_btwelu"
+      ],
+      "grids": {
+        "grid_default_s1": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ]
+      },
+      "createdAt": "2026-09-29T23:31:26.984Z"
     }
   },
   "settings": {
