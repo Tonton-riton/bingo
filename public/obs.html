@@ -2,309 +2,556 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BINGO CARRIÈRE | Overlay OBS</title>
-  <link rel="stylesheet" href="/css/style.css">
+  <title>BINGO | Overlay OBS</title>
   <script src="/socket.io/socket.io.js"></script>
   <script src="/js/audio.js"></script>
   <script src="/js/confetti.js"></script>
   <style>
-    body {
+    /* =====================================================
+       RESET TOTAL - fond chromakey transparent
+       ===================================================== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
       background: transparent !important;
-      background-image: none !important;
+      background-color: transparent !important;
       overflow: hidden;
-      padding: 14px;
-      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      color: #eef2ff;
     }
 
-    /* ---- OBS Controls Panel (visible in browser only) ---- */
-    #obs-controls {
+    /* Wrapper de la page - top-left pour la plupart des modes */
+    #obs-wrapper {
       position: fixed;
-      bottom: 10px;
-      right: 10px;
-      background: rgba(8,12,20,0.9);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 10px;
-      padding: 8px 12px;
-      display: flex;
-      gap: 6px;
-      align-items: center;
-      font-size: 0.72rem;
-      z-index: 9998;
-      flex-wrap: wrap;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      pointer-events: none;
     }
 
-    /* ---- HUD mode ---- */
-    #hud-wrap { display: none; }
-
-    /* ---- Grid mode ---- */
-    #grid-wrap {
+    /* =====================================================
+       MODE HUD - barre de score en haut à gauche
+       ===================================================== */
+    #hud-bar {
       display: none;
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      align-items: center;
+      gap: 12px;
+      background: rgba(8,12,20,0.92);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      padding: 8px 16px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.8);
+      overflow: hidden;
     }
 
-    .obs-grid-header {
-      background: rgba(8,12,20,0.9);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(255,255,255,0.1);
+    #hud-bar::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #4f8ef7, #8b5cf6, #f5a623);
+    }
+
+    .hud-player {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .hud-avatar {
+      width: 32px; height: 32px;
+      border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px;
+      border: 1.5px solid;
+    }
+
+    .hud-score {
+      font-size: 1.5rem;
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+    }
+
+    .hud-vs {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 0 4px;
+    }
+
+    .hud-vs-label {
+      font-size: 0.6rem;
+      font-weight: 900;
+      color: #f5a623;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .hud-progress {
+      width: 55px; height: 4px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 4px;
+      overflow: hidden;
+      display: flex;
+    }
+
+    /* =====================================================
+       MODE GRILLE COMPACTE
+       ===================================================== */
+    #grid-panel {
+      display: none;
+      position: absolute;
+      top: 16px;
+      left: 16px;
+    }
+
+    .grid-panel-header {
+      background: rgba(8,12,20,0.92);
+      border: 1px solid rgba(255,255,255,0.12);
       border-radius: 10px 10px 0 0;
-      padding: 7px 14px;
+      padding: 6px 12px;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 10px;
+      border-bottom: none;
     }
 
-    /* ---- Alert mode ---- */
-    /* Alert is always present, just animates in/out */
+    .obs-mini-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 62px);
+      gap: 3px;
+      background: rgba(8,12,20,0.92);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 0 0 10px 10px;
+      padding: 7px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.8);
+    }
+
+    .obs-tile {
+      height: 54px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 3px;
+      transition: background 0.25s, border-color 0.25s, box-shadow 0.25s;
+    }
+
+    .obs-tile.checked-tile {
+      background: rgba(16,185,129,0.22);
+      border-color: rgba(16,185,129,0.55);
+      box-shadow: 0 0 8px rgba(16,185,129,0.3);
+    }
+
+    .obs-tile.line-tile {
+      border-color: rgba(245,166,35,0.7) !important;
+      box-shadow: 0 0 12px rgba(245,166,35,0.45) !important;
+    }
+
+    /* Player color overrides */
+    .obs-tile.checked-tile.c-blue { background: rgba(79,142,247,0.22); border-color: rgba(79,142,247,0.55); box-shadow: 0 0 8px rgba(79,142,247,0.3); }
+    .obs-tile.checked-tile.c-red { background: rgba(239,68,68,0.22); border-color: rgba(239,68,68,0.55); box-shadow: 0 0 8px rgba(239,68,68,0.3); }
+    .obs-tile.checked-tile.c-purple { background: rgba(139,92,246,0.22); border-color: rgba(139,92,246,0.55); }
+    .obs-tile.checked-tile.c-green { background: rgba(16,185,129,0.22); border-color: rgba(16,185,129,0.55); }
+    .obs-tile.checked-tile.c-gold { background: rgba(245,166,35,0.22); border-color: rgba(245,166,35,0.55); }
+    .obs-tile.checked-tile.c-pink { background: rgba(236,72,153,0.22); border-color: rgba(236,72,153,0.55); }
+    .obs-tile.checked-tile.c-cyan { background: rgba(6,182,212,0.22); border-color: rgba(6,182,212,0.55); }
+    .obs-tile.checked-tile.c-orange { background: rgba(249,115,22,0.22); border-color: rgba(249,115,22,0.55); }
+
+    .obs-tile-emoji { font-size: 17px; line-height: 1; }
+    .obs-tile-pts { font-size: 7px; font-weight: 900; color: #f5a623; margin-top: 2px; }
+
+    /* =====================================================
+       ALERTE STREAM — FIX COMPLET
+       Utiliser top au lieu de translateY pour éviter
+       les conflits avec translateX(-50%)
+       ===================================================== */
     #obs-alert {
-      /* Start off-screen above */
+      /* Centré horizontalement avec margin auto */
       position: fixed;
-      top: 16px;
-      left: 50%;
-      transform: translateX(-50%) translateY(-240px);
-      transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-      z-index: 9999;
+      top: -300px;           /* Caché au-dessus - AUCUN transform Y */
+      left: 0;
+      right: 0;
+      margin: 0 auto;
+      width: fit-content;
       min-width: 340px;
-      max-width: 500px;
-      background: rgba(8,12,20,0.97);
-      backdrop-filter: blur(24px);
-      border: 2px solid rgba(245,166,35,0.6);
+      max-width: 520px;
+
+      background: rgba(6,10,20,0.97);
+      border: 2px solid rgba(245,166,35,0.7);
       border-radius: 16px;
-      padding: 16px 22px;
+      padding: 18px 24px 22px;
       display: flex;
       align-items: center;
       gap: 16px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.95), 0 0 40px rgba(245,166,35,0.18);
+      box-shadow:
+        0 24px 80px rgba(0,0,0,0.95),
+        0 0 0 1px rgba(255,255,255,0.04),
+        0 0 50px rgba(245,166,35,0.15);
       pointer-events: none;
-      will-change: transform;
+      z-index: 9999;
+      overflow: hidden;
+
+      /* Transition uniquement sur top */
+      transition: top 0.5s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    #obs-alert.alert-visible {
-      transform: translateX(-50%) translateY(0);
+    /* État visible : descend à 16px du haut */
+    #obs-alert.show {
+      top: 16px;
     }
 
-    /* The shrinking progress bar at bottom of alert */
-    #obs-alert-bar {
+    /* Accent color top border */
+    #obs-alert::before {
+      content: '';
       position: absolute;
-      bottom: 0; left: 0;
+      top: 0; left: 0; right: 0;
       height: 3px;
-      background: var(--gold);
+      background: linear-gradient(90deg, #f5a623, #ef4444, #8b5cf6);
+    }
+
+    #obs-alert-icon {
+      font-size: 40px;
+      line-height: 1;
+      flex-shrink: 0;
+      filter: drop-shadow(0 0 12px rgba(255,255,255,0.3));
+    }
+
+    #obs-alert-content { flex: 1; }
+
+    #obs-alert-tag {
+      font-size: 0.68rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #f5a623;
+      margin-bottom: 4px;
+    }
+
+    #obs-alert-title {
+      font-size: 1.1rem;
+      font-weight: 900;
+      color: #ffffff;
+      line-height: 1.2;
+    }
+
+    #obs-alert-sub {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      margin-top: 4px;
+      font-weight: 600;
+    }
+
+    /* Barre de progression — SÉPARÉE du transform de l'alerte */
+    #obs-alert-progress {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #f5a623, #ef4444);
       border-radius: 0 0 16px 16px;
-      width: 100%;
-      transform-origin: left;
+      /* La largeur est animée via JS (setInterval) pour éviter les conflits CSS */
     }
 
-    @keyframes alertBarShrink {
-      from { transform: scaleX(1); }
-      to { transform: scaleX(0); }
+    /* =====================================================
+       PANEL DE CONTRÔLE (visible dans le navigateur seulement)
+       ===================================================== */
+    #obs-controls-panel {
+      position: fixed;
+      bottom: 12px;
+      right: 12px;
+      background: rgba(8,12,20,0.95);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 0.75rem;
+      z-index: 9998;
     }
 
-    #obs-alert-bar.running {
-      animation: alertBarShrink 5s linear forwards;
+    #obs-controls-panel .ctrl-title {
+      font-size: 0.7rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #64748b;
+      margin-bottom: 2px;
     }
 
-    #obs-alert-icon { font-size: 38px; flex-shrink: 0; }
-    #obs-alert-label { font-size: 0.72rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: var(--gold); margin-bottom: 3px; }
-    #obs-alert-title { font-size: 1.1rem; font-weight: 900; color: #fff; }
-    #obs-alert-sub { font-size: 0.82rem; color: var(--muted2); margin-top: 3px; }
+    #obs-controls-panel .ctrl-row {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    .ctrl-btn {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #e2e8f0;
+      padding: 4px 9px;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      transition: background 0.15s;
+    }
+
+    .ctrl-btn:hover {
+      background: rgba(255,255,255,0.15);
+    }
+
+    .ctrl-btn.active-mode {
+      background: #4f8ef7;
+      border-color: #4f8ef7;
+      color: white;
+    }
   </style>
 </head>
-<body class="obs">
+<body>
 
-  <!-- ALWAYS-PRESENT ALERT (animates in/out) -->
-  <div id="obs-alert">
-    <div id="obs-alert-icon">🎯</div>
-    <div>
-      <div id="obs-alert-label">⚡ DÉFI VALIDÉ !</div>
-      <div id="obs-alert-title">Titre du défi</div>
-      <div id="obs-alert-sub">+2 pts • Joueur</div>
-    </div>
-    <div id="obs-alert-bar"></div>
+<div id="obs-wrapper">
+  <!-- HUD MODE -->
+  <div id="hud-bar">
+    <div id="hud-players-wrap" style="display:flex;align-items:center;gap:10px;"></div>
   </div>
 
-  <!-- HUD SCOREBOARD MODE -->
-  <div id="hud-wrap">
-    <div class="obs-hud" id="obs-hud">
-      <div id="hud-players" style="display:flex;align-items:center;gap:10px;"></div>
-    </div>
-  </div>
-
-  <!-- COMPACT GRID MODE -->
-  <div id="grid-wrap">
-    <div class="obs-grid-header">
+  <!-- GRID MODE -->
+  <div id="grid-panel">
+    <div class="grid-panel-header">
       <div style="display:flex;align-items:center;gap:8px;">
-        <span id="gw-avatar" style="font-size:18px;">⚽</span>
-        <strong id="gw-name" style="font-size:0.85rem;">Joueur</strong>
-        <span id="gw-club" class="text-xs text-muted"></span>
+        <span id="gp-avatar" style="font-size:18px;">⚽</span>
+        <strong id="gp-name" style="font-size:0.85rem;">Joueur</strong>
+        <span id="gp-club" style="font-size:0.7rem;color:#64748b;"></span>
       </div>
-      <div style="font-size:0.9rem;font-weight:900;" id="gw-score" style="color:var(--accent);">0 PTS</div>
+      <span id="gp-score" style="font-size:0.95rem;font-weight:900;color:#f5a623;">0 PTS</span>
     </div>
-    <div class="obs-mini-grid" id="obs-mini-grid" style="border-top:none;border-radius:0 0 12px 12px;"></div>
+    <div class="obs-mini-grid" id="obs-grid"></div>
   </div>
+</div>
 
-  <!-- OBS Controls (only visible in browser preview) -->
-  <div id="obs-controls">
-    <span class="text-muted">Mode OBS :</span>
-    <a class="btn btn-sm" href="?mode=hud">📊 Scoreboard</a>
-    <a class="btn btn-sm" href="?mode=grid&p=0">🔲 Grille J1</a>
-    <a class="btn btn-sm" href="?mode=grid&p=1">🔲 Grille J2</a>
-    <a class="btn btn-sm" href="?mode=alerts">🔔 Alertes</a>
-    <a class="btn btn-sm" href="?nocontrols=1&mode=hud">Masquer</a>
+<!-- ALERTE STREAM - TOUJOURS PRÉSENTE, ANIMÉE PAR JS -->
+<div id="obs-alert">
+  <div id="obs-alert-icon">🎯</div>
+  <div id="obs-alert-content">
+    <div id="obs-alert-tag">⚡ DÉFI VALIDÉ !</div>
+    <div id="obs-alert-title">Titre du défi</div>
+    <div id="obs-alert-sub">+2 pts • Joueur</div>
   </div>
+  <div id="obs-alert-progress" style="width:100%;"></div>
+</div>
 
-  <script>
-    const socket = io();
-    const params = new URLSearchParams(window.location.search);
-    const mode = params.get('mode') || 'hud';
-    const targetPlayerIdx = parseInt(params.get('p') || '0');
-    const nocontrols = params.has('nocontrols');
-    if (nocontrols) document.getElementById('obs-controls').style.display = 'none';
+<!-- CONTRÔLES (panel navigateur) -->
+<div id="obs-controls-panel">
+  <div class="ctrl-title">🎥 Overlay OBS — Choisir le mode :</div>
+  <div class="ctrl-row">
+    <a class="ctrl-btn" href="?mode=hud">📊 Scoreboard</a>
+    <a class="ctrl-btn" href="?mode=grid&p=0">🔲 Grille J1</a>
+    <a class="ctrl-btn" href="?mode=grid&p=1">🔲 Grille J2</a>
+    <a class="ctrl-btn" href="?mode=alerts">🔔 Alertes seules</a>
+  </div>
+  <div class="ctrl-row">
+    <a class="ctrl-btn" href="?mode=hud&nocontrols=1">Masquer contrôles</a>
+  </div>
+  <div style="color:#475569;font-size:0.65rem;margin-top:4px;">
+    Dans OBS : Source Navigateur → Cocher "Chroma Key" ou fond transparent
+  </div>
+</div>
 
-    const COLOR_MAP = {
-      blue:'#4f8ef7',red:'#ef4444',purple:'#8b5cf6',green:'#10b981',
-      gold:'#f5a623',pink:'#ec4899',cyan:'#06b6d4',orange:'#f97316'
-    };
+<script>
+  const socket = io();
+  const params = new URLSearchParams(window.location.search);
+  const mode = params.get('mode') || 'alerts'; // hud | grid | alerts
+  const targetIdx = parseInt(params.get('p') || '0');
+  const noControls = params.has('nocontrols');
 
-    // Show the right container
-    if (mode === 'hud') document.getElementById('hud-wrap').style.display = 'block';
-    else if (mode === 'grid') document.getElementById('grid-wrap').style.display = 'block';
-    // 'alerts' mode: only the alert element is shown (always present)
+  if (noControls) document.getElementById('obs-controls-panel').style.display = 'none';
 
-    let state = null;
-    let alertTimeout = null;
-    let alertBarTimeout = null;
-    let isAlertVisible = false;
+  const COLOR_MAP = {
+    blue:'#4f8ef7', red:'#ef4444', purple:'#8b5cf6', green:'#10b981',
+    gold:'#f5a623', pink:'#ec4899', cyan:'#06b6d4', orange:'#f97316'
+  };
 
-    socket.on('stateUpdate', (data) => {
-      state = data;
-      if (mode === 'hud') renderHud(data);
-      else if (mode === 'grid') renderGrid(data);
-    });
+  // Show right container
+  if (mode === 'hud') {
+    document.getElementById('hud-bar').style.display = 'flex';
+    document.querySelector('[href="?mode=hud"]').classList.add('active-mode');
+  } else if (mode === 'grid') {
+    document.getElementById('grid-panel').style.display = 'block';
+  } else {
+    document.querySelector('[href="?mode=alerts"]').classList.add('active-mode');
+  }
 
-    socket.on('tileToggled', (ev) => {
-      if (!ev.checked) return;
-      // Sound
-      if (ev.newGrandChelem) window.soundFx?.playGrandChelem();
-      else if (ev.newLineAchieved) window.soundFx?.playBingo();
-      else window.soundFx?.playCheck();
+  let gameState = null;
 
-      // Confetti only for big events
-      if (ev.newGrandChelem) window.launchConfetti?.({ count: 200 });
-      else if (ev.newLineAchieved) window.launchConfetti?.({ count: 100 });
+  socket.on('stateUpdate', (data) => {
+    gameState = data;
+    if (mode === 'hud') renderHud(data);
+    else if (mode === 'grid') renderGrid(data);
+  });
 
-      triggerAlert(ev.playerName, ev.challenge, ev.newLineAchieved, ev.newGrandChelem);
-    });
-
-    // ==== HUD ====
-    function renderHud(data) {
-      const { players, stats } = data;
-      const ids = Object.keys(players || {});
-      const sorted = ids.map(id => ({ id, p: players[id], s: stats?.[id] }))
-        .sort((a,b) => (b.s?.totalPoints||0) - (a.s?.totalPoints||0));
-      const total = sorted.reduce((acc, x) => acc + (x.s?.totalPoints||0), 0) || 1;
-
-      const hud = document.getElementById('hud-players');
-      let html = '';
-      sorted.forEach((item, idx) => {
-        const { p, s } = item;
-        const c = COLOR_MAP[p.color] || '#4f8ef7';
-        const pct = Math.round(((s?.totalPoints||0)/total)*100);
-        if (idx > 0) {
-          html += `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:0 4px;">
-            <span style="font-size:0.65rem;font-weight:900;color:var(--gold);">VS</span>
-            <div style="width:50px;height:4px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;display:flex;">
-              <div style="height:100%;background:${COLOR_MAP[sorted[0].p.color]||'#4f8ef7'};width:${Math.round((sorted[0].s?.totalPoints||0)/total*100)}%;"></div>
-              <div style="height:100%;background:${c};width:${100-Math.round((sorted[0].s?.totalPoints||0)/total*100)}%;"></div>
-            </div>
-          </div>`;
-        }
-        html += `<div class="obs-player">
-          <div class="obs-avatar" style="border-color:${c};background:${c}18;">${p.avatar}</div>
-          <div style="margin-right:8px;">
-            <div style="font-size:0.78rem;font-weight:800;color:${c};">${p.name}</div>
-            <div style="font-size:0.62rem;color:var(--muted);">${s?.tilesCompleted||0}/25 · ${s?.completedLines?.length||0} lig.</div>
-          </div>
-          <div class="obs-score" style="color:${c};">${s?.totalPoints||0}</div>
-          <div style="font-size:0.6rem;color:var(--muted);margin-left:2px;align-self:flex-end;margin-bottom:3px;">pts</div>
-        </div>`;
-      });
-      hud.innerHTML = html;
+  socket.on('tileToggled', (ev) => {
+    if (!ev.checked) return;
+    if (ev.newGrandChelem) {
+      window.soundFx?.playGrandChelem();
+      window.launchConfetti?.({ count: 200 });
+    } else if (ev.newLineAchieved) {
+      window.soundFx?.playBingo();
+      window.launchConfetti?.({ count: 100 });
+    } else {
+      window.soundFx?.playCheck();
     }
+    triggerAlert(ev.playerName, ev.challenge, ev.newLineAchieved, ev.newGrandChelem);
+  });
 
-    // ==== COMPACT GRID ====
-    function renderGrid(data) {
-      const ids = Object.keys(data.players || {});
-      const pid = ids[targetPlayerIdx] || ids[0];
-      if (!pid) return;
+  /* ======== HUD SCOREBOARD ======== */
+  function renderHud(data) {
+    const { players, stats } = data;
+    const ids = Object.keys(players || {});
+    const sorted = ids.map(id => ({ id, p: players[id], s: stats?.[id] }))
+      .sort((a, b) => (b.s?.totalPoints || 0) - (a.s?.totalPoints || 0));
 
-      const p = data.players[pid];
-      const s = data.stats?.[pid];
+    const total = sorted.reduce((acc, x) => acc + (x.s?.totalPoints || 0), 0) || 1;
+    const wrap = document.getElementById('hud-players-wrap');
+
+    let html = '';
+    sorted.forEach((item, idx) => {
+      const { p, s } = item;
       const c = COLOR_MAP[p.color] || '#4f8ef7';
-      const checked = p.grids?.[data.activeGrid] || Array(25).fill(false);
-      const challenges = data.grids?.find(g => g.id === data.activeGrid)?.challenges || data.challenges || [];
+      const pct = Math.round(((s?.totalPoints || 0) / total) * 100);
 
-      document.getElementById('gw-avatar').textContent = p.avatar;
-      document.getElementById('gw-name').textContent = p.name;
-      document.getElementById('gw-club').textContent = p.club;
-      document.getElementById('gw-score').textContent = `${s?.totalPoints||0} PTS`;
-      document.getElementById('gw-score').style.color = c;
-
-      const lineIndices = new Set();
-      (s?.completedLines || []).forEach(l => {
-        if (l.type==='row') for(let col=0;col<5;col++) lineIndices.add(l.index*5+col);
-        if (l.type==='col') for(let row=0;row<5;row++) lineIndices.add(row*5+l.index);
-        if (l.type==='diag'&&l.index===0) [0,6,12,18,24].forEach(i=>lineIndices.add(i));
-        if (l.type==='diag'&&l.index===1) [4,8,12,16,20].forEach(i=>lineIndices.add(i));
-      });
-
-      document.getElementById('obs-mini-grid').innerHTML = challenges.slice(0,25).map((ch, idx) => {
-        const isChecked = !!checked[idx];
-        const isLine = lineIndices.has(idx);
-        return `<div class="obs-tile ${isChecked?'checked':''}${isChecked?' c-'+p.color:''} ${isLine?'in-line':''}">
-          <div class="obs-tile-emoji">${ch.icon||'🎯'}</div>
-          <div class="obs-tile-pts">+${ch.points}</div>
+      if (idx > 0) {
+        html += `<div class="hud-vs">
+          <span class="hud-vs-label">VS</span>
+          <div class="hud-progress">
+            <div style="height:100%;width:${Math.round((sorted[0].s?.totalPoints||0)/total*100)}%;background:${COLOR_MAP[sorted[0].p.color]||'#4f8ef7'};"></div>
+            <div style="height:100%;width:${100-Math.round((sorted[0].s?.totalPoints||0)/total*100)}%;background:${c};"></div>
+          </div>
         </div>`;
-      }).join('');
-    }
-
-    // ==== STREAM ALERT (FIXED) ====
-    function triggerAlert(playerName, challenge, isLine, isGrandChelem) {
-      const alert = document.getElementById('obs-alert');
-      const bar = document.getElementById('obs-alert-bar');
-      const DISPLAY_DURATION = 5000; // 5 seconds
-
-      // Update content BEFORE animating in
-      document.getElementById('obs-alert-icon').textContent = isGrandChelem ? '🏆' : isLine ? '⭐' : (challenge?.icon || '🎯');
-      document.getElementById('obs-alert-label').textContent = isGrandChelem ? '👑 GRAND CHELEM !' : isLine ? '⭐ BINGO ! LIGNE COMPLÉTÉE' : '⚡ DÉFI CARRIÈRE VALIDÉ !';
-      document.getElementById('obs-alert-title').textContent = challenge?.title || '?';
-      document.getElementById('obs-alert-sub').textContent = `+${challenge?.points||0} pts · ${playerName}${isLine ? ' + Bonus Ligne (+5 pts)' : ''}`;
-
-      // Reset bar animation cleanly
-      bar.classList.remove('running');
-      bar.style.animation = 'none';
-      bar.offsetHeight; // force reflow to restart animation
-
-      // If alert already visible, just reset its timer
-      if (isAlertVisible) {
-        clearTimeout(alertTimeout);
-      } else {
-        // Animate in
-        isAlertVisible = true;
-        alert.classList.add('alert-visible');
       }
 
-      // Start bar animation
-      bar.style.animation = '';
-      bar.classList.add('running');
-      bar.style.animationDuration = DISPLAY_DURATION + 'ms';
+      html += `<div class="hud-player">
+        <div class="hud-avatar" style="border-color:${c};background:${c}18;">${p.avatar}</div>
+        <div style="margin-right:6px;">
+          <div style="font-size:0.75rem;font-weight:800;color:${c};">${p.name}</div>
+          <div style="font-size:0.6rem;color:#64748b;">${s?.tilesCompleted||0}/25 · ${s?.completedLines?.length||0} lig.</div>
+        </div>
+        <div class="hud-score" style="color:${c};">${s?.totalPoints||0}</div>
+        <div style="font-size:0.55rem;color:#64748b;align-self:flex-end;margin-bottom:3px;margin-left:2px;">pts</div>
+      </div>`;
+    });
 
-      // Schedule hide
-      clearTimeout(alertTimeout);
-      alertTimeout = setTimeout(() => {
-        alert.classList.remove('alert-visible');
-        bar.classList.remove('running');
-        isAlertVisible = false;
-      }, DISPLAY_DURATION);
+    wrap.innerHTML = html;
+  }
+
+  /* ======== COMPACT GRID ======== */
+  function renderGrid(data) {
+    const ids = Object.keys(data.players || {});
+    const pid = ids[targetIdx] || ids[0];
+    if (!pid) return;
+
+    const p = data.players[pid];
+    const s = data.stats?.[pid];
+    const c = COLOR_MAP[p.color] || '#4f8ef7';
+    const challenges = data.grids?.find(g => g.id === data.activeGrid)?.challenges || [];
+    const checked = p.grids?.[data.activeGrid] || Array(25).fill(false);
+
+    document.getElementById('gp-avatar').textContent = p.avatar;
+    document.getElementById('gp-name').textContent = p.name;
+    document.getElementById('gp-name').style.color = c;
+    document.getElementById('gp-club').textContent = p.club;
+    document.getElementById('gp-score').textContent = `${s?.totalPoints||0} PTS`;
+    document.getElementById('gp-score').style.color = c;
+
+    const lineIndices = new Set();
+    (s?.completedLines || []).forEach(l => {
+      if (l.type === 'row') for (let col = 0; col < 5; col++) lineIndices.add(l.index * 5 + col);
+      if (l.type === 'col') for (let row = 0; row < 5; row++) lineIndices.add(row * 5 + l.index);
+      if (l.type === 'diag' && l.index === 0) [0,6,12,18,24].forEach(i => lineIndices.add(i));
+      if (l.type === 'diag' && l.index === 1) [4,8,12,16,20].forEach(i => lineIndices.add(i));
+    });
+
+    document.getElementById('obs-grid').innerHTML = challenges.slice(0, 25).map((ch, idx) => {
+      const isChecked = !!checked[idx];
+      const isLine = lineIndices.has(idx);
+      return `<div class="obs-tile ${isChecked ? 'checked-tile c-' + p.color : ''} ${isLine ? 'line-tile' : ''}">
+        <div class="obs-tile-emoji">${ch.icon || '🎯'}</div>
+        <div class="obs-tile-pts">+${ch.points}</div>
+      </div>`;
+    }).join('');
+  }
+
+  /* ======== ALERTE STREAM — VERSION FINALE SANS BUG ======== */
+
+  let alertVisible = false;
+  let alertHideTimer = null;
+  let progressTimer = null;
+  let progressStart = null;
+  const ALERT_DURATION = 5000; // ms
+
+  const alertEl    = document.getElementById('obs-alert');
+  const progressEl = document.getElementById('obs-alert-progress');
+
+  function triggerAlert(playerName, challenge, isLine, isGrandChelem) {
+    // 1. Mettre à jour le contenu
+    document.getElementById('obs-alert-icon').textContent =
+      isGrandChelem ? '🏆' : isLine ? '⭐' : (challenge?.icon || '🎯');
+
+    document.getElementById('obs-alert-tag').textContent =
+      isGrandChelem ? '👑 GRAND CHELEM !' :
+      isLine         ? '⭐ BINGO ! LIGNE COMPLÉTÉE' :
+                       '⚡ DÉFI CARRIÈRE VALIDÉ !';
+
+    document.getElementById('obs-alert-title').textContent = challenge?.title || '?';
+
+    document.getElementById('obs-alert-sub').textContent =
+      `+${challenge?.points || 0} pts · ${playerName}` +
+      (isLine ? ' · +5 pts bonus ligne' : '') +
+      (isGrandChelem ? ' · +10 pts Grand Chelem' : '');
+
+    // 2. Réinitialiser la barre de progression
+    clearInterval(progressTimer);
+    clearTimeout(alertHideTimer);
+    progressEl.style.transition = 'none';
+    progressEl.style.width = '100%';
+
+    // 3. Montrer l'alerte (top: 16px)
+    if (!alertVisible) {
+      alertVisible = true;
+      alertEl.classList.add('show');
     }
-  </script>
+
+    // 4. Animer la barre de progression via JS (setInterval, pas d'animation CSS)
+    progressStart = Date.now();
+    progressTimer = setInterval(() => {
+      const elapsed = Date.now() - progressStart;
+      const pct = Math.max(0, 100 - (elapsed / ALERT_DURATION) * 100);
+      progressEl.style.width = pct + '%';
+      if (pct <= 0) {
+        clearInterval(progressTimer);
+      }
+    }, 16);
+
+    // 5. Cacher après ALERT_DURATION
+    alertHideTimer = setTimeout(() => {
+      alertEl.classList.remove('show');
+      alertVisible = false;
+      clearInterval(progressTimer);
+    }, ALERT_DURATION);
+  }
+</script>
 </body>
 </html>

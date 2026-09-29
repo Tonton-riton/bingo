@@ -91,7 +91,8 @@ function emptyState() {
     players: {},
     settings: {
       lineBonus: 5,
-      grandChelemBonus: 10
+      grandChelemBonus: 10,
+      adminPassword: 'admin1234'
     },
     history: []
   };
@@ -106,7 +107,8 @@ function loadState() {
     // Migrate older format if needed (no grids key)
     if (!raw.grids)   raw.grids   = {};
     if (!raw.players) raw.players = {};
-    if (!raw.settings) raw.settings = { lineBonus: 5, grandChelemBonus: 10 };
+    if (!raw.settings) raw.settings = { lineBonus: 5, grandChelemBonus: 10, adminPassword: 'admin1234' };
+    if (!raw.settings.adminPassword) raw.settings.adminPassword = 'admin1234';
     if (!raw.history)  raw.history  = [];
     if (!('activeGridId' in raw)) raw.activeGridId = null;
     // Ensure each player has a grids sub-object
@@ -562,16 +564,45 @@ app.post('/api/reset', (req, res) => {
   res.json({ success: true, state });
 });
 
+// ─── REST: Admin Login ────────────────────────────────────────────────────────
+
+app.post('/api/admin/login', (req, res) => {
+  const { password } = req.body;
+  if (!password) return res.status(400).json({ success: false, message: 'Mot de passe requis.' });
+  const correct = gameState.settings.adminPassword || 'admin1234';
+  if (password !== correct) return res.status(401).json({ success: false, message: 'Mot de passe incorrect.' });
+  // Return a simple token (the password itself hashed as base64 - good enough for a local game)
+  const token = Buffer.from(password).toString('base64');
+  res.json({ success: true, token });
+});
+
+app.post('/api/admin/verify', (req, res) => {
+  const { token } = req.body;
+  if (!token) return res.status(401).json({ success: false });
+  const decoded = Buffer.from(token, 'base64').toString('utf8');
+  const correct = gameState.settings.adminPassword || 'admin1234';
+  res.json({ success: decoded === correct });
+});
+
 // ─── REST: Settings ───────────────────────────────────────────────────────────
 
 app.post('/api/settings', (req, res) => {
-  const { lineBonus, grandChelemBonus } = req.body;
-  if (typeof lineBonus       === 'number') gameState.settings.lineBonus       = lineBonus;
-  if (typeof grandChelemBonus === 'number') gameState.settings.grandChelemBonus = grandChelemBonus;
+  const { lineBonus, grandChelemBonus, adminPassword, token } = req.body;
+  // Require admin token for settings change
+  if (token) {
+    const decoded = Buffer.from(token, 'base64').toString('utf8');
+    const correct = gameState.settings.adminPassword || 'admin1234';
+    if (decoded !== correct) return res.status(401).json({ success: false, message: 'Non autorisé.' });
+  }
+  if (typeof lineBonus        === 'number') gameState.settings.lineBonus        = lineBonus;
+  if (typeof grandChelemBonus === 'number') gameState.settings.grandChelemBonus  = grandChelemBonus;
+  if (typeof adminPassword    === 'string' && adminPassword.length >= 4) {
+    gameState.settings.adminPassword = adminPassword;
+  }
   saveState();
   const state = getComputedState();
   io.emit('stateUpdate', state);
-  res.json({ success: true, settings: gameState.settings });
+  res.json({ success: true, settings: { lineBonus: gameState.settings.lineBonus, grandChelemBonus: gameState.settings.grandChelemBonus } });
 });
 
 // ─── REST: Raw challenges (convenience) ───────────────────────────────────────

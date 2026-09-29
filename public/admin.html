@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BINGO CARRIÈRE | Admin</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/socket.io/socket.io.js"></script>
+  <style>
+    /* Login screen */
+    #login-screen {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      background-image:
+        radial-gradient(ellipse 80% 60% at 10% 5%, rgba(79,142,247,0.1) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 90% 90%, rgba(139,92,246,0.08) 0%, transparent 60%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    .login-card {
+      background: #111827;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px;
+      padding: 40px 36px;
+      max-width: 380px;
+      width: 100%;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.8);
+      text-align: center;
+    }
+
+    .login-logo {
+      width: 60px; height: 60px;
+      background: linear-gradient(135deg, #4f8ef7, #8b5cf6);
+      border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px;
+      margin: 0 auto 20px;
+      box-shadow: 0 0 30px rgba(79,142,247,0.4);
+    }
+
+    #login-error {
+      background: rgba(239,68,68,0.12);
+      border: 1px solid rgba(239,68,68,0.3);
+      color: #f87171;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.83rem;
+      margin-top: 10px;
+      display: none;
+    }
+
+    /* Admin content */
+    #admin-content { display: none; }
+
+    /* Tab nav */
+    .admin-tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 24px;
+      overflow-x: auto;
+    }
+
+    .admin-tab {
+      padding: 12px 20px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      border: none;
+      background: transparent;
+      color: var(--muted2);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+      transition: all 0.15s;
+    }
+
+    .admin-tab:hover { color: var(--text); }
+    .admin-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    /* Content panels */
+    .admin-panel { display: none; }
+    .admin-panel.active { display: block; }
+
+    /* Player cards in admin */
+    .player-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: border-color 0.2s;
+    }
+
+    .player-card:hover { border-color: rgba(255,255,255,0.15); }
+
+    .player-card-avatar {
+      width: 48px; height: 48px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px;
+      border: 2px solid;
+      flex-shrink: 0;
+    }
+
+    .player-card-actions {
+      margin-left: auto;
+      display: flex;
+      gap: 6px;
+    }
+
+    /* Grid cards */
+    .grid-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      transition: border-color 0.2s;
+    }
+
+    .grid-card.active {
+      border-color: rgba(79,142,247,0.4);
+      background: rgba(79,142,247,0.04);
+    }
+
+    .grid-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    /* Challenge inputs in grid editor */
+    .challenge-row {
+      display: grid;
+      grid-template-columns: 32px 36px 1fr 50px 1fr;
+      gap: 5px;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    .challenge-row .ci-num {
+      font-size: 0.65rem;
+      color: var(--muted);
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .ci {
+      width: 100%;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 7px;
+      padding: 5px 8px;
+      color: var(--text);
+      font-size: 0.78rem;
+      outline: none;
+      font-family: inherit;
+    }
+
+    .ci:focus { border-color: var(--accent); }
+
+    /* Notification */
+    .notif {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #111827;
+      border: 1px solid rgba(16,185,129,0.4);
+      color: #34d399;
+      border-radius: 10px;
+      padding: 12px 18px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transform: translateY(100px);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+    }
+
+    .notif.show { transform: translateY(0); }
+  </style>
+</head>
+<body>
+
+  <!-- ============================
+       ÉCRAN DE CONNEXION
+       ============================ -->
+  <div id="login-screen">
+    <div class="login-card">
+      <div class="login-logo">🔐</div>
+      <h1 style="font-size:1.4rem;font-weight:900;margin-bottom:6px;">Panneau Admin</h1>
+      <p style="font-size:0.85rem;color:var(--muted2);margin-bottom:24px;">Bingo Carrière Manager</p>
+      <form onsubmit="submitLogin(event)">
+        <div class="form-group" style="text-align:left;">
+          <label class="form-label">Mot de passe administrateur</label>
+          <input type="password" class="form-input" id="login-pw" placeholder="••••••••" autofocus required>
+          <div id="login-error">❌ Mot de passe incorrect</div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full" style="margin-top:8px;padding:12px;">
+          🔓 Se connecter
+        </button>
+      </form>
+      <p style="font-size:0.75rem;color:var(--muted);margin-top:16px;">
+        Mot de passe par défaut : <code style="background:rgba(255,255,255,0.08);padding:2px 6px;border-radius:4px;">admin1234</code>
+      </p>
+    </div>
+  </div>
+
+  <!-- ============================
+       INTERFACE ADMIN
+       ============================ -->
+  <div id="admin-content">
+    <header class="app-header">
+      <a href="/" class="logo-link">
+        <div class="logo-icon-wrap">🔐</div>
+        <div class="logo-text">
+          <div class="t1">PANNEAU ADMIN</div>
+          <div class="t2">Bingo Carrière Manager</div>
+        </div>
+      </a>
+      <div class="header-nav">
+        <a href="/" class="btn">🏠 Accueil</a>
+        <a href="/spectator.html" target="_blank" class="btn">📺 Spectateur</a>
+        <button class="btn btn-danger" onclick="logout()">🚪 Déconnexion</button>
+      </div>
+    </header>
+
+    <main class="container" style="max-width:1000px;">
+
+      <!-- TABS -->
+      <div class="admin-tabs">
+        <button class="admin-tab active" onclick="showPanel('p-players', this)">👥 Joueurs</button>
+        <button class="admin-tab" onclick="showPanel('p-grids', this)">📋 Grilles Bingo</button>
+        <button class="admin-tab" onclick="showPanel('p-new-player', this)">➕ Ajouter Joueur</button>
+        <button class="admin-tab" onclick="showPanel('p-new-grid', this)">🆕 Créer Grille</button>
+        <button class="admin-tab" onclick="showPanel('p-settings', this)">⚙️ Paramètres</button>
+      </div>
+
+      <!-- ============================
+           PANEL : LISTE JOUEURS
+           ============================ -->
+      <div class="admin-panel active" id="p-players">
+        <div class="flex-between mb-4">
+          <div class="section-title">👥 Joueurs enregistrés</div>
+          <button class="btn btn-danger btn-sm" onclick="confirmResetAll()">🔄 Reset toutes les coches</button>
+        </div>
+        <div id="players-list">
+          <div class="text-muted text-sm">Chargement…</div>
+        </div>
+      </div>
+
+      <!-- ============================
+           PANEL : LISTE GRILLES
+           ============================ -->
+      <div class="admin-panel" id="p-grids">
+        <div class="section-title mb-4">📋 Grilles Bingo disponibles</div>
+        <div id="grids-list">
+          <div class="text-muted text-sm">Chargement…</div>
+        </div>
+      </div>
+
+      <!-- ============================
+           PANEL : AJOUTER JOUEUR
+           ============================ -->
+      <div class="admin-panel" id="p-new-player">
+        <div class="card" style="padding:24px;max-width:600px;">
+          <div class="section-title mb-4">➕ Ajouter un nouveau joueur</div>
+          <form onsubmit="addPlayer(event)" id="form-add-player">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Pseudo / Nom *</label>
+                <input type="text" class="form-input" id="np-name" required maxlength="25" placeholder="ex: Tonton-riton">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Nom du Club *</label>
+                <input type="text" class="form-input" id="np-club" required maxlength="30" placeholder="ex: AS Monaco">
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Avatar (emoji)</label>
+              <div class="emoji-row" id="np-emoji-row">
+                <span class="emoji-opt selected" data-v="⚽">⚽</span>
+                <span class="emoji-opt" data-v="🔥">🔥</span>
+                <span class="emoji-opt" data-v="⚡">⚡</span>
+                <span class="emoji-opt" data-v="👑">👑</span>
+                <span class="emoji-opt" data-v="🦁">🦁</span>
+                <span class="emoji-opt" data-v="🚀">🚀</span>
+                <span class="emoji-opt" data-v="🐺">🐺</span>
+                <span class="emoji-opt" data-v="🎯">🎯</span>
+                <span class="emoji-opt" data-v="🏆">🏆</span>
+                <span class="emoji-opt" data-v="⚔️">⚔️</span>
+                <span class="emoji-opt" data-v="💎">💎</span>
+                <span class="emoji-opt" data-v="🌟">🌟</span>
+                <span class="emoji-opt" data-v="🦅">🦅</span>
+                <span class="emoji-opt" data-v="🐉">🐉</span>
+                <span class="emoji-opt" data-v="🦊">🦊</span>
+              </div>
+              <input type="hidden" id="np-avatar" value="⚽">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Couleur du joueur</label>
+              <div class="color-picker-row" id="np-color-row">
+                <div class="color-swatch selected" data-v="blue" style="background:#4f8ef7;" title="Bleu"></div>
+                <div class="color-swatch" data-v="red" style="background:#ef4444;" title="Rouge"></div>
+                <div class="color-swatch" data-v="purple" style="background:#8b5cf6;" title="Violet"></div>
+                <div class="color-swatch" data-v="green" style="background:#10b981;" title="Vert"></div>
+                <div class="color-swatch" data-v="gold" style="background:#f5a623;" title="Or"></div>
+                <div class="color-swatch" data-v="pink" style="background:#ec4899;" title="Rose"></div>
+                <div class="color-swatch" data-v="cyan" style="background:#06b6d4;" title="Cyan"></div>
+                <div class="color-swatch" data-v="orange" style="background:#f97316;" title="Orange"></div>
+              </div>
+              <input type="hidden" id="np-color" value="blue">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Code PIN (optionnel, 4-6 chiffres)</label>
+              <input type="password" class="form-input" id="np-pin" maxlength="6" placeholder="Laisser vide si non requis">
+            </div>
+
+            <div class="form-actions">
+              <button type="reset" class="btn btn-full" onclick="resetNewPlayerForm()">Réinitialiser</button>
+              <button type="submit" class="btn btn-primary btn-full">✅ Créer le joueur</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ============================
+           PANEL : CRÉER GRILLE
+           ============================ -->
+      <div class="admin-panel" id="p-new-grid">
+        <div class="card" style="padding:24px;">
+          <div class="section-title mb-4">🆕 Créer une nouvelle grille Bingo</div>
+          <form onsubmit="createGrid(event)" id="form-create-grid">
+
+            <div class="form-row mb-3">
+              <div class="form-group">
+                <label class="form-label">Nom de la grille *</label>
+                <input type="text" class="form-input" id="ng-name" required maxlength="60" placeholder="ex: Bingo Saison 2 — Ligue 1">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Description (optionnelle)</label>
+                <input type="text" class="form-input" id="ng-desc" maxlength="100" placeholder="ex: Objectifs de la 2ème saison en D1">
+              </div>
+            </div>
+
+            <div class="section-title" style="margin-bottom:10px;">📝 Les 25 défis de la grille</div>
+            <div style="font-size:0.75rem;color:var(--muted2);margin-bottom:8px;display:grid;grid-template-columns:32px 36px 1fr 50px 1fr;gap:5px;">
+              <span style="text-align:center;">#</span>
+              <span>Emoji</span>
+              <span>Titre *</span>
+              <span>Pts *</span>
+              <span>Contrainte</span>
+            </div>
+
+            <div id="ng-challenges-rows" style="max-height:480px;overflow-y:auto;padding-right:4px;">
+              <!-- 25 rows built by JS -->
+            </div>
+
+            <div style="margin-top:14px;display:flex;gap:10px;">
+              <button type="button" class="btn" onclick="fillDefaultChallenges()">📋 Remplir avec les défis par défaut</button>
+              <button type="button" class="btn" onclick="clearChallenges()">🗑️ Tout vider</button>
+              <button type="submit" class="btn btn-primary" style="margin-left:auto;">✅ Créer la grille</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- ============================
+           PANEL : PARAMÈTRES
+           ============================ -->
+      <div class="admin-panel" id="p-settings">
+        <div class="settings-grid">
+
+          <!-- Bonus de score -->
+          <div class="settings-card">
+            <h3>⚡ Bonus de score</h3>
+            <div class="form-group">
+              <label class="form-label">Bonus par ligne / colonne / diagonale (pts)</label>
+              <input type="number" class="form-input" id="s-line-bonus" value="5" min="0" max="50">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Bonus Grand Chelem (25/25 défis) (pts)</label>
+              <input type="number" class="form-input" id="s-grand-bonus" value="10" min="0" max="100">
+            </div>
+            <button class="btn btn-primary btn-full" onclick="saveScoreSettings()">💾 Enregistrer</button>
+          </div>
+
+          <!-- Sécurité Admin -->
+          <div class="settings-card">
+            <h3>🔐 Sécurité Administrateur</h3>
+            <div class="form-group">
+              <label class="form-label">Nouveau mot de passe admin (min. 4 caractères)</label>
+              <input type="password" class="form-input" id="s-new-pw" placeholder="Nouveau mot de passe…">
+            </div>
+            <div class="form-group">
+              <label class="form-label">Confirmer le nouveau mot de passe</label>
+              <input type="password" class="form-input" id="s-confirm-pw" placeholder="Confirmer…">
+            </div>
+            <button class="btn btn-gold btn-full" onclick="changeAdminPassword()">🔑 Changer le mot de passe</button>
+          </div>
+
+          <!-- Danger zone -->
+          <div class="settings-card" style="border-color:rgba(239,68,68,0.3);">
+            <h3 style="color:#f87171;">⚠️ Zone Dangereuse</h3>
+            <div style="font-size:0.82rem;color:var(--muted2);margin-bottom:14px;line-height:1.5;">
+              Ces actions sont irréversibles. Utilisez uniquement pour recommencer une partie depuis zéro.
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+              <button class="btn btn-danger btn-full" onclick="confirmResetAll()">
+                🔄 Reset toutes les coches (conserve joueurs)
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- NOTIFICATION BAR -->
+  <div class="notif" id="notif">✅ Action effectuée</div>
+
+  <!-- EDIT PLAYER MODAL -->
+  <div class="modal-overlay" id="modal-edit-player">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title">✏️ Modifier le joueur</div>
+        <button class="modal-close" onclick="closeModal('modal-edit-player')">✕</button>
+      </div>
+      <form onsubmit="submitEditPlayer(event)" id="form-edit-player">
+        <input type="hidden" id="ep-id">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Pseudo</label>
+            <input type="text" class="form-input" id="ep-name" required maxlength="25">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Club</label>
+            <input type="text" class="form-input" id="ep-club" required maxlength="30">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Avatar (emoji)</label>
+          <div class="emoji-row" id="ep-emoji-row">
+            <span class="emoji-opt" data-v="⚽">⚽</span>
+            <span class="emoji-opt" data-v="🔥">🔥</span>
+            <span class="emoji-opt" data-v="⚡">⚡</span>
+            <span class="emoji-opt" data-v="👑">👑</span>
+            <span class="emoji-opt" data-v="🦁">🦁</span>
+            <span class="emoji-opt" data-v="🚀">🚀</span>
+            <span class="emoji-opt" data-v="🐺">🐺</span>
+            <span class="emoji-opt" data-v="🎯">🎯</span>
+            <span class="emoji-opt" data-v="🏆">🏆</span>
+            <span class="emoji-opt" data-v="⚔️">⚔️</span>
+            <span class="emoji-opt" data-v="💎">💎</span>
+            <span class="emoji-opt" data-v="🌟">🌟</span>
+            <span class="emoji-opt" data-v="🦅">🦅</span>
+            <span class="emoji-opt" data-v="🐉">🐉</span>
+            <span class="emoji-opt" data-v="🦊">🦊</span>
+          </div>
+          <input type="hidden" id="ep-avatar" value="">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Couleur</label>
+          <div class="color-picker-row" id="ep-color-row">
+            <div class="color-swatch" data-v="blue" style="background:#4f8ef7;" title="Bleu"></div>
+            <div class="color-swatch" data-v="red" style="background:#ef4444;" title="Rouge"></div>
+            <div class="color-swatch" data-v="purple" style="background:#8b5cf6;" title="Violet"></div>
+            <div class="color-swatch" data-v="green" style="background:#10b981;" title="Vert"></div>
+            <div class="color-swatch" data-v="gold" style="background:#f5a623;" title="Or"></div>
+            <div class="color-swatch" data-v="pink" style="background:#ec4899;" title="Rose"></div>
+            <div class="color-swatch" data-v="cyan" style="background:#06b6d4;" title="Cyan"></div>
+            <div class="color-swatch" data-v="orange" style="background:#f97316;" title="Orange"></div>
+          </div>
+          <input type="hidden" id="ep-color" value="blue">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nouveau PIN (laisser vide pour ne pas changer)</label>
+          <input type="password" class="form-input" id="ep-pin" maxlength="6" placeholder="Nouveau PIN…">
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-full" onclick="closeModal('modal-edit-player')">Annuler</button>
+          <button type="submit" class="btn btn-primary btn-full">💾 Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- VIEW/EDIT GRID MODAL -->
+  <div class="modal-overlay" id="modal-view-grid">
+    <div class="modal-box" style="max-width:700px;">
+      <div class="modal-header">
+        <div class="modal-title" id="vg-modal-title">📋 Grille</div>
+        <button class="modal-close" onclick="closeModal('modal-view-grid')">✕</button>
+      </div>
+      <div id="vg-challenges-list" style="max-height:70vh;overflow-y:auto;"></div>
+    </div>
+  </div>
+
+  <script>
+    const socket = io();
+    const COLOR_MAP = {
+      blue:'#4f8ef7', red:'#ef4444', purple:'#8b5cf6', green:'#10b981',
+      gold:'#f5a623', pink:'#ec4899', cyan:'#06b6d4', orange:'#f97316'
+    };
+    let adminToken = null;
+    let state = null;
+
+    /* ========================================================
+       AUTHENTIFICATION
+       ======================================================== */
+    async function submitLogin(e) {
+      e.preventDefault();
+      const pw = document.getElementById('login-pw').value;
+      const errEl = document.getElementById('login-error');
+      try {
+        const res = await fetch('/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: pw })
+        });
+        const data = await res.json();
+        if (data.success) {
+          adminToken = data.token;
+          localStorage.setItem('bingo_admin_token', adminToken);
+          document.getElementById('login-screen').style.display = 'none';
+          document.getElementById('admin-content').style.display = 'block';
+          errEl.style.display = 'none';
+        } else {
+          errEl.style.display = 'block';
+          errEl.textContent = '❌ ' + (data.message || 'Mot de passe incorrect');
+        }
+      } catch {
+        errEl.style.display = 'block';
+        errEl.textContent = '❌ Erreur réseau, serveur inaccessible.';
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem('bingo_admin_token');
+      adminToken = null;
+      document.getElementById('login-screen').style.display = 'flex';
+      document.getElementById('admin-content').style.display = 'none';
+      document.getElementById('login-pw').value = '';
+    }
+
+    // Check saved token on load
+    async function checkSavedToken() {
+      const saved = localStorage.getItem('bingo_admin_token');
+      if (!saved) return;
+      try {
+        const res = await fetch('/api/admin/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: saved })
+        });
+        const data = await res.json();
+        if (data.success) {
+          adminToken = saved;
+          document.getElementById('login-screen').style.display = 'none';
+          document.getElementById('admin-content').style.display = 'block';
+        }
+      } catch {}
+    }
+
+    /* ========================================================
+       SOCKET
+       ======================================================== */
+    socket.on('stateUpdate', (data) => {
+      state = data;
+      renderPlayersList(data);
+      renderGridsList(data);
+      if (data.settings) {
+        document.getElementById('s-line-bonus').value = data.settings.lineBonus ?? 5;
+        document.getElementById('s-grand-bonus').value = data.settings.grandChelemBonus ?? 10;
+      }
+    });
+
+    /* ========================================================
+       TAB NAVIGATION
+       ======================================================== */
+    function showPanel(panelId, btn) {
+      document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById(panelId).classList.add('active');
+      if (panelId === 'p-new-grid' && document.getElementById('ng-challenges-rows').children.length === 0) {
+        buildChallengesRows();
+      }
+    }
+
+    /* ========================================================
+       RENDER PLAYERS LIST
+       ======================================================== */
+    function renderPlayersList(data) {
+      const { players, stats } = data;
+      const ids = Object.keys(players || {});
+      const container = document.getElementById('players-list');
+
+      if (!ids.length) {
+        container.innerHTML = `<div class="text-muted text-sm card" style="padding:20px;text-align:center;">
+          Aucun joueur. Allez dans l'onglet <strong>➕ Ajouter Joueur</strong> pour en créer un.
+        </div>`;
+        return;
+      }
+
+      container.innerHTML = ids.map(id => {
+        const p = players[id], s = stats?.[id];
+        const c = COLOR_MAP[p.color] || '#4f8ef7';
+        return `
+          <div class="player-card">
+            <div class="player-card-avatar" style="border-color:${c};background:${c}18;font-size:24px;">${p.avatar}</div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-weight:800;font-size:0.95rem;">${p.name}</div>
+              <div class="text-xs text-muted">${p.club}</div>
+              <div class="text-xs" style="margin-top:4px;color:${c};">${s?.totalPoints||0} pts · ${s?.tilesCompleted||0}/25 défis · ${s?.completedLines?.length||0} ligne(s)</div>
+              <div class="text-xs text-muted">PIN : ${p.pin ? '••••' : 'non défini'} · Créé le ${new Date(p.createdAt||Date.now()).toLocaleDateString('fr-FR')}</div>
+            </div>
+            <div class="player-card-actions">
+              <a href="/player.html?p=${id}" target="_blank" class="btn btn-sm" title="Voir la grille">🎮 Grille</a>
+              <button class="btn btn-sm" onclick="openEditPlayer('${id}')" title="Modifier">✏️ Modifier</button>
+              <button class="btn btn-sm" onclick="resetPlayerGrid('${id}','${p.name}')" title="Reset coches">🔄</button>
+              <button class="btn btn-danger btn-sm" onclick="deletePlayer('${id}','${p.name}')" title="Supprimer">🗑️</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    /* ========================================================
+       RENDER GRIDS LIST
+       ======================================================== */
+    function renderGridsList(data) {
+      const { grids, activeGrid } = data;
+      const container = document.getElementById('grids-list');
+
+      if (!grids || !grids.length) {
+        container.innerHTML = `<div class="text-muted text-sm card" style="padding:20px;text-align:center;">
+          Aucune grille. Allez dans l'onglet <strong>🆕 Créer Grille</strong>.
+        </div>`;
+        return;
+      }
+
+      container.innerHTML = grids.map(g => `
+        <div class="grid-card ${g.id === activeGrid ? 'active' : ''}">
+          <div class="grid-card-header">
+            <div>
+              <div style="font-weight:800;font-size:0.95rem;display:flex;align-items:center;gap:8px;">
+                ${g.name}
+                ${g.id === activeGrid ? '<span class="line-tag" style="font-size:0.65rem;">✅ ACTIVE</span>' : ''}
+              </div>
+              <div class="text-xs text-muted" style="margin-top:2px;">${g.description || 'Pas de description'} · ${g.challenges?.length || 0} défis</div>
+            </div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <button class="btn btn-sm" onclick="viewGrid('${g.id}')">👁 Voir les défis</button>
+              ${g.id !== activeGrid ? `<button class="btn btn-primary btn-sm" onclick="activateGrid('${g.id}')">▶ Activer</button>` : ''}
+              ${grids.length > 1 ? `<button class="btn btn-danger btn-sm" onclick="deleteGrid('${g.id}','${g.name}')">🗑️</button>` : ''}
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    /* ========================================================
+       PLAYER ACTIONS
+       ======================================================== */
+    async function addPlayer(e) {
+      e.preventDefault();
+      const name = document.getElementById('np-name').value.trim();
+      const club = document.getElementById('np-club').value.trim();
+      const avatar = document.getElementById('np-avatar').value;
+      const color = document.getElementById('np-color').value;
+      const pin = document.getElementById('np-pin').value;
+
+      const res = await fetch('/api/players', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, club, avatar, color, pin })
+      });
+      const data = await res.json();
+      if (data.success) {
+        notify(`✅ Joueur "${name}" ajouté avec succès !`);
+        document.getElementById('form-add-player').reset();
+        resetNewPlayerForm();
+        showPanel('p-players', document.querySelector('.admin-tab'));
+      } else {
+        notify('❌ Erreur : ' + data.message, true);
+      }
+    }
+
+    function resetNewPlayerForm() {
+      document.getElementById('np-avatar').value = '⚽';
+      document.querySelectorAll('#np-emoji-row .emoji-opt').forEach(x => x.classList.toggle('selected', x.dataset.v === '⚽'));
+      document.getElementById('np-color').value = 'blue';
+      document.querySelectorAll('#np-color-row .color-swatch').forEach(x => x.classList.toggle('selected', x.dataset.v === 'blue'));
+    }
+
+    async function deletePlayer(id, name) {
+      if (!confirm(`Supprimer définitivement le joueur "${name}" ? Cette action est irréversible.`)) return;
+      await fetch(`/api/players/${id}`, { method: 'DELETE' });
+      notify(`✅ Joueur "${name}" supprimé.`);
+    }
+
+    function openEditPlayer(id) {
+      if (!state) return;
+      const p = state.players[id];
+      if (!p) return;
+      document.getElementById('ep-id').value = id;
+      document.getElementById('ep-name').value = p.name;
+      document.getElementById('ep-club').value = p.club;
+      document.getElementById('ep-avatar').value = p.avatar;
+      document.getElementById('ep-pin').value = '';
+      document.querySelectorAll('#ep-emoji-row .emoji-opt').forEach(x => x.classList.toggle('selected', x.dataset.v === p.avatar));
+      document.getElementById('ep-color').value = p.color;
+      document.querySelectorAll('#ep-color-row .color-swatch').forEach(x => x.classList.toggle('selected', x.dataset.v === p.color));
+      openModal('modal-edit-player');
+    }
+
+    async function submitEditPlayer(e) {
+      e.preventDefault();
+      const id = document.getElementById('ep-id').value;
+      const name = document.getElementById('ep-name').value.trim();
+      const club = document.getElementById('ep-club').value.trim();
+      const avatar = document.getElementById('ep-avatar').value;
+      const color = document.getElementById('ep-color').value;
+      const pin = document.getElementById('ep-pin').value;
+      await fetch('/api/profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ playerId: id, name, club, avatar, color, pin: pin || undefined })
+      });
+      closeModal('modal-edit-player');
+      notify(`✅ Profil de "${name}" mis à jour !`);
+    }
+
+    async function resetPlayerGrid(id, name) {
+      if (!confirm(`Réinitialiser toutes les coches de "${name}" ?`)) return;
+      await fetch('/api/reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ target: `player:${id}`, gridId: state?.activeGrid })
+      });
+      notify(`✅ Coches de "${name}" réinitialisées.`);
+    }
+
+    async function confirmResetAll() {
+      if (!confirm('Réinitialiser les coches de TOUS les joueurs ? Les scores seront remis à zéro.')) return;
+      await fetch('/api/reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ target: 'all', gridId: state?.activeGrid })
+      });
+      notify('✅ Toutes les coches réinitialisées !');
+    }
+
+    /* ========================================================
+       GRID ACTIONS
+       ======================================================== */
+    function viewGrid(id) {
+      const grid = state?.grids?.find(g => g.id === id);
+      if (!grid) return;
+      document.getElementById('vg-modal-title').textContent = `📋 ${grid.name}`;
+      document.getElementById('vg-challenges-list').innerHTML = grid.challenges.map((ch, i) => `
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);">
+          <div style="color:var(--muted);font-size:0.7rem;font-weight:700;width:22px;text-align:center;">${i+1}</div>
+          <span style="font-size:1.2rem;">${ch.icon||'🎯'}</span>
+          <div style="flex:1;">
+            <div style="font-weight:700;font-size:0.88rem;">${ch.title}</div>
+            <div style="font-size:0.75rem;color:var(--muted2);">${ch.description||''} · ${ch.constraint||''}</div>
+          </div>
+          <span class="pts pts-${ch.points}" style="flex-shrink:0;">+${ch.points} pt${ch.points>1?'s':''}</span>
+        </div>
+      `).join('');
+      openModal('modal-view-grid');
+    }
+
+    async function activateGrid(id) {
+      const res = await fetch('/api/grid/activate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ gridId: id })
+      });
+      const data = await res.json();
+      if (data.success) notify('✅ Grille activée avec succès !');
+    }
+
+    async function deleteGrid(id, name) {
+      if (!confirm(`Supprimer la grille "${name}" ? Les coches associées seront perdues.`)) return;
+      await fetch(`/api/grids/${id}`, { method: 'DELETE' });
+      notify(`✅ Grille "${name}" supprimée.`);
+    }
+
+    /* ========================================================
+       CREATE GRID
+       ======================================================== */
+    const DEFAULT_CHALLENGES = [
+      {icon:'🛡️',title:'Invincibilité Domicile',pts:2,desc:'0 défaite à domicile en championnat',c:'1 saison | D2'},
+      {icon:'💰',title:'Balance Positive',pts:1,desc:'Bénéfice transferts >= +10M€',c:'1 saison | D2'},
+      {icon:'🌱',title:'Éclosion Académie',pts:1,desc:'3 jeunes promus (10+ matchs)',c:'1 saison | D2'},
+      {icon:'📋',title:'Tactique Immuable',pts:1,desc:'Même dispositif 100% des matchs',c:'1 saison | D2'},
+      {icon:'🟥',title:'Discipline & Podium',pts:2,desc:'5+ cartons rouges & Top 5',c:'1 saison | D2'},
+      {icon:'🎯',title:'Attaque Mitraillette',pts:2,desc:'80+ buts en championnat',c:'1 saison | D2'},
+      {icon:'📈',title:'Plus-Value x3',pts:3,desc:'Revendre un joueur >= 3x son achat',c:'1-3 saisons | D2'},
+      {icon:'⭐',title:'Pépite Générationnelle',pts:3,desc:'Amener un jeune à 80+ GEN',c:'2-4 saisons | D2'},
+      {icon:'🧱',title:'Forteresse Défensive',pts:2,desc:'Meilleure défense (< 30 buts)',c:'1 saison | D2'},
+      {icon:'🔒',title:'Mercato Totalement Gelé',pts:2,desc:'0 achat et 0 prêt entrant',c:'1 saison | D2'},
+      {icon:'🚀',title:'Montée Directe',pts:2,desc:'Promotion en D1 (1er ou 2ème)',c:'1-2 saisons | D2'},
+      {icon:'💎',title:'Vente Galactique',pts:2,desc:'Vente sèche >= 50M€',c:'1-3 saisons | D2/D1'},
+      {icon:'🃏',title:'JOKER ADVERSAIRE',pts:2,desc:'Défi imposé par le rival',c:'1 saison | Choix rival'},
+      {icon:'🎓',title:'Onze 100% Formation',pts:3,desc:'Titulariser 7+ joueurs académie',c:'1-3 saisons | D2'},
+      {icon:'👑',title:'Sacrifice du Capitaine',pts:1,desc:'Vendre son meilleur GEN sans chuter',c:'1 saison | D2'},
+      {icon:'🏆',title:'Épopée en Coupe',pts:3,desc:'Atteindre la demi-finale',c:'1-2 saisons | D2/D1'},
+      {icon:'📉',title:'Rigueur Salariale',pts:1,desc:'Baisser masse salariale de 20%',c:'1 saison | D2'},
+      {icon:'🌍',title:'Vocation Internationale',pts:1,desc:'Un formé appelé en sélection',c:'1-3 saisons | D2'},
+      {icon:'👟',title:'Roi de la Passe',pts:1,desc:'Meilleur passeur (15+ passes)',c:'1 saison | D2'},
+      {icon:'👔',title:'Confiance Totale',pts:1,desc:"Note Conseil d'Admin > 85",c:'1 saison | D2'},
+      {icon:'🥇',title:'Titre Suprême D1',pts:5,desc:'Champion de D1',c:'2-4 saisons | D1'},
+      {icon:'🏦',title:'Coffre-Fort 100M€',pts:2,desc:'100M€ budget disponible',c:'2-4 saisons | D2/D1'},
+      {icon:'🌟',title:'Trophée Continental',pts:5,desc:"Joueur dans l'Équipe de l'Année",c:'2-4 saisons | D1'},
+      {icon:'⚽',title:"Soulier d'Or Club",pts:2,desc:'Meilleur buteur (25+ buts)',c:'1 saison | D2'},
+      {icon:'⚔️',title:'Maître du Derby',pts:3,desc:'Battre son rival historique x2',c:'1 saison | D2'}
+    ];
+
+    function buildChallengesRows(defaults) {
+      const rows = document.getElementById('ng-challenges-rows');
+      rows.innerHTML = Array.from({ length: 25 }, (_, i) => {
+        const d = defaults?.[i] || DEFAULT_CHALLENGES[i] || {};
+        return `<div class="challenge-row">
+          <div class="ci-num">${i + 1}</div>
+          <input class="ci" type="text" data-ci="${i}" data-field="icon" value="${d.icon||'🎯'}" placeholder="🎯" title="Emoji">
+          <input class="ci" type="text" data-ci="${i}" data-field="title" value="${d.title||''}" placeholder="Titre du défi" required>
+          <input class="ci" type="number" data-ci="${i}" data-field="points" value="${d.pts||d.points||1}" min="1" max="10" required>
+          <input class="ci" type="text" data-ci="${i}" data-field="constraint" value="${d.c||d.constraint||''}" placeholder="Contrainte (ex: 1 saison | D2)">
+        </div>`;
+      }).join('');
+    }
+
+    function fillDefaultChallenges() { buildChallengesRows(DEFAULT_CHALLENGES); }
+    function clearChallenges() { buildChallengesRows([]); }
+
+    async function createGrid(e) {
+      e.preventDefault();
+      const name = document.getElementById('ng-name').value.trim();
+      const desc = document.getElementById('ng-desc').value.trim();
+
+      const inputs = document.querySelectorAll('#ng-challenges-rows [data-ci]');
+      const map = {};
+      inputs.forEach(el => {
+        const ci = el.dataset.ci;
+        if (!map[ci]) map[ci] = { id: parseInt(ci), icon: '🎯', title: '', points: 1, description: '', constraint: '', category: 'Défi' };
+        if (el.dataset.field === 'points') map[ci].points = parseInt(el.value) || 1;
+        else map[ci][el.dataset.field] = el.value;
+      });
+      const challenges = Object.values(map).sort((a, b) => a.id - b.id);
+
+      if (challenges.length !== 25) {
+        notify('❌ Il faut exactement 25 défis.', true);
+        return;
+      }
+
+      const res = await fetch('/api/grids', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, description: desc, challenges })
+      });
+      const data = await res.json();
+      if (data.success) {
+        notify(`✅ Grille "${name}" créée !`);
+        document.getElementById('form-create-grid').reset();
+        buildChallengesRows([]);
+        showPanel('p-grids', document.querySelectorAll('.admin-tab')[1]);
+      } else {
+        notify('❌ Erreur : ' + data.message, true);
+      }
+    }
+
+    /* ========================================================
+       SETTINGS
+       ======================================================== */
+    async function saveScoreSettings() {
+      const lineBonus = parseInt(document.getElementById('s-line-bonus').value) || 5;
+      const grandChelemBonus = parseInt(document.getElementById('s-grand-bonus').value) || 10;
+      await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lineBonus, grandChelemBonus, token: adminToken })
+      });
+      notify('✅ Paramètres de score enregistrés !');
+    }
+
+    async function changeAdminPassword() {
+      const pw = document.getElementById('s-new-pw').value;
+      const conf = document.getElementById('s-confirm-pw').value;
+      if (!pw || pw.length < 4) { notify('❌ Le mot de passe doit faire au moins 4 caractères.', true); return; }
+      if (pw !== conf) { notify('❌ Les mots de passe ne correspondent pas.', true); return; }
+      const res = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminPassword: pw, token: adminToken })
+      });
+      const data = await res.json();
+      if (data.success) {
+        // Update token
+        adminToken = btoa(pw);
+        localStorage.setItem('bingo_admin_token', adminToken);
+        document.getElementById('s-new-pw').value = '';
+        document.getElementById('s-confirm-pw').value = '';
+        notify('✅ Mot de passe admin changé !');
+      } else {
+        notify('❌ Erreur : ' + (data.message || 'Non autorisé'), true);
+      }
+    }
+
+    /* ========================================================
+       UI HELPERS
+       ======================================================== */
+    function openModal(id) { document.getElementById(id).classList.add('open'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+    document.querySelectorAll('.modal-overlay').forEach(el => {
+      el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
+    });
+
+    function makePicker(rowId, hiddenId) {
+      document.getElementById(rowId)?.addEventListener('click', e => {
+        const opt = e.target.closest('.emoji-opt') || e.target.closest('.color-swatch');
+        if (!opt) return;
+        const isEmoji = opt.classList.contains('emoji-opt');
+        document.querySelectorAll(`#${rowId} .${isEmoji ? 'emoji-opt' : 'color-swatch'}`).forEach(x => x.classList.remove('selected'));
+        opt.classList.add('selected');
+        document.getElementById(hiddenId).value = opt.dataset.v;
+      });
+    }
+
+    makePicker('np-emoji-row', 'np-avatar');
+    makePicker('np-color-row', 'np-color');
+    makePicker('ep-emoji-row', 'ep-avatar');
+    makePicker('ep-color-row', 'ep-color');
+
+    let notifTimer = null;
+    function notify(msg, isError = false) {
+      const el = document.getElementById('notif');
+      el.textContent = msg;
+      el.style.borderColor = isError ? 'rgba(239,68,68,0.4)' : 'rgba(16,185,129,0.4)';
+      el.style.color = isError ? '#f87171' : '#34d399';
+      el.classList.add('show');
+      clearTimeout(notifTimer);
+      notifTimer = setTimeout(() => el.classList.remove('show'), 3000);
+    }
+
+    // Init
+    checkSavedToken();
+    buildChallengesRows([]);
+  </script>
+</body>
+</html>
