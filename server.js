@@ -12,6 +12,7 @@ const { Server } = require('socket.io');
 const cors    = require('cors');
 const fs      = require('fs');
 const path    = require('path');
+const aiGenerator = require('./data/ai_generator');
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -179,7 +180,8 @@ function bootstrapDefaultGrid() {
     gameState.grids[gridId] = {
       id: gridId,
       name: 'Bingo Carrière Saison 1',
-      description: 'La grille officielle de la saison 1.',
+      size: 5,
+      description: 'La grille officielle de la saison 1 (25 défis carrière).',
       challenges: rawChallenges.map((c, i) => ({
         id:          c.id !== undefined ? c.id : i,
         icon:        c.icon        || '🎯',
@@ -205,11 +207,13 @@ function makeId() {
   return `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
-/** Get or create a 25-bool checked array for player+grid */
+/** Get or create checked array for player+grid based on grid challenge count */
 function getChecked(player, gridId) {
   if (!player.grids) player.grids = {};
-  if (!Array.isArray(player.grids[gridId]) || player.grids[gridId].length !== 25) {
-    player.grids[gridId] = new Array(25).fill(false);
+  const grid = gameState.grids[gridId];
+  const total = grid?.challenges?.length || 25;
+  if (!Array.isArray(player.grids[gridId]) || player.grids[gridId].length !== total) {
+    player.grids[gridId] = new Array(total).fill(false);
   }
   return player.grids[gridId];
 }
@@ -223,13 +227,16 @@ function gridChallenges(gridId) {
 // ─── Stats calculation ────────────────────────────────────────────────────────
 
 /**
- * Calculate per-player stats for a specific grid.
+ * Calculate per-player stats for a specific grid (supports 3x3, 4x4, 5x5, etc.).
  * @param {object} player
  * @param {string} gridId
  */
 function calculateStats(player, gridId) {
-  const challenges = gridChallenges(gridId);
+  const grid       = gameState.grids[gridId];
+  const challenges = grid ? grid.challenges : [];
   const checked    = getChecked(player, gridId);
+  const size       = grid?.size || Math.round(Math.sqrt(challenges.length)) || 5;
+  const totalTiles = challenges.length || (size * size);
   let basePoints   = 0;
   let tilesCompleted = 0;
 
@@ -241,43 +248,48 @@ function calculateStats(player, gridId) {
     }
   });
 
-  // Lines
   const completedLines = [];
 
   // Rows
-  for (let r = 0; r < 5; r++) {
+  for (let r = 0; r < size; r++) {
     let ok = true;
-    for (let c = 0; c < 5; c++) {
-      if (!checked[r * 5 + c]) { ok = false; break; }
+    for (let c = 0; c < size; c++) {
+      if (!checked[r * size + c]) { ok = false; break; }
     }
     if (ok) completedLines.push({ type: 'row', index: r, name: `Ligne ${r + 1}` });
   }
 
   // Columns
-  for (let c = 0; c < 5; c++) {
+  for (let c = 0; c < size; c++) {
     let ok = true;
-    for (let r = 0; r < 5; r++) {
-      if (!checked[r * 5 + c]) { ok = false; break; }
+    for (let r = 0; r < size; r++) {
+      if (!checked[r * size + c]) { ok = false; break; }
     }
     if (ok) completedLines.push({ type: 'col', index: c, name: `Colonne ${c + 1}` });
   }
 
   // Diagonals
-  if (checked[0] && checked[6] && checked[12] && checked[18] && checked[24]) {
-    completedLines.push({ type: 'diag', index: 0, name: 'Diagonale \\' });
+  let diag1Ok = true;
+  for (let i = 0; i < size; i++) {
+    if (!checked[i * size + i]) { diag1Ok = false; break; }
   }
-  if (checked[4] && checked[8] && checked[12] && checked[16] && checked[20]) {
-    completedLines.push({ type: 'diag', index: 1, name: 'Diagonale /' });
-  }
+  if (diag1Ok) completedLines.push({ type: 'diag', index: 0, name: 'Diagonale \\' });
 
-  const lineBonusPts    = (gameState.settings.lineBonus || 5) * completedLines.length;
-  const isGrandChelem   = tilesCompleted === 25;
+  let diag2Ok = true;
+  for (let i = 0; i < size; i++) {
+    if (!checked[i * size + (size - 1 - i)]) { diag2Ok = false; break; }
+  }
+  if (diag2Ok) completedLines.push({ type: 'diag', index: 1, name: 'Diagonale /' });
+
+  const lineBonusPts     = (gameState.settings.lineBonus || 5) * completedLines.length;
+  const isGrandChelem    = totalTiles > 0 && tilesCompleted === totalTiles;
   const grandChelemBonus = isGrandChelem ? (gameState.settings.grandChelemBonus || 10) : 0;
-  const totalPoints     = basePoints + lineBonusPts + grandChelemBonus;
+  const totalPoints      = basePoints + lineBonusPts + grandChelemBonus;
 
   return {
     tilesCompleted,
-    totalTiles: 25,
+    totalTiles,
+    size,
     basePoints,
     completedLines,
     lineBonus: lineBonusPts,
@@ -336,34 +348,77 @@ app.get('/api/grids', (req, res) => {
 });
 
 app.post('/api/grids', (req, res) => {
-  const { name, description, challenges } = req.body;
+  const { name, description, size, challenges } = req.body;
 
-  if (!name || !Array.isArray(challenges) || challenges.length !== 25) {
-    return res.status(400).json({ success: false, message: 'name and exactly 25 challenges required.' });
+  if (!name || !Array.isArray(challenges)) {
+    return res.status(400).json({ success: false, message: 'Le nom et un tableau de défis sont requis.' });
+  }
+
+  const validSizes = [3, 4, 5];
+  const gridDim = (typeof size === 'number' && validSizes.includes(size))
+    ? size
+    : Math.round(Math.sqrt(challenges.length)) || 5;
+
+  const expectedCount = gridDim * gridDim;
+  if (challenges.length !== expectedCount) {
+    return res.status(400).json({
+      success: false,
+      message: `Pour une grille ${gridDim}x${gridDim}, il faut exactement ${expectedCount} défis (reçu: ${challenges.length}).`
+    });
   }
 
   const gridId = `grid_${makeId()}`;
   const sanitized = challenges.map((c, i) => ({
     id:          c.id !== undefined ? c.id : i,
     icon:        c.icon        || '🎯',
-    title:       c.title       || `Défi ${i + 1}`,
-    description: c.description || '',
-    points:      typeof c.points === 'number' ? c.points : 1,
-    constraint:  c.constraint  || '',
-    category:    c.category    || 'Général'
+    title:       (c.title      || `Défi ${i + 1}`).trim(),
+    description: (c.description || '').trim(),
+    points:      typeof c.points === 'number' ? Math.max(1, Math.min(10, c.points)) : 1,
+    constraint:  (c.constraint  || '').trim(),
+    category:    (c.category    || 'Général').trim()
   }));
 
   gameState.grids[gridId] = {
-    id: gridId,
-    name: name.trim(),
+    id:          gridId,
+    name:        name.trim(),
+    size:        gridDim,
     description: (description || '').trim(),
-    challenges: sanitized
+    challenges:  sanitized,
+    createdAt:   new Date().toISOString()
   };
 
   saveState();
   io.emit('stateUpdate', getComputedState());
   res.json({ success: true, grid: gameState.grids[gridId] });
 });
+
+// ─── REST: AI Generator ───────────────────────────────────────────────────────
+
+app.post('/api/ai/generate-grid', (req, res) => {
+  try {
+    const result = aiGenerator.generateGrid(req.body);
+    res.json({ success: true, ...result });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+app.post('/api/ai/reroll-tile', (req, res) => {
+  try {
+    const tile = aiGenerator.generateSingleChallenge(req.body);
+    res.json({ success: true, challenge: tile });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+app.get('/api/ai/config', (req, res) => {
+  res.json({
+    themes: aiGenerator.THEMES_CONFIG,
+    difficulties: aiGenerator.DIFFICULTY_CONFIG
+  });
+});
+
 
 app.delete('/api/grids/:id', (req, res) => {
   const { id } = req.params;
@@ -421,7 +476,7 @@ app.post('/api/players', (req, res) => {
 
   // Pre-initialise checked array for active grid
   if (gameState.activeGridId) {
-    player.grids[gameState.activeGridId] = new Array(25).fill(false);
+    getChecked(player, gameState.activeGridId);
   }
 
   gameState.players[playerId] = player;
@@ -508,7 +563,8 @@ app.post('/api/toggle', (req, res) => {
     return res.status(400).json({ success: false, message: 'Grille invalide.' });
   }
 
-  if (tileIndex < 0 || tileIndex >= 25) {
+  const challenges    = gridChallenges(gId);
+  if (tileIndex < 0 || tileIndex >= challenges.length) {
     return res.status(400).json({ success: false, message: 'Index de tuile invalide.' });
   }
 
@@ -518,7 +574,6 @@ app.post('/api/toggle', (req, res) => {
   checkedArr[tileIndex] = isNowChecked;
 
   const newStats      = calculateStats(player, gId);
-  const challenges    = gridChallenges(gId);
   const challenge     = challenges[tileIndex] || null;
 
   // History
@@ -651,8 +706,8 @@ io.on('connection', (socket) => {
     const player = gameState.players[playerId];
     if (!player) return;
     const gId = gridId || gameState.activeGridId;
-    if (!gId || !gameState.grids[gId]) return;
-    if (tileIndex < 0 || tileIndex >= 25) return;
+    const challenges = gridChallenges(gId);
+    if (tileIndex < 0 || tileIndex >= challenges.length) return;
 
     const prevStats   = calculateStats(player, gId);
     const checkedArr  = getChecked(player, gId);
@@ -660,7 +715,6 @@ io.on('connection', (socket) => {
     checkedArr[tileIndex] = isNowChecked;
 
     const newStats   = calculateStats(player, gId);
-    const challenges = gridChallenges(gId);
     const challenge  = challenges[tileIndex] || null;
 
     gameState.history.push({

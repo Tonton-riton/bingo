@@ -232,6 +232,96 @@
           "category": "Rivalité"
         }
       ]
+    },
+    "grid_1790724089455_a36dvw": {
+      "id": "grid_1790724089455_a36dvw",
+      "name": "Bingo 3x3 — Équilibré (Carrière)",
+      "size": 3,
+      "description": "Grille 3x3 (9 défis) générée par IA • Difficulté : Équilibré • Thème : ⚽ Carrière Standard & Équilibrée",
+      "challenges": [
+        {
+          "id": 0,
+          "icon": "🏆",
+          "title": "Victoire en Coupe",
+          "description": "Soulever la Coupe Nationale en battant un club de division supérieure",
+          "points": 4,
+          "constraint": "1-3 saisons | D2/D1",
+          "category": "Coupe"
+        },
+        {
+          "id": 1,
+          "icon": "👔",
+          "title": "Confiance Totale",
+          "description": "Terminer la saison avec une note de confiance du Conseil d’Admin > 85",
+          "points": 1,
+          "constraint": "1 saison | D2/D1",
+          "category": "Gestion"
+        },
+        {
+          "id": 2,
+          "icon": "⚽",
+          "title": "Renard des Surfaces",
+          "description": "Avoir un buteur qui atteint la barre des 18 buts en championnat",
+          "points": 1,
+          "constraint": "1 saison | D2/D1",
+          "category": "Attaque"
+        },
+        {
+          "id": 3,
+          "icon": "🏎️",
+          "title": "Champion Express",
+          "description": "Valider mathématiquement le titre de champion au moins 4 journées avant la fin",
+          "points": 4,
+          "constraint": "1-3 saisons | D2/D1",
+          "category": "Succès"
+        },
+        {
+          "id": 4,
+          "icon": "🏆",
+          "title": "Épopée en Coupe",
+          "description": "Atteindre le dernier carré (demi-finale ou finale) de la coupe nationale",
+          "points": 3,
+          "constraint": "1-2 saisons | D2/D1",
+          "category": "Coupe"
+        },
+        {
+          "id": 5,
+          "icon": "⭐",
+          "title": "Billet pour les Étoiles",
+          "description": "Qualifier le club pour la plus prestigieuse compétition européenne (C1)",
+          "points": 4,
+          "constraint": "2-4 saisons | D1",
+          "category": "Succès"
+        },
+        {
+          "id": 6,
+          "icon": "🤝",
+          "title": "Coup de Maître Gratuit",
+          "description": "Signer un joueur libre de contrat qui participe à 10+ buts ou clean sheets",
+          "points": 1,
+          "constraint": "1 saison | D2/D1",
+          "category": "Transferts"
+        },
+        {
+          "id": 7,
+          "icon": "⚔️",
+          "title": "Maître du Derby",
+          "description": "Battre son rival historique à l’aller ET au retour en championnat",
+          "points": 3,
+          "constraint": "1 saison | D2/D1",
+          "category": "Rivalité"
+        },
+        {
+          "id": 8,
+          "icon": "🎯",
+          "title": "Attaque Mitraillette",
+          "description": "Marquer 75 buts ou plus en championnat sur la saison",
+          "points": 2,
+          "constraint": "1 saison | D2/D1",
+          "category": "Attaque"
+        }
+      ],
+      "createdAt": "2026-09-29T23:21:29.455Z"
     }
   },
   "players": {
@@ -260,6 +350,17 @@
           false,
           false,
           false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "grid_1790724089455_a36dvw": [
           false,
           false,
           false,
@@ -298,6 +399,17 @@
           false,
           false,
           false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "grid_1790724089455_a36dvw": [
           false,
           false,
           false,

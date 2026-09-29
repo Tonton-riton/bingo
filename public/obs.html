@@ -456,7 +456,7 @@
         <div class="hud-avatar" style="border-color:${c};background:${c}18;">${renderAvatar(p.avatar)}</div>
         <div style="margin-right:6px;">
           <div style="font-size:0.75rem;font-weight:800;color:${c};">${p.name}</div>
-          <div style="font-size:0.6rem;color:#64748b;">${s?.tilesCompleted||0}/25 · ${s?.completedLines?.length||0} lig.</div>
+          <div style="font-size:0.6rem;color:#64748b;">${s?.tilesCompleted||0}/${s?.totalTiles || 25} · ${s?.completedLines?.length||0} lig.</div>
         </div>
         <div class="hud-score" style="color:${c};">${s?.totalPoints||0}</div>
         <div style="font-size:0.55rem;color:#64748b;align-self:flex-end;margin-bottom:3px;margin-left:2px;">pts</div>
@@ -476,28 +476,34 @@
     const s = data.stats?.[pid];
     const c = COLOR_MAP[p.color] || '#4f8ef7';
     const challenges = data.grids?.find(g => g.id === data.activeGrid)?.challenges || [];
-    const checked = p.grids?.[data.activeGrid] || Array(25).fill(false);
+    const N = Math.round(Math.sqrt(challenges.length)) || 5;
+    const totalTiles = challenges.length || 25;
+    const checked = p.grids?.[data.activeGrid] || Array(totalTiles).fill(false);
 
     document.getElementById('gp-avatar').innerHTML = renderAvatar(p.avatar);
     document.getElementById('gp-name').textContent = p.name;
     document.getElementById('gp-name').style.color = c;
-    document.getElementById('gp-club').textContent = p.club;
+    document.getElementById('gp-club').textContent = `${p.club} (${s?.tilesCompleted||0}/${totalTiles})`;
     document.getElementById('gp-score').textContent = `${s?.totalPoints||0} PTS`;
     document.getElementById('gp-score').style.color = c;
 
     const lineIndices = new Set();
     (s?.completedLines || []).forEach(l => {
-      if (l.type === 'row') for (let col = 0; col < 5; col++) lineIndices.add(l.index * 5 + col);
-      if (l.type === 'col') for (let row = 0; row < 5; row++) lineIndices.add(row * 5 + l.index);
-      if (l.type === 'diag' && l.index === 0) [0,6,12,18,24].forEach(i => lineIndices.add(i));
-      if (l.type === 'diag' && l.index === 1) [4,8,12,16,20].forEach(i => lineIndices.add(i));
+      if (l.type === 'row') for (let col = 0; col < N; col++) lineIndices.add(l.index * N + col);
+      if (l.type === 'col') for (let row = 0; row < N; row++) lineIndices.add(row * N + l.index);
+      if (l.type === 'diag' && l.index === 0) for (let i = 0; i < N; i++) lineIndices.add(i * N + i);
+      if (l.type === 'diag' && l.index === 1) for (let i = 0; i < N; i++) lineIndices.add(i * N + (N - 1 - i));
     });
 
-    document.getElementById('obs-grid').innerHTML = challenges.slice(0, 25).map((ch, idx) => {
+    const obsGrid = document.getElementById('obs-grid');
+    const tileW = N === 3 ? '85px' : (N === 4 ? '70px' : '62px');
+    obsGrid.style.gridTemplateColumns = `repeat(${N}, ${tileW})`;
+
+    obsGrid.innerHTML = challenges.map((ch, idx) => {
       const isChecked = !!checked[idx];
       const isLine = lineIndices.has(idx);
       return `<div class="obs-tile ${isChecked ? 'checked-tile c-' + p.color : ''} ${isLine ? 'line-tile' : ''}">
-        <div class="obs-tile-emoji">${ch.icon || '🎯'}</div>
+        <div class="obs-tile-emoji">${renderAvatar(ch.icon || '🎯')}</div>
         <div class="obs-tile-pts">+${ch.points}</div>
       </div>`;
     }).join('');

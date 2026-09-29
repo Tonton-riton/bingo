@@ -141,35 +141,85 @@
       gap: 10px;
     }
 
-    /* Challenge inputs in grid editor */
-    .challenge-row {
-      display: grid;
-      grid-template-columns: 32px 36px 1fr 50px 1fr;
-      gap: 5px;
+    /* Challenge cards in grid editor (style "voir la grille") */
+    .challenge-card-edit {
+      background: rgba(255,255,255,0.025);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      transition: all 0.2s;
+    }
+    .challenge-card-edit:hover {
+      border-color: rgba(79,142,247,0.3);
+      background: rgba(255,255,255,0.045);
+    }
+    .ch-card-header {
+      display: flex;
       align-items: center;
-      margin-bottom: 4px;
+      gap: 10px;
+      margin-bottom: 8px;
     }
-
-    .challenge-row .ci-num {
-      font-size: 0.65rem;
-      color: var(--muted);
-      font-weight: 700;
+    .ch-badge {
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: var(--accent);
+      background: rgba(79,142,247,0.12);
+      border: 1px solid rgba(79,142,247,0.3);
+      padding: 3px 8px;
+      border-radius: 6px;
+      min-width: 36px;
       text-align: center;
+      flex-shrink: 0;
     }
-
+    .ch-card-body {
+      display: flex;
+      gap: 10px;
+    }
     .ci {
       width: 100%;
       background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 7px;
-      padding: 5px 8px;
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 8px;
+      padding: 7px 10px;
       color: var(--text);
-      font-size: 0.78rem;
+      font-size: 0.82rem;
       outline: none;
       font-family: inherit;
     }
+    .ci:focus { border-color: var(--accent); background: rgba(79,142,247,0.06); }
+    .ci-icon { width: 46px; text-align: center; font-size: 1.2rem; flex-shrink: 0; }
+    .ci-title { font-weight: 700; font-size: 0.9rem; color: #fff; }
+    .ci-desc { color: var(--text); font-size: 0.82rem; }
+    .ci-constraint { color: var(--muted2); font-size: 0.8rem; }
+    .ci-pts { width: 145px; font-weight: 700; font-size: 0.8rem; flex-shrink: 0; }
+    select.ci option { background: #111827; color: #fff; }
 
-    .ci:focus { border-color: var(--accent); }
+    /* Size selector buttons */
+    .grid-size-selector {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .btn-size-opt {
+      flex: 1;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+    }
+    .btn-size-opt:hover {
+      background: rgba(255,255,255,0.06);
+      border-color: rgba(255,255,255,0.15);
+    }
+    .btn-size-opt.active {
+      border-color: var(--accent);
+      background: rgba(79,142,247,0.14);
+      box-shadow: 0 0 16px rgba(79,142,247,0.18);
+    }
 
     /* Notification */
     .notif {
@@ -355,37 +405,101 @@
            ============================ -->
       <div class="admin-panel" id="p-new-grid">
         <div class="card" style="padding:24px;">
-          <div class="section-title mb-4">🆕 Créer une nouvelle grille Bingo</div>
-          <form onsubmit="createGrid(event)" id="form-create-grid">
+          <div class="section-title mb-3">🆕 Créer une nouvelle grille Bingo</div>
 
+          <!-- SÉLECTEUR DE FORMAT / TAILLE -->
+          <div style="margin-bottom:18px;">
+            <label class="form-label" style="margin-bottom:8px;">📐 Format de la grille</label>
+            <div class="grid-size-selector">
+              <button type="button" class="btn btn-size-opt active" data-size="5" onclick="selectGridSize(5)">
+                <div style="font-weight:900;font-size:1.15rem;color:var(--text);">🔲 5x5 Carrière Pro</div>
+                <div style="font-size:0.75rem;color:var(--muted2);margin-top:2px;">Format classique (25 défis)</div>
+              </button>
+              <button type="button" class="btn btn-size-opt" data-size="4" onclick="selectGridSize(4)">
+                <div style="font-weight:900;font-size:1.15rem;color:var(--text);">🔲 4x4 Intermédiaire</div>
+                <div style="font-size:0.75rem;color:var(--muted2);margin-top:2px;">Format équilibré (16 défis)</div>
+              </button>
+              <button type="button" class="btn btn-size-opt" data-size="3" onclick="selectGridSize(3)">
+                <div style="font-weight:900;font-size:1.15rem;color:var(--text);">🔲 3x3 Express</div>
+                <div style="font-size:0.75rem;color:var(--muted2);margin-top:2px;">Format rapide (9 défis)</div>
+              </button>
+            </div>
+          </div>
+
+          <!-- GÉNÉRATEUR IA D'OBJECTIFS -->
+          <div class="ai-generator-box" style="background:linear-gradient(145deg, rgba(139,92,246,0.12), rgba(79,142,247,0.08)); border:1px solid rgba(139,92,246,0.35); border-radius:14px; padding:18px 20px; margin-bottom:24px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <span style="font-size:1.6rem;">🤖✨</span>
+                <div>
+                  <div style="font-weight:900;font-size:1.05rem;color:#c084fc;">Générateur IA d'Objectifs Carrière</div>
+                  <div style="font-size:0.78rem;color:var(--muted2);">Génère automatiquement une grille cohérente selon votre difficulté et thème de carrière</div>
+                </div>
+              </div>
+              <span class="line-tag" style="color:#c084fc;border-color:rgba(192,132,252,0.4);background:rgba(192,132,252,0.1);">IA Intégrée</span>
+            </div>
+
+            <div class="form-row" style="margin-bottom:14px;">
+              <div class="form-group">
+                <label class="form-label" style="color:#e9d5ff;">🎯 Degré de difficulté</label>
+                <select class="form-input" id="ai-difficulty" style="border-color:rgba(139,92,246,0.4);">
+                  <option value="easy">🟢 Facile / Saison 1 (1-2 pts) — Accessible, pour débuter</option>
+                  <option value="medium" selected>🟡 Équilibré / Standard (1-3 pts) — Mix idéal esport</option>
+                  <option value="hard">🔴 Difficile / Hardcore (2-4 pts) — Contraintes strictes</option>
+                  <option value="legendary">👑 Légendaire / Esport (3-5 pts) — Titres D1, Ballon d'Or, Triplés</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" style="color:#e9d5ff;">⚽ Thème de la carrière</label>
+                <select class="form-input" id="ai-theme" style="border-color:rgba(139,92,246,0.4);">
+                  <option value="classic" selected>⚽ Carrière Standard & Ascension</option>
+                  <option value="academy">👶 Académie & 100% Jeunes du Centre</option>
+                  <option value="moneyball">💰 Moneyball & Business Mercato</option>
+                  <option value="defense">🛡️ Catenaccio & Forteresse Défensive</option>
+                  <option value="rivalry">⚔️ Derbys & Rivalités Stream</option>
+                  <option value="fun">🎲 Mode Fun & Chaos</option>
+                  <option value="mixed">🌟 Mix Universel Complet</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+              <div style="font-size:0.75rem;color:var(--muted2);">
+                Génère <strong id="ai-count-preview" style="color:#c084fc;">25</strong> défis calibrés avec émojis, titres, descriptions détaillées, contraintes et points.
+              </div>
+              <button type="button" class="btn" id="btn-run-ai" onclick="runAiGeneration()" style="background:linear-gradient(135deg, #8b5cf6, #4f8ef7);border:none;color:#fff;font-weight:800;padding:10px 22px;box-shadow:0 4px 15px rgba(139,92,246,0.35);">
+                ✨ Générer la grille avec l'IA
+              </button>
+            </div>
+          </div>
+
+          <form onsubmit="createGrid(event)" id="form-create-grid">
             <div class="form-row mb-3">
               <div class="form-group">
                 <label class="form-label">Nom de la grille *</label>
                 <input type="text" class="form-input" id="ng-name" required maxlength="60" placeholder="ex: Bingo Saison 2 — Ligue 1">
               </div>
               <div class="form-group">
-                <label class="form-label">Description (optionnelle)</label>
-                <input type="text" class="form-input" id="ng-desc" maxlength="100" placeholder="ex: Objectifs de la 2ème saison en D1">
+                <label class="form-label">Description générale (optionnelle)</label>
+                <input type="text" class="form-input" id="ng-desc" maxlength="120" placeholder="ex: Objectifs de la 2ème saison en D1">
               </div>
             </div>
 
-            <div class="section-title" style="margin-bottom:10px;">📝 Les 25 défis de la grille</div>
-            <div style="font-size:0.75rem;color:var(--muted2);margin-bottom:8px;display:grid;grid-template-columns:32px 36px 1fr 50px 1fr;gap:5px;">
-              <span style="text-align:center;">#</span>
-              <span>Emoji</span>
-              <span>Titre *</span>
-              <span>Pts *</span>
-              <span>Contrainte</span>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+              <div class="section-title">
+                📝 Liste des défis — <span id="ng-section-count" style="color:var(--accent);">25 défis (5x5)</span>
+              </div>
+              <span class="text-xs text-muted">Chaque défi affiche son titre, sa description détaillée, sa contrainte et ses points</span>
             </div>
 
-            <div id="ng-challenges-rows" style="max-height:480px;overflow-y:auto;padding-right:4px;">
-              <!-- 25 rows built by JS -->
+            <div id="ng-challenges-rows" style="max-height:550px;overflow-y:auto;padding-right:6px;">
+              <!-- rows built by JS -->
             </div>
 
-            <div style="margin-top:14px;display:flex;gap:10px;">
-              <button type="button" class="btn" onclick="fillDefaultChallenges()">📋 Remplir avec les défis par défaut</button>
+            <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+              <button type="button" class="btn" onclick="fillDefaultChallenges()">📋 Remplir par défaut</button>
               <button type="button" class="btn" onclick="clearChallenges()">🗑️ Tout vider</button>
-              <button type="submit" class="btn btn-primary" style="margin-left:auto;">✅ Créer la grille</button>
+              <button type="submit" class="btn btn-primary" style="margin-left:auto;padding:10px 24px;">✅ Créer la grille</button>
             </div>
           </form>
         </div>
@@ -798,16 +912,20 @@
     function viewGrid(id) {
       const grid = state?.grids?.find(g => g.id === id);
       if (!grid) return;
-      document.getElementById('vg-modal-title').textContent = `📋 ${grid.name}`;
-      document.getElementById('vg-challenges-list').innerHTML = grid.challenges.map((ch, i) => `
-        <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04);">
-          <div style="color:var(--muted);font-size:0.7rem;font-weight:700;width:22px;text-align:center;">${i+1}</div>
-          <span style="font-size:1.2rem;">${ch.icon||'🎯'}</span>
-          <div style="flex:1;">
-            <div style="font-weight:700;font-size:0.88rem;">${ch.title}</div>
-            <div style="font-size:0.75rem;color:var(--muted2);">${ch.description||''} · ${ch.constraint||''}</div>
+      const size = grid.size || Math.round(Math.sqrt(grid.challenges?.length || 25)) || 5;
+      document.getElementById('vg-modal-title').innerHTML = `📋 ${grid.name} <span class="line-tag" style="font-size:0.7rem;margin-left:8px;color:var(--accent);border-color:rgba(79,142,247,0.4);">${size}x${size} · ${grid.challenges?.length || 0} défis</span>`;
+      document.getElementById('vg-challenges-list').innerHTML = (grid.challenges || []).map((ch, i) => `
+        <div style="display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.06);">
+          <div style="color:var(--accent);font-size:0.75rem;font-weight:800;width:32px;text-align:center;background:rgba(79,142,247,0.12);border:1px solid rgba(79,142,247,0.25);padding:4px 0;border-radius:6px;flex-shrink:0;">#${i+1}</div>
+          <span style="font-size:1.4rem;line-height:1;flex-shrink:0;">${renderAvatar(ch.icon||'🎯')}</span>
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:800;font-size:0.95rem;color:#fff;margin-bottom:3px;">${ch.title}</div>
+            <div style="font-size:0.84rem;color:var(--text);line-height:1.4;margin-bottom:4px;">
+              ${ch.description ? ch.description : '<span style="color:var(--muted);font-style:italic;">Aucune description</span>'}
+            </div>
+            ${ch.constraint ? `<div style="font-size:0.75rem;color:var(--muted2);background:rgba(255,255,255,0.04);display:inline-block;padding:2px 7px;border-radius:5px;border:1px solid rgba(255,255,255,0.06);">⏱ ${ch.constraint}</div>` : ''}
           </div>
-          <span class="pts pts-${ch.points}" style="flex-shrink:0;">+${ch.points} pt${ch.points>1?'s':''}</span>
+          <span class="pts pts-${ch.points}" style="flex-shrink:0;font-size:0.78rem;">+${ch.points} pt${ch.points>1?'s':''}</span>
         </div>
       `).join('');
       openModal('modal-view-grid');
@@ -830,8 +948,10 @@
     }
 
     /* ========================================================
-       CREATE GRID
+       CREATE GRID & AI GENERATOR
        ======================================================== */
+    let currentGridSize = 5;
+
     const DEFAULT_CHALLENGES = [
       {icon:'🛡️',title:'Invincibilité Domicile',pts:2,desc:'0 défaite à domicile en championnat',c:'1 saison | D2'},
       {icon:'💰',title:'Balance Positive',pts:1,desc:'Bénéfice transferts >= +10M€',c:'1 saison | D2'},
@@ -860,51 +980,170 @@
       {icon:'⚔️',title:'Maître du Derby',pts:3,desc:'Battre son rival historique x2',c:'1 saison | D2'}
     ];
 
+    function selectGridSize(size) {
+      currentGridSize = parseInt(size) || 5;
+      document.querySelectorAll('.btn-size-opt').forEach(btn => {
+        btn.classList.toggle('active', parseInt(btn.dataset.size) === currentGridSize);
+      });
+      const count = currentGridSize * currentGridSize;
+      const countEl = document.getElementById('ai-count-preview');
+      if (countEl) countEl.textContent = count;
+      const titleEl = document.getElementById('ng-section-count');
+      if (titleEl) titleEl.textContent = `${count} défis (${currentGridSize}x${currentGridSize})`;
+      buildChallengesRows([]);
+    }
+
     function buildChallengesRows(defaults) {
+      const count = currentGridSize * currentGridSize;
       const rows = document.getElementById('ng-challenges-rows');
-      rows.innerHTML = Array.from({ length: 25 }, (_, i) => {
-        const d = defaults?.[i] || DEFAULT_CHALLENGES[i] || {};
-        return `<div class="challenge-row">
-          <div class="ci-num">${i + 1}</div>
-          <input class="ci" type="text" data-ci="${i}" data-field="icon" value="${d.icon||'🎯'}" placeholder="🎯" title="Emoji">
-          <input class="ci" type="text" data-ci="${i}" data-field="title" value="${d.title||''}" placeholder="Titre du défi" required>
-          <input class="ci" type="number" data-ci="${i}" data-field="points" value="${d.pts||d.points||1}" min="1" max="10" required>
-          <input class="ci" type="text" data-ci="${i}" data-field="constraint" value="${d.c||d.constraint||''}" placeholder="Contrainte (ex: 1 saison | D2)">
-        </div>`;
+      rows.innerHTML = Array.from({ length: count }, (_, i) => {
+        const d = defaults?.[i] || DEFAULT_CHALLENGES[i % DEFAULT_CHALLENGES.length] || {};
+        const pts = parseInt(d.points || d.pts || 1);
+        const icon = d.icon || '🎯';
+        const title = d.title || (defaults ? '' : `Défi #${i + 1}`);
+        const desc = d.description || d.desc || '';
+        const constraint = d.constraint || d.c || '';
+
+        return `
+          <div class="challenge-card-edit" id="ch-card-${i}">
+            <div class="ch-card-header">
+              <div class="ch-badge">#${i + 1}</div>
+              <input class="ci ci-icon" type="text" data-ci="${i}" data-field="icon" value="${icon}" placeholder="🎯" title="Emoji du défi">
+              <div style="flex:1;">
+                <input class="ci ci-title" type="text" data-ci="${i}" data-field="title" value="${title}" placeholder="Titre du défi (ex: Invincibilité Domicile)" required>
+              </div>
+              <select class="ci ci-pts" data-ci="${i}" data-field="points">
+                <option value="1" ${pts===1?'selected':''}>⭐ 1 pt (Facile)</option>
+                <option value="2" ${pts===2?'selected':''}>⭐⭐ 2 pts (Moyen)</option>
+                <option value="3" ${pts===3?'selected':''}>⭐⭐⭐ 3 pts (Difficile)</option>
+                <option value="4" ${pts===4?'selected':''}>🔥 4 pts (Hardcore)</option>
+                <option value="5" ${pts===5?'selected':''}>👑 5 pts (Légendaire)</option>
+              </select>
+              <button type="button" class="btn btn-sm" onclick="rerollSingleChallenge(${i})" title="Régénérer ce défi avec l'IA" style="background:rgba(139,92,246,0.15);border-color:rgba(139,92,246,0.3);color:#c084fc;padding:6px 10px;flex-shrink:0;">🎲 IA</button>
+            </div>
+            <div class="ch-card-body">
+              <div style="flex:2;">
+                <input class="ci ci-desc" type="text" data-ci="${i}" data-field="description" value="${desc}" placeholder="Description détaillée (ex: 0 défaite à domicile en championnat)" required>
+              </div>
+              <div style="flex:1;">
+                <input class="ci ci-constraint" type="text" data-ci="${i}" data-field="constraint" value="${constraint}" placeholder="Contrainte (ex: 1 saison | D2)">
+              </div>
+            </div>
+          </div>
+        `;
       }).join('');
     }
 
-    function fillDefaultChallenges() { buildChallengesRows(DEFAULT_CHALLENGES); }
-    function clearChallenges() { buildChallengesRows([]); }
+    function fillDefaultChallenges() {
+      buildChallengesRows(DEFAULT_CHALLENGES);
+      notify('📋 Grille pré-remplie avec les défis officiels.');
+    }
+
+    function clearChallenges() {
+      const count = currentGridSize * currentGridSize;
+      const empty = Array.from({ length: count }, (_, i) => ({ icon:'🎯', title:'', desc:'', c:'', pts:1 }));
+      buildChallengesRows(empty);
+      notify('🗑️ Formulaire vidé.');
+    }
+
+    /* ======== AI GENERATION ======== */
+    async function runAiGeneration() {
+      const btn = document.getElementById('btn-run-ai');
+      btn.disabled = true;
+      btn.textContent = '⏳ Génération en cours…';
+      const difficulty = document.getElementById('ai-difficulty')?.value || 'medium';
+      const theme = document.getElementById('ai-theme')?.value || 'classic';
+
+      try {
+        const res = await fetch('/api/ai/generate-grid', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ size: currentGridSize, difficulty, theme })
+        });
+        const data = await res.json();
+        if (data.success && data.challenges) {
+          document.getElementById('ng-name').value = data.name;
+          document.getElementById('ng-desc').value = data.description;
+          buildChallengesRows(data.challenges);
+          notify(`✨ Grille ${currentGridSize}x${currentGridSize} générée avec succès par l'IA !`);
+        } else {
+          notify('❌ Erreur : ' + (data.message || 'Échec de génération'), true);
+        }
+      } catch (err) {
+        notify('❌ Erreur réseau lors de la génération IA', true);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '✨ Générer la grille avec l\'IA';
+      }
+    }
+
+    async function rerollSingleChallenge(idx) {
+      const difficulty = document.getElementById('ai-difficulty')?.value || 'medium';
+      const theme = document.getElementById('ai-theme')?.value || 'mixed';
+      const titles = Array.from(document.querySelectorAll('#ng-challenges-rows [data-field="title"]')).map(x => x.value.trim());
+
+      try {
+        const res = await fetch('/api/ai/reroll-tile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ difficulty, theme, excludeTitles: titles })
+        });
+        const data = await res.json();
+        if (data.success && data.challenge) {
+          const ch = data.challenge;
+          const card = document.getElementById(`ch-card-${idx}`);
+          if (card) {
+            card.querySelector('[data-field="icon"]').value = ch.icon || '🎯';
+            card.querySelector('[data-field="title"]').value = ch.title;
+            card.querySelector('[data-field="description"]').value = ch.description;
+            card.querySelector('[data-field="constraint"]').value = ch.constraint || '';
+            card.querySelector('[data-field="points"]').value = ch.points || 1;
+            card.style.borderColor = 'var(--accent)';
+            setTimeout(() => card.style.borderColor = '', 1200);
+          }
+          notify(`🎲 Défi #${idx + 1} régénéré avec l'IA !`);
+        }
+      } catch (e) {
+        notify('❌ Erreur de régénération', true);
+      }
+    }
 
     async function createGrid(e) {
       e.preventDefault();
       const name = document.getElementById('ng-name').value.trim();
       const desc = document.getElementById('ng-desc').value.trim();
 
+      const expectedCount = currentGridSize * currentGridSize;
       const inputs = document.querySelectorAll('#ng-challenges-rows [data-ci]');
       const map = {};
       inputs.forEach(el => {
         const ci = el.dataset.ci;
         if (!map[ci]) map[ci] = { id: parseInt(ci), icon: '🎯', title: '', points: 1, description: '', constraint: '', category: 'Défi' };
         if (el.dataset.field === 'points') map[ci].points = parseInt(el.value) || 1;
-        else map[ci][el.dataset.field] = el.value;
+        else map[ci][el.dataset.field] = el.value.trim();
       });
       const challenges = Object.values(map).sort((a, b) => a.id - b.id);
 
-      if (challenges.length !== 25) {
-        notify('❌ Il faut exactement 25 défis.', true);
+      if (challenges.length !== expectedCount) {
+        notify(`❌ Il faut exactement ${expectedCount} défis pour une grille ${currentGridSize}x${currentGridSize}.`, true);
+        return;
+      }
+
+      // Check titles
+      const missingTitle = challenges.find(c => !c.title);
+      if (missingTitle) {
+        notify(`❌ Le défi #${missingTitle.id + 1} n'a pas de titre.`, true);
         return;
       }
 
       const res = await fetch('/api/grids', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, description: desc, challenges })
+        body: JSON.stringify({ name, description: desc, size: currentGridSize, challenges })
       });
       const data = await res.json();
       if (data.success) {
-        notify(`✅ Grille "${name}" créée !`);
+        notify(`✅ Grille "${name}" (${currentGridSize}x${currentGridSize}) créée avec succès !`);
         document.getElementById('form-create-grid').reset();
         buildChallengesRows([]);
         showPanel('p-grids', document.querySelectorAll('.admin-tab')[1]);
