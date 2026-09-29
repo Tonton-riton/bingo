@@ -149,86 +149,166 @@
       gap: 10px;
     }
 
-    /* Challenge cards in grid editor */
-    .challenge-card-edit {
-      background: #10121a;
-      border: 1px solid #2e3344;
-      border-left: 3px solid var(--accent);
-      border-radius: 0px;
-      padding: 14px 16px;
-      margin-bottom: 12px;
-      transition: all 0.2s;
-    }
-    .challenge-card-edit:hover {
-      border-color: var(--accent);
-      background: #151722;
-    }
-    .ch-card-header {
-      display: flex;
-      align-items: flex-end;
-      gap: 10px;
-      margin-bottom: 10px;
-      flex-wrap: wrap;
-    }
-    .ch-badge {
-      font-size: 0.8rem;
-      font-weight: 900;
-      color: #000000;
-      background: var(--accent);
-      padding: 6px 10px;
-      border-radius: 0px;
-      min-width: 38px;
-      text-align: center;
-      flex-shrink: 0;
-    }
-    .ch-card-body {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-    .ci {
-      background: #090a10 !important;
-      border: 1px solid #383e52 !important;
-      border-radius: 0px !important;
-      padding: 9px 12px;
-      color: #ffffff !important;
-      font-size: 0.88rem;
-      outline: none;
-      font-family: inherit;
-      font-weight: 600;
-    }
-    .ci:focus { border-color: var(--accent) !important; box-shadow: 0 0 0 1px var(--accent) !important; }
-    .ci-icon { width: 50px; text-align: center; font-size: 1.25rem; flex-shrink: 0; }
-    .ci-title { font-weight: 800; font-size: 0.95rem; color: #ffffff !important; }
-    .ci-desc { color: #ffffff !important; font-size: 0.85rem; }
-    .ci-constraint { color: #ffaa66 !important; font-size: 0.82rem; font-weight: 700; }
-    .ci-pts { width: 165px; font-weight: 800; font-size: 0.82rem; flex-shrink: 0; }
-    select.ci option { background: #0f1016; color: #fff; }
-
-    /* Size selector buttons */
+    /* Grid Size Selector (3 equal responsive columns) */
     .grid-size-selector {
-      display: flex;
-      gap: 12px;
-      margin-bottom: 20px;
+      display: grid !important;
+      grid-template-columns: repeat(3, 1fr) !important;
+      gap: 12px !important;
+      width: 100% !important;
+      box-sizing: border-box !important;
+      margin-bottom: 20px !important;
+    }
+    @media (max-width: 768px) {
+      .grid-size-selector {
+        grid-template-columns: 1fr !important;
+      }
     }
     .btn-size-opt {
-      flex: 1;
-      padding: 14px 16px;
-      border-radius: 0px;
-      border: 1px solid var(--border);
-      background: #11131b;
-      cursor: pointer;
-      text-align: center;
-      transition: all 0.2s;
+      width: 100% !important;
+      box-sizing: border-box !important;
+      white-space: normal !important;
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: center !important;
+      padding: 14px 16px !important;
+      border-radius: 8px !important;
+      border: 1px solid var(--border) !important;
+      background: #0b0e18 !important;
+      cursor: pointer !important;
+      text-align: center !important;
+      transition: all 0.2s ease !important;
     }
     .btn-size-opt:hover {
-      background: #171a26;
-      border-color: var(--accent);
+      background: #121828 !important;
+      border-color: var(--accent) !important;
     }
     .btn-size-opt.active {
-      border-color: var(--accent);
-      background: rgba(255,85,0,0.18);
-      box-shadow: 0 0 20px rgba(255,85,0,0.25);
+      border-color: var(--accent) !important;
+      background: rgba(255, 85, 0, 0.16) !important;
+      box-shadow: 0 0 20px rgba(255, 85, 0, 0.22) !important;
+    }
+
+    /* Challenge Editor Table - Synchronized CSS Grid */
+    .ch-table-wrapper {
+      width: 100%;
+      overflow-x: auto;
+      padding-bottom: 6px;
+    }
+    .ch-table-header,
+    .challenge-row-edit {
+      display: grid !important;
+      grid-template-columns: 36px 48px minmax(130px, 1.4fr) minmax(180px, 1.8fr) 76px minmax(120px, 1.1fr) 38px !important;
+      align-items: center !important;
+      gap: 8px !important;
+      width: 100% !important;
+      min-width: 780px;
+      box-sizing: border-box !important;
+    }
+    .ch-table-header {
+      padding: 8px 10px !important;
+      font-size: 0.76rem !important;
+      font-weight: 800 !important;
+      color: #64748b !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.05em !important;
+      margin-bottom: 6px !important;
+      border-bottom: 1px solid #1e293b;
+    }
+    .ch-table-header span {
+      display: block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .challenge-row-edit {
+      background: #090d16 !important;
+      border: 1px solid #1e293b !important;
+      border-radius: 8px !important;
+      padding: 6px 10px !important;
+      margin-bottom: 6px !important;
+      transition: border-color 0.15s ease, background 0.15s ease !important;
+    }
+    .challenge-row-edit:hover {
+      background: #0e1424 !important;
+      border-color: #3b82f6 !important;
+    }
+    .challenge-row-edit .ch-num {
+      width: auto !important;
+      text-align: center !important;
+      color: #94a3b8 !important;
+      font-weight: 800 !important;
+      font-size: 0.85rem !important;
+    }
+    .challenge-row-edit input,
+    .challenge-row-edit select {
+      width: 100% !important;
+      min-width: 0 !important;
+      height: 38px !important;
+      box-sizing: border-box !important;
+      background: #070a12 !important;
+      border: 1px solid #1e293b !important;
+      border-radius: 6px !important;
+      padding: 6px 10px !important;
+      color: #ffffff !important;
+      font-size: 0.86rem !important;
+      font-family: inherit !important;
+      outline: none !important;
+    }
+    .challenge-row-edit input:focus,
+    .challenge-row-edit select:focus {
+      border-color: #3b82f6 !important;
+      box-shadow: 0 0 0 1px #3b82f6 !important;
+    }
+    .challenge-row-edit input.ci-icon {
+      text-align: center !important;
+      font-size: 1.25rem !important;
+      padding: 2px !important;
+    }
+    .challenge-row-edit input.ci-title {
+      font-weight: 700 !important;
+      color: #ffffff !important;
+    }
+    .challenge-row-edit input.ci-desc {
+      color: #cbd5e1 !important;
+      font-size: 0.82rem !important;
+    }
+    .challenge-row-edit select.ci-pts {
+      text-align: center !important;
+      font-weight: 800 !important;
+      color: #60a5fa !important;
+      cursor: pointer !important;
+      padding: 6px 4px !important;
+    }
+    .challenge-row-edit select.ci-pts option {
+      background: #0f1016;
+      color: #ffffff;
+    }
+    .challenge-row-edit input.ci-constraint {
+      color: #ffaa66 !important;
+      font-size: 0.82rem !important;
+      font-weight: 600 !important;
+    }
+    .challenge-row-edit .ci-reroll {
+      width: 36px !important;
+      height: 36px !important;
+      min-width: 36px !important;
+      border-radius: 6px !important;
+      border: 1px solid rgba(139, 92, 246, 0.4) !important;
+      background: rgba(139, 92, 246, 0.12) !important;
+      color: #c084fc !important;
+      font-size: 1rem !important;
+      cursor: pointer !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      transition: all 0.15s ease !important;
+      padding: 0 !important;
+    }
+    .challenge-row-edit .ci-reroll:hover {
+      background: rgba(139, 92, 246, 0.3) !important;
+      border-color: #c084fc !important;
+      transform: scale(1.06);
     }
 
     /* Notification */
@@ -300,7 +380,7 @@
       </div>
     </header>
 
-    <main class="container" style="max-width:1000px;">
+    <main class="container" style="max-width:1240px;width:100%;">
 
       <!-- TABS -->
       <div class="admin-tabs">
@@ -507,19 +587,21 @@
               </div>
             </div>
 
-            <!-- TABLE HEADER (matching screenshot) -->
-            <div class="ch-table-header">
-              <span style="width:28px;text-align:center;">#</span>
-              <span style="width:44px;text-align:center;">Emoji</span>
-              <span style="flex:1.2;min-width:150px;">Titre *</span>
-              <span style="flex:1.5;min-width:180px;">Description</span>
-              <span style="width:60px;text-align:center;">Pts *</span>
-              <span style="width:170px;">Contrainte</span>
-              <span style="width:34px;text-align:center;">IA</span>
-            </div>
+            <!-- TABLE HEADER & ROWS (Rock-solid CSS Grid) -->
+            <div class="ch-table-wrapper">
+              <div class="ch-table-header">
+                <span style="text-align:center;">#</span>
+                <span style="text-align:center;">Emoji</span>
+                <span>Titre *</span>
+                <span>Description</span>
+                <span style="text-align:center;">Pts *</span>
+                <span>Contrainte</span>
+                <span style="text-align:center;">IA</span>
+              </div>
 
-            <div id="ng-challenges-rows" style="max-height:550px;overflow-y:auto;padding-right:6px;">
-              <!-- rows built by JS -->
+              <div id="ng-challenges-rows" style="max-height:550px;overflow-y:auto;padding-right:4px;">
+                <!-- rows built by JS -->
+              </div>
             </div>
 
             <!-- ACTION BAR (matching screenshot) -->
