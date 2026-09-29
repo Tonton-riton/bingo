@@ -414,54 +414,60 @@
            PANEL : CRÉER GRILLE
            ============================ -->
       <div class="admin-panel" id="p-new-grid">
-        <div class="card" style="padding:24px;">
-          <div class="section-title mb-3">🆕 Créer une nouvelle grille Bingo</div>
+        <div class="card" style="background:#0d121f; border:1px solid #1e293b; border-radius:14px; padding:26px;">
+          <!-- HEADER DE LA MODALE / SECTION -->
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+            <span style="font-size:1.4rem;">🗂️</span>
+            <h2 style="font-size:1.1rem;font-weight:900;color:#ffffff;letter-spacing:0.04em;text-transform:uppercase;margin:0;">
+              CRÉER UNE NOUVELLE GRILLE BINGO
+            </h2>
+          </div>
 
           <!-- SÉLECTEUR DE FORMAT / TAILLE -->
           <div style="margin-bottom:18px;">
-            <label class="form-label" style="margin-bottom:8px;">📐 Format de la grille</label>
+            <label class="form-label" style="color:#94a3b8;font-size:0.78rem;margin-bottom:8px;">📐 FORMAT DE LA GRILLE</label>
             <div class="grid-size-selector">
               <button type="button" class="btn btn-size-opt active" data-size="5" onclick="selectGridSize(5)">
-                <div style="font-weight:900;font-size:1.15rem;color:var(--text);">🔲 5x5 Carrière Pro</div>
-                <div style="font-size:0.75rem;color:var(--muted2);margin-top:2px;">Format classique (25 défis)</div>
+                <div style="font-weight:900;font-size:1.05rem;color:#ffffff;">🔲 5x5 Carrière Pro</div>
+                <div style="font-size:0.75rem;color:#94a3b8;margin-top:2px;">Format classique (25 défis)</div>
               </button>
               <button type="button" class="btn btn-size-opt" data-size="4" onclick="selectGridSize(4)">
-                <div style="font-weight:900;font-size:1.15rem;color:var(--text);">🔲 4x4 Intermédiaire</div>
-                <div style="font-size:0.75rem;color:var(--muted2);margin-top:2px;">Format équilibré (16 défis)</div>
+                <div style="font-weight:900;font-size:1.05rem;color:#ffffff;">🔲 4x4 Intermédiaire</div>
+                <div style="font-size:0.75rem;color:#94a3b8;margin-top:2px;">Format équilibré (16 défis)</div>
               </button>
               <button type="button" class="btn btn-size-opt" data-size="3" onclick="selectGridSize(3)">
-                <div style="font-weight:900;font-size:1.15rem;color:var(--text);">🔲 3x3 Express</div>
-                <div style="font-size:0.75rem;color:var(--muted2);margin-top:2px;">Format rapide (9 défis)</div>
+                <div style="font-weight:900;font-size:1.05rem;color:#ffffff;">🔲 3x3 Express</div>
+                <div style="font-size:0.75rem;color:#94a3b8;margin-top:2px;">Format rapide (9 défis)</div>
               </button>
             </div>
           </div>
 
           <!-- GÉNÉRATEUR IA D'OBJECTIFS -->
-          <div class="ai-generator-box" style="background:linear-gradient(145deg, rgba(139,92,246,0.12), rgba(79,142,247,0.08)); border:1px solid rgba(139,92,246,0.35); border-radius:14px; padding:18px 20px; margin-bottom:24px;">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+          <div class="ai-generator-box" style="background:#0a0f1d; border:1px solid #23304d; border-radius:10px; padding:16px 18px; margin-bottom:22px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px;">
               <div style="display:flex;align-items:center;gap:10px;">
-                <span style="font-size:1.6rem;">🤖✨</span>
+                <span style="font-size:1.4rem;">🤖✨</span>
                 <div>
-                  <div style="font-weight:900;font-size:1.05rem;color:#c084fc;">Générateur IA d'Objectifs Carrière</div>
-                  <div style="font-size:0.78rem;color:var(--muted2);">Génère automatiquement une grille cohérente selon votre difficulté et thème de carrière</div>
+                  <div style="font-weight:900;font-size:0.98rem;color:#c084fc;">Générateur IA d'Objectifs Carrière</div>
+                  <div style="font-size:0.76rem;color:#94a3b8;">Génère automatiquement une grille calibrée selon votre difficulté et thème de carrière</div>
                 </div>
               </div>
-              <span class="line-tag" style="color:#c084fc;border-color:rgba(192,132,252,0.4);background:rgba(192,132,252,0.1);">IA Intégrée</span>
+              <span class="line-tag" style="color:#c084fc;border-color:rgba(192,132,252,0.4);background:rgba(192,132,252,0.1);font-size:0.72rem;">IA Intégrée</span>
             </div>
 
-            <div class="form-row" style="margin-bottom:14px;">
-              <div class="form-group">
-                <label class="form-label" style="color:#e9d5ff;">🎯 Degré de difficulté</label>
-                <select class="form-input" id="ai-difficulty" style="border-color:rgba(139,92,246,0.4);">
+            <div class="form-row" style="margin-bottom:12px;">
+              <div class="form-group" style="margin-bottom:0;">
+                <label class="form-label" style="color:#e9d5ff;font-size:0.75rem;">🎯 Degré de difficulté</label>
+                <select class="form-input" id="ai-difficulty" style="border-color:#2a3652;">
                   <option value="easy">🟢 Facile / Saison 1 (1-2 pts) — Accessible, pour débuter</option>
                   <option value="medium" selected>🟡 Équilibré / Standard (1-3 pts) — Mix idéal esport</option>
                   <option value="hard">🔴 Difficile / Hardcore (2-4 pts) — Contraintes strictes</option>
                   <option value="legendary">👑 Légendaire / Esport (3-5 pts) — Titres D1, Ballon d'Or, Triplés</option>
                 </select>
               </div>
-              <div class="form-group">
-                <label class="form-label" style="color:#e9d5ff;">⚽ Thème de la carrière</label>
-                <select class="form-input" id="ai-theme" style="border-color:rgba(139,92,246,0.4);">
+              <div class="form-group" style="margin-bottom:0;">
+                <label class="form-label" style="color:#e9d5ff;font-size:0.75rem;">⚽ Thème de la carrière</label>
+                <select class="form-input" id="ai-theme" style="border-color:#2a3652;">
                   <option value="classic" selected>⚽ Carrière Standard & Ascension</option>
                   <option value="academy">👶 Académie & 100% Jeunes du Centre</option>
                   <option value="moneyball">💰 Moneyball & Business Mercato</option>
@@ -473,11 +479,11 @@
               </div>
             </div>
 
-            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
-              <div style="font-size:0.75rem;color:var(--muted2);">
-                Génère <strong id="ai-count-preview" style="color:#c084fc;">25</strong> défis calibrés avec émojis, titres, descriptions détaillées, contraintes et points.
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-top:12px;">
+              <div style="font-size:0.75rem;color:#94a3b8;">
+                Génère <strong id="ai-count-preview" style="color:#c084fc;">25</strong> défis avec emojis, titres, descriptions détaillées, contraintes et points.
               </div>
-              <button type="button" class="btn" id="btn-run-ai" onclick="runAiGeneration()" style="background:linear-gradient(135deg, #8b5cf6, #4f8ef7);border:none;color:#fff;font-weight:800;padding:10px 22px;box-shadow:0 4px 15px rgba(139,92,246,0.35);">
+              <button type="button" class="btn" id="btn-run-ai" onclick="runAiGeneration()" style="background:linear-gradient(135deg, #8b5cf6, #3b82f6);border:none;color:#fff;font-weight:800;padding:8px 18px;border-radius:8px;box-shadow:0 4px 14px rgba(139,92,246,0.35);">
                 ✨ Générer la grille avec l'IA
               </button>
             </div>
@@ -486,30 +492,47 @@
           <form onsubmit="createGrid(event)" id="form-create-grid">
             <div class="form-row mb-3">
               <div class="form-group">
-                <label class="form-label">Nom de la grille *</label>
+                <label class="form-label" style="color:#cbd5e1;font-size:0.8rem;">Nom de la grille *</label>
                 <input type="text" class="form-input" id="ng-name" required maxlength="60" placeholder="ex: Bingo Saison 2 — Ligue 1">
               </div>
               <div class="form-group">
-                <label class="form-label">Description générale (optionnelle)</label>
+                <label class="form-label" style="color:#cbd5e1;font-size:0.8rem;">Description (optionnelle)</label>
                 <input type="text" class="form-input" id="ng-desc" maxlength="120" placeholder="ex: Objectifs de la 2ème saison en D1">
               </div>
             </div>
 
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-              <div class="section-title">
-                📝 Liste des défis — <span id="ng-section-count" style="color:var(--accent);">25 défis (5x5)</span>
+            <div style="margin-top:20px;margin-bottom:12px;">
+              <div style="font-size:0.95rem;font-weight:900;color:#ffffff;letter-spacing:0.04em;text-transform:uppercase;display:flex;align-items:center;gap:8px;">
+                <span>📑</span> <span id="ng-section-count">LES 25 DÉFIS DE LA GRILLE</span>
               </div>
-              <span class="text-xs text-muted">Chaque défi affiche son titre, sa description détaillée, sa contrainte et ses points</span>
+            </div>
+
+            <!-- TABLE HEADER (matching screenshot) -->
+            <div class="ch-table-header">
+              <span style="width:28px;text-align:center;">#</span>
+              <span style="width:44px;text-align:center;">Emoji</span>
+              <span style="flex:1.2;min-width:150px;">Titre *</span>
+              <span style="flex:1.5;min-width:180px;">Description</span>
+              <span style="width:60px;text-align:center;">Pts *</span>
+              <span style="width:170px;">Contrainte</span>
+              <span style="width:34px;text-align:center;">IA</span>
             </div>
 
             <div id="ng-challenges-rows" style="max-height:550px;overflow-y:auto;padding-right:6px;">
               <!-- rows built by JS -->
             </div>
 
-            <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-              <button type="button" class="btn" onclick="fillDefaultChallenges()">📋 Remplir par défaut</button>
-              <button type="button" class="btn" onclick="clearChallenges()">🗑️ Tout vider</button>
-              <button type="submit" class="btn btn-primary" style="margin-left:auto;padding:10px 24px;">✅ Créer la grille</button>
+            <!-- ACTION BAR (matching screenshot) -->
+            <div style="margin-top:22px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
+              <button type="button" class="btn btn-secondary-slate" onclick="fillDefaultChallenges()">
+                📜 Remplir avec les défis par défaut
+              </button>
+              <button type="button" class="btn btn-secondary-slate" onclick="clearChallenges()">
+                🗑️ Tout vider
+              </button>
+              <button type="submit" class="btn btn-primary" style="margin-left:auto;padding:11px 26px;font-size:0.88rem;font-weight:800;">
+                ✅ Créer la grille
+              </button>
             </div>
           </form>
         </div>
@@ -999,8 +1022,8 @@
       const countEl = document.getElementById('ai-count-preview');
       if (countEl) countEl.textContent = count;
       const titleEl = document.getElementById('ng-section-count');
-      if (titleEl) titleEl.textContent = `${count} défis (${currentGridSize}x${currentGridSize})`;
-      buildChallengesRows([]);
+      if (titleEl) titleEl.textContent = `LES ${count} DÉFIS DE LA GRILLE (${currentGridSize}x${currentGridSize})`;
+      buildChallengesRows();
     }
 
     function buildChallengesRows(defaults) {
@@ -1015,41 +1038,20 @@
         const constraint = d.constraint || d.c || '';
 
         return `
-          <div class="challenge-card-edit" id="ch-card-${i}">
-            <div class="ch-card-header">
-              <div class="ch-badge">#${i + 1}</div>
-              <div style="display:flex;flex-direction:column;gap:3px;flex-shrink:0;">
-                <label style="font-size:0.65rem;font-weight:900;color:#ff9955;text-transform:uppercase;">ICÔNE</label>
-                <input class="ci ci-icon" type="text" data-ci="${i}" data-field="icon" value="${icon}" placeholder="🎯" title="Emoji du défi">
-              </div>
-              <div style="flex:2;min-width:180px;">
-                <label style="font-size:0.65rem;font-weight:900;color:#ffffff;text-transform:uppercase;display:block;margin-bottom:3px;">TITRE DU DÉFI *</label>
-                <input class="ci ci-title" type="text" data-ci="${i}" data-field="title" value="${title}" placeholder="Titre (ex: Invincibilité Domicile)" required>
-              </div>
-              <div style="flex:1;min-width:145px;">
-                <label style="font-size:0.65rem;font-weight:900;color:#ffffff;text-transform:uppercase;display:block;margin-bottom:3px;">POINTS</label>
-                <select class="ci ci-pts" data-ci="${i}" data-field="points">
-                  <option value="1" ${pts===1?'selected':''}>⭐ 1 pt (Facile)</option>
-                  <option value="2" ${pts===2?'selected':''}>⭐⭐ 2 pts (Moyen)</option>
-                  <option value="3" ${pts===3?'selected':''}>⭐⭐⭐ 3 pts (Difficile)</option>
-                  <option value="4" ${pts===4?'selected':''}>🔥 4 pts (Hardcore)</option>
-                  <option value="5" ${pts===5?'selected':''}>👑 5 pts (Légendaire)</option>
-                </select>
-              </div>
-              <div style="align-self:flex-end;">
-                <button type="button" class="btn btn-sm" onclick="rerollSingleChallenge(${i})" title="Régénérer ce défi avec l'IA" style="background:#ff5500;border-color:#ff5500;color:#ffffff;padding:8px 12px;font-weight:900;flex-shrink:0;">🎲 IA</button>
-              </div>
-            </div>
-            <div class="ch-card-body" style="margin-top:8px;">
-              <div style="flex:2;min-width:200px;">
-                <label style="font-size:0.65rem;font-weight:900;color:#e5e7eb;text-transform:uppercase;display:block;margin-bottom:3px;">📝 DESCRIPTION DÉTAILLÉE DU DÉFI *</label>
-                <input class="ci ci-desc" type="text" data-ci="${i}" data-field="description" value="${desc}" placeholder="Ex: 0 défaite à domicile en championnat sur toute la saison" required>
-              </div>
-              <div style="flex:1;min-width:140px;">
-                <label style="font-size:0.65rem;font-weight:900;color:#ffaa66;text-transform:uppercase;display:block;margin-bottom:3px;">⏱ CONTRAINTE / CONDITION</label>
-                <input class="ci ci-constraint" type="text" data-ci="${i}" data-field="constraint" value="${constraint}" placeholder="Ex: 1 saison | D2">
-              </div>
-            </div>
+          <div class="challenge-row-edit" id="ch-row-${i}">
+            <span class="ch-num">${i + 1}</span>
+            <input class="ci ci-icon" type="text" data-ci="${i}" data-field="icon" value="${icon}" placeholder="🎯" title="Emoji">
+            <input class="ci ci-title" type="text" data-ci="${i}" data-field="title" value="${title}" placeholder="Titre du défi *" required>
+            <input class="ci ci-desc" type="text" data-ci="${i}" data-field="description" value="${desc}" placeholder="Description détaillée" required>
+            <select class="ci ci-pts" data-ci="${i}" data-field="points" title="Points">
+              <option value="1" ${pts===1?'selected':''}>1 pt</option>
+              <option value="2" ${pts===2?'selected':''}>2 pts</option>
+              <option value="3" ${pts===3?'selected':''}>3 pts</option>
+              <option value="4" ${pts===4?'selected':''}>4 pts</option>
+              <option value="5" ${pts===5?'selected':''}>5 pts</option>
+            </select>
+            <input class="ci ci-constraint" type="text" data-ci="${i}" data-field="constraint" value="${constraint}" placeholder="ex: 1 saison | D2">
+            <button type="button" class="ci-reroll" onclick="rerollSingleChallenge(${i})" title="Régénérer ce défi avec l'IA">🎲</button>
           </div>
         `;
       }).join('');
@@ -1112,15 +1114,15 @@
         const data = await res.json();
         if (data.success && data.challenge) {
           const ch = data.challenge;
-          const card = document.getElementById(`ch-card-${idx}`);
-          if (card) {
-            card.querySelector('[data-field="icon"]').value = ch.icon || '🎯';
-            card.querySelector('[data-field="title"]').value = ch.title;
-            card.querySelector('[data-field="description"]').value = ch.description;
-            card.querySelector('[data-field="constraint"]').value = ch.constraint || '';
-            card.querySelector('[data-field="points"]').value = ch.points || 1;
-            card.style.borderColor = 'var(--accent)';
-            setTimeout(() => card.style.borderColor = '', 1200);
+          const row = document.getElementById(`ch-row-${idx}`);
+          if (row) {
+            row.querySelector('[data-field="icon"]').value = ch.icon || '🎯';
+            row.querySelector('[data-field="title"]').value = ch.title;
+            row.querySelector('[data-field="description"]').value = ch.description;
+            row.querySelector('[data-field="constraint"]').value = ch.constraint || '';
+            row.querySelector('[data-field="points"]').value = ch.points || 1;
+            row.style.borderColor = 'var(--accent)';
+            setTimeout(() => row.style.borderColor = '', 1200);
           }
           notify(`🎲 Défi #${idx + 1} régénéré avec l'IA !`);
         }

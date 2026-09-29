@@ -40,8 +40,8 @@ const SocialHub = (function() {
     div.innerHTML = `
       <!-- MODAL REGISTER -->
       <div class="modal-overlay" id="modal-social-register">
-        <div class="modal-box" style="max-width:480px; border:2px solid var(--accent); background:#0c0d12;">
-          <div class="modal-header" style="border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:12px;">
+        <div class="modal-box" style="max-width:480px; border:1px solid #1e293b; border-radius:14px; background:#0e1424;">
+          <div class="modal-header" style="border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:12px;">
             <div class="modal-title" style="color:#ffffff; font-weight:900; letter-spacing:0.02em;">
               <span style="color:var(--accent);">⚡</span> CRÉER UN COMPTE
             </div>
@@ -49,18 +49,18 @@ const SocialHub = (function() {
           </div>
           <form onsubmit="SocialHub.submitRegister(event)" style="margin-top:16px;">
             <div class="form-group">
-              <label class="form-label" style="color:#ffffff;">PSEUDO JOUEUR / STREAMER *</label>
-              <input type="text" class="form-input" id="reg-name" required maxlength="25" placeholder="Ex: Tonton-riton" style="background:#13151b; border:1px solid #333844; color:#fff; font-size:0.95rem; font-weight:700;">
+              <label class="form-label" style="color:#cbd5e1; font-size:0.78rem;">PSEUDO JOUEUR / STREAMER *</label>
+              <input type="text" class="form-input" id="reg-name" required maxlength="25" placeholder="Ex: Tonton-riton" style="background:#090d16; border:1px solid #1e293b; border-radius:8px; color:#fff; font-size:0.95rem; font-weight:700;">
             </div>
             <div class="form-group">
-              <label class="form-label" style="color:#ffffff;">CLUB / ÉQUIPE CARRIÈRE</label>
-              <input type="text" class="form-input" id="reg-club" maxlength="30" placeholder="Ex: Olympique de Marseille, Real Madrid..." style="background:#13151b; border:1px solid #333844; color:#fff;">
+              <label class="form-label" style="color:#cbd5e1; font-size:0.78rem;">CLUB / ÉQUIPE CARRIÈRE</label>
+              <input type="text" class="form-input" id="reg-club" maxlength="30" placeholder="Ex: Olympique de Marseille, Real Madrid..." style="background:#090d16; border:1px solid #1e293b; border-radius:8px; color:#fff;">
             </div>
             <div class="form-group">
-              <label class="form-label" style="color:#ffffff;">AVATAR (EMOJI OU LIEN IMAGE)</label>
+              <label class="form-label" style="color:#cbd5e1; font-size:0.78rem;">AVATAR (EMOJI OU LIEN IMAGE)</label>
               <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
-                <div id="reg-avatar-preview" style="width:44px; height:44px; border:2px solid var(--accent); background:#181a24; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0;">⚽</div>
-                <input type="text" class="form-input" id="reg-avatar" value="⚽" placeholder="Emoji ou URL..." style="flex:1; background:#13151b; border:1px solid #333844; color:#fff;">
+                <div id="reg-avatar-preview" style="width:44px; height:44px; border:2px solid var(--accent); border-radius:8px; background:#141d33; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0;">⚽</div>
+                <input type="text" class="form-input" id="reg-avatar" value="⚽" placeholder="Emoji ou URL..." style="flex:1; background:#090d16; border:1px solid #1e293b; border-radius:8px; color:#fff;">
               </div>
               <div class="emoji-row" id="reg-emoji-row" style="display:flex; gap:6px; flex-wrap:wrap;">
                 <span class="emoji-opt selected" data-v="⚽">⚽</span>
@@ -78,15 +78,15 @@ const SocialHub = (function() {
               </div>
             </div>
             <div class="form-group">
-              <label class="form-label" style="color:#ffffff;">CODE PIN / MOT DE PASSE (Optionnel pour sécuriser)</label>
-              <input type="password" class="form-input" id="reg-pin" maxlength="12" placeholder="Code secret ou 4 chiffres..." style="background:#13151b; border:1px solid #333844; color:#fff;">
+              <label class="form-label" style="color:#cbd5e1; font-size:0.78rem;">CODE PIN / MOT DE PASSE (Optionnel pour sécuriser)</label>
+              <input type="password" class="form-input" id="reg-pin" maxlength="12" placeholder="Code secret ou 4 chiffres..." style="background:#090d16; border:1px solid #1e293b; border-radius:8px; color:#fff;">
             </div>
             <div id="reg-error" style="display:none; color:#f87171; font-size:0.82rem; margin-bottom:12px; font-weight:700;"></div>
             <div style="display:flex; gap:10px; margin-top:20px;">
-              <button type="button" class="btn btn-full" onclick="SocialHub.closeModal('modal-social-register')">Annuler</button>
+              <button type="button" class="btn btn-secondary-slate btn-full" onclick="SocialHub.closeModal('modal-social-register')">Annuler</button>
               <button type="submit" class="btn btn-primary btn-full" style="font-weight:900;">🚀 CRÉER MON COMPTE</button>
             </div>
-            <div style="text-align:center; margin-top:14px; font-size:0.8rem; color:#9ca3af;">
+            <div style="text-align:center; margin-top:14px; font-size:0.8rem; color:#94a3b8;">
               Tu as déjà un compte ? <a href="javascript:void(0)" onclick="SocialHub.switchToLogin()" style="color:var(--accent); font-weight:700; text-decoration:none;">Se connecter ici</a>
             </div>
           </form>
@@ -95,8 +95,8 @@ const SocialHub = (function() {
 
       <!-- MODAL LOGIN -->
       <div class="modal-overlay" id="modal-social-login">
-        <div class="modal-box" style="max-width:440px; border:2px solid var(--accent); background:#0c0d12;">
-          <div class="modal-header" style="border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:12px;">
+        <div class="modal-box" style="max-width:440px; border:1px solid #1e293b; border-radius:14px; background:#0e1424;">
+          <div class="modal-header" style="border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:12px;">
             <div class="modal-title" style="color:#ffffff; font-weight:900; letter-spacing:0.02em;">
               <span style="color:var(--accent);">🔑</span> CONNEXION JOUEUR
             </div>
@@ -104,19 +104,19 @@ const SocialHub = (function() {
           </div>
           <form onsubmit="SocialHub.submitLogin(event)" style="margin-top:16px;">
             <div class="form-group">
-              <label class="form-label" style="color:#ffffff;">TON PSEUDO *</label>
-              <input type="text" class="form-input" id="login-username" required placeholder="Ex: Tonton-riton" style="background:#13151b; border:1px solid #333844; color:#fff; font-size:0.95rem; font-weight:700;">
+              <label class="form-label" style="color:#cbd5e1; font-size:0.78rem;">TON PSEUDO *</label>
+              <input type="text" class="form-input" id="login-username" required placeholder="Ex: Tonton-riton" style="background:#090d16; border:1px solid #1e293b; border-radius:8px; color:#fff; font-size:0.95rem; font-weight:700;">
             </div>
             <div class="form-group">
-              <label class="form-label" style="color:#ffffff;">CODE PIN / MOT DE PASSE (si défini)</label>
-              <input type="password" class="form-input" id="login-pin" placeholder="••••" style="background:#13151b; border:1px solid #333844; color:#fff;">
+              <label class="form-label" style="color:#cbd5e1; font-size:0.78rem;">CODE PIN / MOT DE PASSE (si défini)</label>
+              <input type="password" class="form-input" id="login-pin" placeholder="••••" style="background:#090d16; border:1px solid #1e293b; border-radius:8px; color:#fff;">
             </div>
             <div id="login-auth-error" style="display:none; color:#f87171; font-size:0.82rem; margin-bottom:12px; font-weight:700;"></div>
             <div style="display:flex; gap:10px; margin-top:20px;">
-              <button type="button" class="btn btn-full" onclick="SocialHub.closeModal('modal-social-login')">Annuler</button>
+              <button type="button" class="btn btn-secondary-slate btn-full" onclick="SocialHub.closeModal('modal-social-login')">Annuler</button>
               <button type="submit" class="btn btn-primary btn-full" style="font-weight:900;">🔓 SE CONNECTER</button>
             </div>
-            <div style="text-align:center; margin-top:14px; font-size:0.8rem; color:#9ca3af;">
+            <div style="text-align:center; margin-top:14px; font-size:0.8rem; color:#94a3b8;">
               Pas encore de compte ? <a href="javascript:void(0)" onclick="SocialHub.switchToRegister()" style="color:var(--accent); font-weight:700; text-decoration:none;">Créer un compte gratuit</a>
             </div>
           </form>
@@ -125,8 +125,8 @@ const SocialHub = (function() {
 
       <!-- MODAL FRIENDS & COMMUNITY HUB -->
       <div class="modal-overlay" id="modal-social-friends">
-        <div class="modal-box" style="max-width:680px; border:2px solid var(--accent); background:#0c0d12;">
-          <div class="modal-header" style="border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:12px;">
+        <div class="modal-box" style="max-width:680px; border:1px solid #1e293b; border-radius:14px; background:#0e1424;">
+          <div class="modal-header" style="border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:12px;">
             <div class="modal-title" style="color:#ffffff; font-weight:900;">
               <span style="color:var(--accent);">👥</span> COMMUNAUTÉ & AMIS
             </div>
@@ -134,9 +134,9 @@ const SocialHub = (function() {
           </div>
 
           <!-- TABS -->
-          <div style="display:flex; gap:8px; margin-bottom:16px; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:8px;">
-            <button class="btn btn-sm active-tab" id="btn-tab-my-friends" onclick="SocialHub.switchTab('my-friends')" style="border-radius:0px; font-weight:800;">⭐ MES AMIS (<span id="friends-tab-count">0</span>)</button>
-            <button class="btn btn-sm" id="btn-tab-find-players" onclick="SocialHub.switchTab('find-players')" style="border-radius:0px; font-weight:800;">🔍 TROUVER DES JOUEURS</button>
+          <div style="display:flex; gap:8px; margin-bottom:16px; border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:8px;">
+            <button class="btn btn-sm active-tab" id="btn-tab-my-friends" onclick="SocialHub.switchTab('my-friends')" style="border-radius:8px; font-weight:800;">⭐ MES AMIS (<span id="friends-tab-count">0</span>)</button>
+            <button class="btn btn-sm" id="btn-tab-find-players" onclick="SocialHub.switchTab('find-players')" style="border-radius:8px; font-weight:800;">🔍 TROUVER DES JOUEURS</button>
           </div>
 
           <!-- TAB 1: MY FRIENDS -->
@@ -149,7 +149,7 @@ const SocialHub = (function() {
           <!-- TAB 2: FIND PLAYERS -->
           <div id="subtab-find-players" style="display:none;">
             <div style="margin-bottom:14px;">
-              <input type="text" class="form-input" id="search-player-input" oninput="SocialHub.filterPlayers(this.value)" placeholder="Rechercher par pseudo ou par club..." style="background:#13151b; border:1px solid #333844; color:#fff; font-size:0.9rem;">
+              <input type="text" class="form-input" id="search-player-input" oninput="SocialHub.filterPlayers(this.value)" placeholder="Rechercher par pseudo ou par club..." style="background:#090d16; border:1px solid #1e293b; border-radius:8px; color:#fff; font-size:0.9rem;">
             </div>
             <div id="community-players-list" style="max-height:340px; overflow-y:auto; display:flex; flex-direction:column; gap:8px;">
               <div class="text-muted text-sm" style="padding:20px; text-align:center;">Chargement des joueurs…</div>
@@ -375,10 +375,10 @@ const SocialHub = (function() {
       const friends = players.filter(p => friendIds.has(p.id));
       if (!friends.length) {
         myFriendsEl.innerHTML = `
-          <div class="card" style="padding:24px; text-align:center; border-radius:0px; border-color:rgba(255,255,255,0.1);">
+          <div class="card" style="padding:24px; text-align:center; border-radius:10px; border:1px solid #1e293b; background:#090d16;">
             <div style="font-size:28px; margin-bottom:8px;">👥</div>
             <div style="font-weight:800; color:#ffffff; font-size:1rem; margin-bottom:4px;">Aucun ami pour le moment</div>
-            <div style="font-size:0.82rem; color:#9ca3af; margin-bottom:14px;">Trouvez des adversaires dans la communauté et ajoutez-les pour comparer vos grilles en direct !</div>
+            <div style="font-size:0.82rem; color:#94a3b8; margin-bottom:14px;">Trouvez des adversaires dans la communauté et ajoutez-les pour comparer vos grilles en direct !</div>
             <button class="btn btn-primary btn-sm" onclick="SocialHub.switchTab('find-players')">🔍 Explorer les joueurs</button>
           </div>
         `;
@@ -387,12 +387,12 @@ const SocialHub = (function() {
           const s = f.stats;
           const av = typeof renderAvatar === 'function' ? renderAvatar(f.avatar) : f.avatar;
           return `
-            <div class="friend-card" style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 14px; background:#14161f; border:1px solid rgba(255,255,255,0.12); border-left:3px solid var(--accent);">
+            <div class="friend-card" style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px 14px; background:#090d16; border:1px solid #1e293b; border-left:3px solid var(--accent); border-radius:8px;">
               <div style="display:flex; align-items:center; gap:10px;">
-                <div style="width:40px; height:40px; border:2px solid var(--accent); display:flex; align-items:center; justify-content:center; font-size:20px; background:#1b1e2a; flex-shrink:0;">${av}</div>
+                <div style="width:40px; height:40px; border:2px solid var(--accent); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:20px; background:#141d33; flex-shrink:0;">${av}</div>
                 <div>
                   <div style="font-weight:800; font-size:0.95rem; color:#ffffff;">${f.name}</div>
-                  <div style="font-size:0.75rem; color:#9ca3af;">${f.club} · <strong style="color:var(--accent);">${s?.totalPoints || 0} pts</strong> (${s?.tilesCompleted || 0}/${s?.totalTiles || 25})</div>
+                  <div style="font-size:0.75rem; color:#94a3b8;">${f.club} · <strong style="color:var(--accent);">${s?.totalPoints || 0} pts</strong> (${s?.tilesCompleted || 0}/${s?.totalTiles || 25})</div>
                 </div>
               </div>
               <div style="display:flex; gap:6px; align-items:center;">
@@ -433,17 +433,17 @@ const SocialHub = (function() {
       const av = typeof renderAvatar === 'function' ? renderAvatar(p.avatar) : p.avatar;
       const s = p.stats;
       return `
-        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 14px; background:#14161f; border:1px solid rgba(255,255,255,0.08);">
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px 14px; background:#090d16; border:1px solid #1e293b; border-radius:8px;">
           <div style="display:flex; align-items:center; gap:10px;">
-            <div style="width:36px; height:36px; border:1px solid rgba(255,255,255,0.2); display:flex; align-items:center; justify-content:center; font-size:18px; background:#1b1e2a; flex-shrink:0;">${av}</div>
+            <div style="width:36px; height:36px; border:1px solid #2a374f; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:18px; background:#141d33; flex-shrink:0;">${av}</div>
             <div>
               <div style="font-weight:800; font-size:0.9rem; color:#ffffff;">${p.name}</div>
-              <div style="font-size:0.72rem; color:#9ca3af;">${p.club} · ${s?.totalPoints || 0} pts</div>
+              <div style="font-size:0.72rem; color:#94a3b8;">${p.club} · ${s?.totalPoints || 0} pts</div>
             </div>
           </div>
           <div>
             ${isFriend
-              ? `<span style="font-size:0.75rem; color:#34d399; font-weight:700; background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.3); padding:4px 8px;">✓ Ami</span>`
+              ? `<span style="font-size:0.75rem; color:#34d399; font-weight:700; background:rgba(16,185,129,0.12); border:1px solid rgba(16,185,129,0.3); border-radius:6px; padding:4px 8px;">✓ Ami</span>`
               : `<button class="btn btn-sm" onclick="SocialHub.addFriend('${p.id}')" style="font-size:0.75rem; border-color:var(--accent); color:var(--accent);">+ Ajouter</button>`
             }
           </div>

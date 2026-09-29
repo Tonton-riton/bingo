@@ -37,13 +37,13 @@
   <main class="container" style="max-width:1100px;">
 
     <!-- PLAYER SCORE BANNER -->
-    <div class="scoreboard mb-4">
+    <div class="scoreboard mb-4" style="background:#0e1424;border:1px solid #1e293b;border-left:4px solid var(--accent);border-radius:12px;">
       <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;">
         <div style="display:flex;align-items:center;gap:12px;">
-          <div id="banner-avatar" style="font-size:36px;width:52px;height:52px;border-radius:0px;display:flex;align-items:center;justify-content:center;border:2px solid;background:#161924;">⚽</div>
+          <div id="banner-avatar" style="font-size:36px;width:52px;height:52px;border-radius:8px;display:flex;align-items:center;justify-content:center;border:2px solid;background:#141d33;">⚽</div>
           <div>
             <div style="font-size:1.3rem;font-weight:900;color:#ffffff;" id="banner-name">Joueur</div>
-            <div class="text-sm" style="color:#d1d5db;" id="banner-club"></div>
+            <div class="text-sm" style="color:#cbd5e1;" id="banner-club"></div>
           </div>
         </div>
         <div>
@@ -71,7 +71,7 @@
     </div>
 
     <!-- FRIENDS DUEL BAR -->
-    <div id="friends-duel-bar" style="display:none;background:#10121a;border:1px solid var(--border);border-left:4px solid var(--accent);padding:10px 14px;margin-bottom:14px;">
+    <div id="friends-duel-bar" style="display:none;background:#0e1424;border:1px solid #1e293b;border-left:4px solid var(--accent);border-radius:8px;padding:10px 14px;margin-bottom:14px;">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
         <div style="font-size:0.75rem;font-weight:900;color:var(--accent);text-transform:uppercase;letter-spacing:0.06em;">⭐ MES AMIS EN DIRECT :</div>
         <div id="friends-duel-pills" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
@@ -79,13 +79,13 @@
     </div>
 
     <!-- RIVAL BANNER (compact) -->
-    <div id="rival-bar" style="display:none;background:#10121a;border:1px solid var(--border);border-left:4px solid #ffaa00;padding:8px 14px;margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+    <div id="rival-bar" style="display:none;background:#0e1424;border:1px solid #1e293b;border-left:4px solid var(--gold);border-radius:8px;padding:8px 14px;margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
       <div class="text-xs fw-800" style="color:var(--gold);">AUTRES JOUEURS :</div>
       <div id="rival-pills" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
     </div>
 
     <!-- ACTIVE LINES -->
-    <div id="lines-bar" class="lines-bar hidden" style="margin-bottom:12px;">
+    <div id="lines-bar" class="lines-bar hidden" style="margin-bottom:12px;border-radius:8px;">
       <span class="text-xs fw-700" style="color:var(--gold);">LIGNES ACTIVES :</span>
       <div id="lines-tags"></div>
     </div>
@@ -97,7 +97,7 @@
     </div>
 
     <!-- BINGO GRID -->
-    <div style="background:#0e1017;border:1px solid var(--border);border-radius:0px;padding:14px;" class="mb-4">
+    <div style="background:#090d16;border:1px solid #1e293b;border-radius:12px;padding:14px;" class="mb-4">
       <div class="bingo-grid" id="bingo-grid"></div>
     </div>
 
