@@ -15,7 +15,7 @@
   <!-- HEADER -->
   <header class="app-header">
     <a href="/" class="logo-link">
-      <div class="logo-icon-wrap" id="hdr-avatar" style="background:#ff5500;font-size:20px;border-radius:0px;">⚽</div>
+      <div class="logo-icon-wrap" id="hdr-avatar" style="background:var(--lime);color:#000;font-size:20px;border-radius:8px;">⚽</div>
       <div class="logo-text">
         <div class="t1" id="hdr-name">Chargement…</div>
         <div class="t2" id="hdr-club"></div>
@@ -25,7 +25,7 @@
       <button class="btn btn-icon" id="btn-sound" title="Son">🔊</button>
       <button class="btn btn-sm" onclick="SocialHub.openFriendsModal()" title="Mes Amis" style="border-color:var(--accent);color:var(--accent);font-weight:800;">👥 Mes Amis</button>
       <button class="btn btn-sm" onclick="openModal('modal-profile')">✏️ Profil</button>
-      <div style="display:flex;gap:4px;background:#10121a;padding:4px;border:1px solid var(--border);" id="player-switcher">
+      <div style="display:flex;gap:4px;background:#10141b;padding:4px;border:1px solid var(--border);border-radius:8px;" id="player-switcher">
         <!-- filled by JS -->
       </div>
       <div id="auth-nav-slot"></div>
@@ -178,7 +178,7 @@
     let state = null;
     const COLOR_MAP = {
       blue:'#4f8ef7',red:'#ef4444',purple:'#8b5cf6',green:'#10b981',
-      gold:'#ffaa00',pink:'#ec4899',cyan:'#06b6d4',orange:'#ff5500'
+      gold:'#ffaa00',pink:'#ec4899',cyan:'#06b6d4',orange:'#ff5500',lime:'#bbf246'
     };
 
     // Pick first player if none specified
