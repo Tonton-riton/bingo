@@ -1,80 +1,320 @@
 {
+  "activeGridId": "grid_default_s1",
+  "grids": {
+    "grid_default_s1": {
+      "id": "grid_default_s1",
+      "name": "Bingo Carrière Saison 1",
+      "description": "La grille officielle de la saison 1.",
+      "challenges": [
+        {
+          "id": 0,
+          "icon": "🛡️",
+          "title": "Invincibilité Domicile",
+          "description": "0 défaite à domicile en championnat",
+          "points": 2,
+          "constraint": "1 saison | D2",
+          "category": "Défense"
+        },
+        {
+          "id": 1,
+          "icon": "💰",
+          "title": "Balance Positive",
+          "description": "Bénéfice transferts >= +10M€",
+          "points": 1,
+          "constraint": "1 saison | D2",
+          "category": "Finance"
+        },
+        {
+          "id": 2,
+          "icon": "🌱",
+          "title": "Éclosion Académie",
+          "description": "3 jeunes promus (10+ matchs)",
+          "points": 1,
+          "constraint": "1 saison | D2",
+          "category": "Formation"
+        },
+        {
+          "id": 3,
+          "icon": "📋",
+          "title": "Tactique Immuable",
+          "description": "Même dispositif 100% des matchs",
+          "points": 1,
+          "constraint": "1 saison | D2",
+          "category": "Tactique"
+        },
+        {
+          "id": 4,
+          "icon": "🟥",
+          "title": "Discipline & Podium",
+          "description": "5+ cartons rouges & Top 5 ligue",
+          "points": 2,
+          "constraint": "1 saison | D2",
+          "category": "Discipline"
+        },
+        {
+          "id": 5,
+          "icon": "🎯",
+          "title": "Attaque Mitraillette",
+          "description": "80+ buts marqués en championnat",
+          "points": 2,
+          "constraint": "1 saison | D2",
+          "category": "Attaque"
+        },
+        {
+          "id": 6,
+          "icon": "📈",
+          "title": "Plus-Value x3",
+          "description": "Revendre un joueur >= 3x son achat",
+          "points": 3,
+          "constraint": "1-3 saisons | D2",
+          "category": "Transferts"
+        },
+        {
+          "id": 7,
+          "icon": "⭐",
+          "title": "Pépite Générationnelle",
+          "description": "Amener un jeune du centre à 80+ GEN",
+          "points": 3,
+          "constraint": "2-4 saisons | D2",
+          "category": "Formation"
+        },
+        {
+          "id": 8,
+          "icon": "🧱",
+          "title": "Forteresse Défensive",
+          "description": "Meilleure défense (< 30 buts pris)",
+          "points": 2,
+          "constraint": "1 saison | D2",
+          "category": "Défense"
+        },
+        {
+          "id": 9,
+          "icon": "🔒",
+          "title": "Mercato Totalement Gelé",
+          "description": "0 achat et 0 prêt entrant",
+          "points": 2,
+          "constraint": "1 saison | D2",
+          "category": "Transferts"
+        },
+        {
+          "id": 10,
+          "icon": "🚀",
+          "title": "Montée Directe",
+          "description": "Promotion en D1 (1er ou 2ème)",
+          "points": 2,
+          "constraint": "1-2 saisons | D2",
+          "category": "Succès"
+        },
+        {
+          "id": 11,
+          "icon": "💎",
+          "title": "Vente Galactique",
+          "description": "Vente sèche d'un joueur >= 50M€",
+          "points": 2,
+          "constraint": "1-3 saisons | D2/D1",
+          "category": "Transferts"
+        },
+        {
+          "id": 12,
+          "icon": "🃏",
+          "title": "JOKER ADVERSAIRE",
+          "description": "Défi imposé par le rival",
+          "points": 2,
+          "constraint": "1 saison | Choix rival",
+          "category": "Spécial"
+        },
+        {
+          "id": 13,
+          "icon": "🎓",
+          "title": "Onze 100% Formation",
+          "description": "Titulariser 7+ joueurs de l'académie",
+          "points": 3,
+          "constraint": "1-3 saisons | D2",
+          "category": "Formation"
+        },
+        {
+          "id": 14,
+          "icon": "👑",
+          "title": "Sacrifice du Capitaine",
+          "description": "Vendre son meilleur GEN sans chuter",
+          "points": 1,
+          "constraint": "1 saison | D2",
+          "category": "Tactique"
+        },
+        {
+          "id": 15,
+          "icon": "🏆",
+          "title": "Épopée en Coupe",
+          "description": "Atteindre le dernier carré (demi-finale)",
+          "points": 3,
+          "constraint": "1-2 saisons | D2/D1",
+          "category": "Coupe"
+        },
+        {
+          "id": 16,
+          "icon": "📉",
+          "title": "Rigueur Salariale",
+          "description": "Baisser masse salariale de 20% & Top",
+          "points": 1,
+          "constraint": "1 saison | D2",
+          "category": "Finance"
+        },
+        {
+          "id": 17,
+          "icon": "🌍",
+          "title": "Vocation Internationale",
+          "description": "Un joueur formé appelé en sélection",
+          "points": 1,
+          "constraint": "1-3 saisons | D2",
+          "category": "Formation"
+        },
+        {
+          "id": 18,
+          "icon": "👟",
+          "title": "Roi de la Passe",
+          "description": "Meilleur passeur ligue (15+ passes)",
+          "points": 1,
+          "constraint": "1 saison | D2",
+          "category": "Performance"
+        },
+        {
+          "id": 19,
+          "icon": "👔",
+          "title": "Confiance Totale",
+          "description": "Note Conseil d'Admin > 85 fin d'année",
+          "points": 1,
+          "constraint": "1 saison | D2",
+          "category": "Gestion"
+        },
+        {
+          "id": 20,
+          "icon": "🥇",
+          "title": "Titre Suprême D1",
+          "description": "Être sacré Champion de D1",
+          "points": 5,
+          "constraint": "2-4 saisons | D1",
+          "category": "Succès"
+        },
+        {
+          "id": 21,
+          "icon": "🏦",
+          "title": "Coffre-Fort 100M€",
+          "description": "100M€ budget transfert disponible",
+          "points": 2,
+          "constraint": "2-4 saisons | D2/D1",
+          "category": "Finance"
+        },
+        {
+          "id": 22,
+          "icon": "🌟",
+          "title": "Trophée Continental / BO",
+          "description": "Joueur dans l'Équipe de l'Année / BO",
+          "points": 5,
+          "constraint": "2-4 saisons | D1",
+          "category": "Trophée"
+        },
+        {
+          "id": 23,
+          "icon": "⚽",
+          "title": "Soulier d'Or Club",
+          "description": "Meilleur buteur du championnat (25+ buts)",
+          "points": 2,
+          "constraint": "1 saison | D2",
+          "category": "Attaque"
+        },
+        {
+          "id": 24,
+          "icon": "⚔️",
+          "title": "Maître du Derby",
+          "description": "Battre son club rival historique x2",
+          "points": 3,
+          "constraint": "1 saison | D2",
+          "category": "Rivalité"
+        }
+      ]
+    }
+  },
   "players": {
-    "1": {
-      "id": "1",
-      "name": "Joueur 1",
-      "club": "FC Streamer",
-      "avatar": "⚽",
-      "pin": "1111",
-      "color": "#3b82f6",
-      "checked": [
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false
-      ]
+    "player_1790716547784_btwelu": {
+      "id": "player_1790716547784_btwelu",
+      "name": "Tonton-riton",
+      "club": "AS Monaco",
+      "avatar": "ball",
+      "color": "blue",
+      "pin": "0000",
+      "grids": {
+        "grid_default_s1": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ]
+      },
+      "createdAt": "2026-09-29T21:15:47.784Z"
     },
-    "2": {
-      "id": "2",
-      "name": "Joueur 2",
-      "club": "Rival FC",
-      "avatar": "🔥",
-      "pin": "2222",
-      "color": "#ef4444",
-      "checked": [
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false
-      ]
+    "player_1790716547802_jbzzbl": {
+      "id": "player_1790716547802_jbzzbl",
+      "name": "Rival FC",
+      "club": "PSG",
+      "avatar": "fire",
+      "color": "red",
+      "pin": "0000",
+      "grids": {
+        "grid_default_s1": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ]
+      },
+      "createdAt": "2026-09-29T21:15:47.802Z"
     }
   },
   "settings": {
     "lineBonus": 5,
-    "grandChelemBonus": 10,
-    "requirePin": false
+    "grandChelemBonus": 10
   },
   "history": []
 }

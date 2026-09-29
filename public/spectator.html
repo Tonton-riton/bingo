@@ -3,442 +3,318 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BINGO CARRIÈRE MANAGER | Vue Spectateur Live</title>
+  <title>BINGO CARRIÈRE | Spectateur Live</title>
   <link rel="stylesheet" href="/css/style.css">
   <script src="/socket.io/socket.io.js"></script>
   <script src="/js/audio.js"></script>
   <script src="/js/confetti.js"></script>
   <style>
-    .dual-grids-wrapper {
+    .spec-grids-wrap {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 24px;
+      gap: 18px;
     }
-    @media (max-width: 1100px) {
-      .dual-grids-wrapper {
-        grid-template-columns: 1fr;
-      }
+    .spec-grids-wrap.mode-1 { grid-template-columns: 1fr; }
+    .spec-grids-wrap.mode-2 { grid-template-columns: 1fr 1fr; }
+    .spec-grids-wrap.mode-3 { grid-template-columns: 1fr 1fr 1fr; }
+    .spec-grids-wrap.mode-4 { grid-template-columns: 1fr 1fr; }
+    @media (max-width: 900px) {
+      .spec-grids-wrap { grid-template-columns: 1fr !important; }
     }
-    .spectator-grid-header {
+
+    .spec-player-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 10px 14px;
-      border-radius: 12px;
-      margin-bottom: 12px;
-      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      margin-bottom: 10px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
     }
-    .spectator-grid-header.p1 {
-      background: linear-gradient(90deg, rgba(59, 130, 246, 0.2), rgba(6, 182, 212, 0.08));
-      border-color: rgba(59, 130, 246, 0.4);
-    }
-    .spectator-grid-header.p2 {
-      background: linear-gradient(90deg, rgba(239, 68, 68, 0.2), rgba(249, 115, 22, 0.08));
-      border-color: rgba(239, 68, 68, 0.4);
-    }
-    .leader-crown {
-      background: rgba(245, 158, 11, 0.2);
-      border: 1px solid rgba(245, 158, 11, 0.5);
+
+    .lead-tag {
+      background: rgba(245,166,35,0.18);
+      border: 1px solid rgba(245,166,35,0.4);
       color: #fbbf24;
-      font-size: 0.75rem;
+      font-size: 0.68rem;
       font-weight: 800;
-      padding: 3px 8px;
-      border-radius: 20px;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-    .view-toggle-btn {
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid var(--border-subtle);
-      color: var(--text-main);
-      padding: 6px 12px;
-      border-radius: 8px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .view-toggle-btn.active {
-      background: rgba(255, 255, 255, 0.2);
-      border-color: rgba(255, 255, 255, 0.4);
-      color: white;
+      padding: 2px 8px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
   </style>
 </head>
 <body>
   <header class="app-header">
-    <a href="/" class="logo-area">
-      <span class="logo-icon">📺</span>
+    <a href="/" class="logo-link">
+      <div class="logo-icon-wrap">📺</div>
       <div class="logo-text">
-        <h1>VUE SPECTATEUR LIVE</h1>
-        <span>BINGO CARRIÈRE MANAGER • EN DIRECT</span>
+        <div class="t1">VUE SPECTATEUR LIVE</div>
+        <div class="t2">BINGO CARRIÈRE MANAGER • EN DIRECT</div>
       </div>
     </a>
-    <div class="nav-links">
-      <div style="display: flex; gap: 4px; background: rgba(255,255,255,0.04); padding: 3px; border-radius: 8px;">
-        <button id="view-mode-dual" class="view-toggle-btn active">⚔️ Duel (Côte à côte)</button>
-        <button id="view-mode-p1" class="view-toggle-btn">⚽ Joueur 1</button>
-        <button id="view-mode-p2" class="view-toggle-btn">🔥 Joueur 2</button>
+    <div class="header-nav">
+      <div class="tabs" style="margin:0;">
+        <button class="tab active" onclick="setViewMode(this,'auto')">⚔️ Auto</button>
+        <button class="tab" onclick="setViewMode(this,'all')">👥 Tous</button>
+        <button class="tab" id="tab-p1" onclick="setViewMode(this,'single-0')">Joueur 1</button>
+        <button class="tab" id="tab-p2" onclick="setViewMode(this,'single-1')">Joueur 2</button>
       </div>
-      <button id="btn-toggle-sound" class="nav-btn" title="Activer / Désactiver les sons">
-        <span id="sound-icon">🔊</span>
-      </button>
-      <button id="btn-fullscreen" class="nav-btn" title="Plein écran">
-        <span>⛶</span>
-      </button>
-      <a href="/obs.html" target="_blank" class="nav-btn">🎥 Mode OBS</a>
+      <button class="btn btn-icon" id="btn-sound">🔊</button>
+      <button class="btn btn-icon" onclick="toggleFullscreen()" title="Plein écran">⛶</button>
+      <a href="/obs.html" target="_blank" class="btn">🎥 OBS</a>
     </div>
   </header>
 
   <main class="container">
-    <!-- Live Duel Scoreboard Banner -->
-    <div class="duel-banner">
-      <!-- Player 1 Score Block -->
-      <div class="player-score-card">
-        <div class="player-avatar p1" id="p1-avatar">⚽</div>
-        <div class="player-info">
-          <h3 id="p1-name">
-            Joueur 1
-            <span id="p1-crown" class="leader-crown" style="display: none;">👑 EN TÊTE</span>
-          </h3>
-          <span class="club-tag" id="p1-club">FC Streamer</span>
-        </div>
-        <div class="score-badge p1" id="p1-score">0</div>
-        <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 700; align-self: flex-end; margin-bottom: 4px;">PTS</span>
-      </div>
 
-      <!-- Duel Center Bar -->
-      <div class="duel-center">
-        <div class="duel-vs" id="duel-lead-status">⚡ DUEL EN DIRECT ⚡</div>
-        <div class="duel-progress-bar">
-          <div class="duel-fill-p1" id="duel-bar-p1" style="width: 50%;"></div>
-          <div class="duel-fill-p2" id="duel-bar-p2" style="width: 50%;"></div>
-        </div>
-        <div class="duel-status-text" id="duel-details-text">0 pts vs 0 pts</div>
-      </div>
-
-      <!-- Player 2 Score Block -->
-      <div class="player-score-card" style="flex-direction: row-reverse; text-align: right;">
-        <div class="player-avatar p2" id="p2-avatar">🔥</div>
-        <div class="player-info">
-          <h3 id="p2-name" style="justify-content: flex-end;">
-            <span id="p2-crown" class="leader-crown" style="display: none;">👑 EN TÊTE</span>
-            Joueur 2
-          </h3>
-          <span class="club-tag" id="p2-club">Rival FC</span>
-        </div>
-        <div class="score-badge p2" id="p2-score">0</div>
-        <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 700; align-self: flex-end; margin-bottom: 4px;">PTS</span>
+    <!-- SCOREBOARD -->
+    <div class="scoreboard mb-4">
+      <div id="spec-scoreboard" class="scoreboard-inner" style="flex-wrap:wrap;">
+        <div class="text-muted text-sm" style="padding:12px;">Chargement…</div>
       </div>
     </div>
 
-    <!-- Dual Grids Layout -->
-    <div class="dual-grids-wrapper" id="grids-wrapper">
-      
-      <!-- Panel Joueur 1 -->
-      <div id="panel-p1" class="theme-p1">
-        <div class="spectator-grid-header p1">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span id="p1-panel-avatar" style="font-size: 20px;">⚽</span>
-            <strong id="p1-panel-title" style="font-size: 0.95rem; color: #60a5fa;">JOUEUR 1</strong>
-            <span id="p1-panel-club" style="font-size: 0.8rem; color: var(--text-muted);">(FC Streamer)</span>
-          </div>
-          <div style="display: flex; gap: 6px;">
-            <span id="p1-tiles-badge" class="line-tag" style="background: rgba(59, 130, 246, 0.2); color: #93c5fd; border-color: rgba(59, 130, 246, 0.4);">
-              0 / 25 défis
-            </span>
-            <span id="p1-lines-badge" class="line-tag">0 ligne</span>
-          </div>
-        </div>
-        
-        <div class="bingo-grid-container" style="padding: 10px;">
-          <div class="bingo-grid" id="grid-p1">
-            <!-- P1 tiles -->
-          </div>
-        </div>
-      </div>
-
-      <!-- Panel Joueur 2 -->
-      <div id="panel-p2" class="theme-p2">
-        <div class="spectator-grid-header p2">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <span id="p2-panel-avatar" style="font-size: 20px;">🔥</span>
-            <strong id="p2-panel-title" style="font-size: 0.95rem; color: #f87171;">JOUEUR 2</strong>
-            <span id="p2-panel-club" style="font-size: 0.8rem; color: var(--text-muted);">(Rival FC)</span>
-          </div>
-          <div style="display: flex; gap: 6px;">
-            <span id="p2-tiles-badge" class="line-tag" style="background: rgba(239, 68, 68, 0.2); color: #fca5a5; border-color: rgba(239, 68, 68, 0.4);">
-              0 / 25 défis
-            </span>
-            <span id="p2-lines-badge" class="line-tag">0 ligne</span>
-          </div>
-        </div>
-
-        <div class="bingo-grid-container" style="padding: 10px;">
-          <div class="bingo-grid" id="grid-p2">
-            <!-- P2 tiles -->
-          </div>
-        </div>
-      </div>
-
+    <!-- GRIDS -->
+    <div class="spec-grids-wrap mode-2" id="spec-grids-wrap">
+      <!-- Filled dynamically -->
     </div>
 
-    <!-- Live History Activity Feed -->
-    <div style="margin-top: 24px;" class="activity-feed">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-        <h4>🔴 Historique des défis validés en direct</h4>
-        <span style="font-size: 0.75rem; color: var(--text-muted);">Mise à jour en direct</span>
-      </div>
-      <div id="activity-feed-list">
-        <div style="color: var(--text-muted); font-size: 0.8rem; text-align: center; padding: 12px;">
-          En attente des premiers défis validés...
-        </div>
-      </div>
+    <!-- ACTIVITY FEED -->
+    <div class="feed" style="margin-top:18px;">
+      <div class="feed-title">🔴 Historique en direct</div>
+      <div id="spec-feed"></div>
     </div>
+
   </main>
 
-  <!-- Live Toast Alert for OBS & Spectators -->
-  <div id="live-alert-toast">
-    <div class="toast-icon" id="toast-icon">🎯</div>
-    <div class="toast-content">
-      <h4 id="toast-subtitle">DÉFI VALIDÉ !</h4>
-      <div class="toast-title" id="toast-title">Attaque Mitraillette</div>
-      <div class="toast-subtitle" id="toast-points">+2 points</div>
-    </div>
-  </div>
+  <div id="toast-container"></div>
 
   <script>
     const socket = io();
-    let localGameState = null;
-    let currentViewMode = 'dual'; // 'dual', 'p1', 'p2'
+    const COLOR_MAP = {
+      blue:'#4f8ef7',red:'#ef4444',purple:'#8b5cf6',green:'#10b981',
+      gold:'#f5a623',pink:'#ec4899',cyan:'#06b6d4',orange:'#f97316'
+    };
+    let state = null;
+    let viewMode = 'auto'; // 'auto', 'all', 'single-N'
 
-    // Sound toggle
-    const soundBtn = document.getElementById('btn-toggle-sound');
-    const soundIcon = document.getElementById('sound-icon');
-    function updateSoundIcon() {
-      soundIcon.textContent = window.soundFx.isMuted() ? '🔇' : '🔊';
-    }
-    soundBtn.addEventListener('click', () => {
-      window.soundFx.toggleMute();
-      updateSoundIcon();
+    document.getElementById('btn-sound').addEventListener('click', () => {
+      const m = window.soundFx?.toggleMute?.();
+      document.getElementById('btn-sound').textContent = m ? '🔇' : '🔊';
     });
-    updateSoundIcon();
 
-    // Fullscreen toggle
-    document.getElementById('btn-fullscreen').addEventListener('click', () => {
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(() => {});
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{});
+      else document.exitFullscreen().catch(()=>{});
+    }
+
+    function setViewMode(btn, mode) {
+      document.querySelectorAll('.app-header .tab').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      viewMode = mode;
+      if (state) renderGrids(state);
+    }
+
+    socket.on('stateUpdate', (data) => {
+      state = data;
+      renderScoreboard(data);
+      renderGrids(data);
+      renderFeed(data.history || []);
+      updateSingleTabs(data);
+    });
+
+    socket.on('tileToggled', (ev) => {
+      if (!ev.checked) return;
+      if (ev.newGrandChelem) {
+        window.soundFx?.playGrandChelem();
+        window.launchConfetti?.({ count: 250 });
+      } else if (ev.newLineAchieved) {
+        window.soundFx?.playBingo();
+        window.launchConfetti?.({ count: 120 });
       } else {
-        document.exitFullscreen().catch(() => {});
+        window.soundFx?.playCheck();
       }
+      showToast(ev.playerName, ev.challenge, ev.newLineAchieved, ev.newGrandChelem);
     });
 
-    // View mode buttons
-    const btnDual = document.getElementById('view-mode-dual');
-    const btnP1 = document.getElementById('view-mode-p1');
-    const btnP2 = document.getElementById('view-mode-p2');
-    const panelP1 = document.getElementById('panel-p1');
-    const panelP2 = document.getElementById('panel-p2');
-    const wrapper = document.getElementById('grids-wrapper');
-
-    function setViewMode(mode) {
-      currentViewMode = mode;
-      btnDual.classList.toggle('active', mode === 'dual');
-      btnP1.classList.toggle('active', mode === 'p1');
-      btnP2.classList.toggle('active', mode === 'p2');
-
-      if (mode === 'dual') {
-        panelP1.style.display = 'block';
-        panelP2.style.display = 'block';
-        wrapper.style.gridTemplateColumns = '1fr 1fr';
-      } else if (mode === 'p1') {
-        panelP1.style.display = 'block';
-        panelP2.style.display = 'none';
-        wrapper.style.gridTemplateColumns = '1fr';
-      } else if (mode === 'p2') {
-        panelP1.style.display = 'none';
-        panelP2.style.display = 'block';
-        wrapper.style.gridTemplateColumns = '1fr';
-      }
+    function updateSingleTabs(data) {
+      const ids = Object.keys(data.players || {});
+      const t1 = document.getElementById('tab-p1');
+      const t2 = document.getElementById('tab-p2');
+      if (ids[0]) { t1.textContent = data.players[ids[0]].avatar + ' ' + data.players[ids[0]].name.split(' ')[0]; t1.onclick = () => setViewMode(t1, 'single-0'); }
+      if (ids[1]) { t2.textContent = data.players[ids[1]].avatar + ' ' + data.players[ids[1]].name.split(' ')[0]; t2.onclick = () => setViewMode(t2, 'single-1'); }
+      else t2.style.display = 'none';
     }
 
-    btnDual.addEventListener('click', () => setViewMode('dual'));
-    btnP1.addEventListener('click', () => setViewMode('p1'));
-    btnP2.addEventListener('click', () => setViewMode('p2'));
+    function renderScoreboard(data) {
+      const { players, stats } = data;
+      const ids = Object.keys(players || {});
+      if (!ids.length) { document.getElementById('spec-scoreboard').innerHTML = '<div class="text-muted text-sm" style="padding:12px;">Aucun joueur</div>'; return; }
 
-    // Render single player's grid in spectator mode
-    function renderSpectatorGrid(containerId, challenges, checkedArray, completedLines) {
-      const grid = document.getElementById(containerId);
-      grid.innerHTML = '';
+      const sorted = ids.map(id => ({ id, p: players[id], s: stats?.[id] }))
+        .sort((a,b) => (b.s?.totalPoints||0) - (a.s?.totalPoints||0));
+      const total = sorted.reduce((acc, x) => acc + (x.s?.totalPoints||0), 0) || 1;
+      const maxScore = sorted[0]?.s?.totalPoints || 0;
 
-      const activeLineIndices = new Set();
-      completedLines.forEach(l => {
-        if (l.type === 'row') for (let c = 0; c < 5; c++) activeLineIndices.add(l.index * 5 + c);
-        if (l.type === 'col') for (let r = 0; r < 5; r++) activeLineIndices.add(r * 5 + l.index);
-        if (l.type === 'diag') {
-          if (l.index === 0) [0, 6, 12, 18, 24].forEach(i => activeLineIndices.add(i));
-          if (l.index === 1) [4, 8, 12, 16, 20].forEach(i => activeLineIndices.add(i));
-        }
-      });
-
-      challenges.forEach((ch, idx) => {
-        const isChecked = !!checkedArray[idx];
-        const isInLine = activeLineIndices.has(idx);
-
-        const tileEl = document.createElement('div');
-        tileEl.className = `bingo-tile read-only ${isChecked ? 'checked' : ''} ${isInLine ? 'in-line' : ''}`;
-
-        tileEl.innerHTML = `
-          <div class="tile-top">
-            <span class="tile-icon">${ch.icon}</span>
-            <span class="pts-badge pts-${ch.points}">+${ch.points} ${ch.points > 1 ? 'PTS' : 'PT'}</span>
-          </div>
-          <div class="tile-title">${ch.title}</div>
-          <div class="tile-desc">${ch.description}</div>
-          <div class="tile-bottom">
-            <span class="tile-constraint">${ch.constraint}</span>
-            <div class="tile-checkbox">${isChecked ? '✓' : ''}</div>
+      let html = '<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;width:100%;">';
+      sorted.forEach((item, idx) => {
+        const { p, s } = item;
+        const c = COLOR_MAP[p.color] || '#4f8ef7';
+        const isLeader = idx === 0 && maxScore > 0;
+        html += `
+          <div class="player-chip ${isLeader ? 'leader':''}" style="border-color:${c}22;">
+            ${isLeader ? '<div class="leader-crown">👑</div>' : ''}
+            <div class="player-chip-avatar" style="border-color:${c};background:${c}18;">${p.avatar}</div>
+            <div class="player-chip-info">
+              <div class="player-chip-name">${p.name}</div>
+              <div class="player-chip-club">${p.club} · ${s?.completedLines?.length||0} ligne(s)</div>
+              <div class="player-chip-meta">${s?.tilesCompleted||0}/25 défis</div>
+            </div>
+            <div>
+              <div class="player-chip-score" style="color:${c}">${s?.totalPoints||0}</div>
+              <div class="text-xs text-muted" style="text-align:right;">pts</div>
+            </div>
           </div>
         `;
-
-        grid.appendChild(tileEl);
       });
+
+      if (sorted.length >= 2) {
+        html += '<div class="scoreboard-center" style="flex:1;min-width:150px;">';
+        html += '<div class="vs-label">Score</div>';
+        html += '<div class="scoreboard-bar">';
+        sorted.forEach(item => {
+          const pct = Math.round(((item.s?.totalPoints||0)/total)*100);
+          const c = COLOR_MAP[item.p.color] || '#4f8ef7';
+          html += `<div class="scoreboard-bar-fill" style="width:${pct}%;background:${c};"></div>`;
+        });
+        html += '</div>';
+        const lead = sorted[0], trail = sorted[1];
+        const diff = (lead.s?.totalPoints||0) - (trail.s?.totalPoints||0);
+        html += `<div class="text-xs text-muted" style="text-align:center;margin-top:4px;">${diff > 0 ? `${lead.p.name} mène de <strong>+${diff} pts</strong>` : 'Égalité !'}</div>`;
+        html += '</div>';
+      }
+
+      html += '</div>';
+      document.getElementById('spec-scoreboard').innerHTML = html;
     }
 
-    function renderFeed(history) {
-      const feed = document.getElementById('activity-feed-list');
-      if (!history || history.length === 0) {
-        feed.innerHTML = '<div style="color: var(--text-muted); font-size: 0.8rem; text-align: center; padding: 12px;">En attente des premiers défis validés...</div>';
+    function renderGrids(data) {
+      const { players, stats, grids, activeGrid } = data;
+      const ids = Object.keys(players || {});
+      if (!ids.length) {
+        document.getElementById('spec-grids-wrap').innerHTML = '<div class="text-muted text-sm card" style="padding:20px;grid-column:1/-1;">Aucun joueur. Créez des joueurs depuis l\'accueil → Admin.</div>';
         return;
       }
 
-      feed.innerHTML = history.slice().reverse().map(item => {
-        const isCheck = item.action === 'check';
-        const time = new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        const color = item.playerId === '1' ? '#60a5fa' : '#f87171';
+      const challenges = grids?.find(g => g.id === activeGrid)?.challenges || data.challenges || [];
+
+      let visibleIds;
+      if (viewMode === 'auto') {
+        visibleIds = ids.length <= 2 ? ids : ids.slice(0, 4);
+      } else if (viewMode === 'all') {
+        visibleIds = ids;
+      } else {
+        const idx = parseInt(viewMode.split('-')[1]);
+        visibleIds = ids[idx] ? [ids[idx]] : [ids[0]];
+      }
+
+      const wrap = document.getElementById('spec-grids-wrap');
+      // Set columns based on count
+      const n = Math.min(visibleIds.length, 4);
+      wrap.className = `spec-grids-wrap mode-${n}`;
+
+      wrap.innerHTML = visibleIds.map(id => {
+        const p = players[id], s = stats?.[id];
+        const c = COLOR_MAP[p.color] || '#4f8ef7';
+        const checked = p.grids?.[activeGrid] || Array(25).fill(false);
+        const completedLines = s?.completedLines || [];
+        const lineIndices = new Set();
+        completedLines.forEach(l => {
+          if (l.type==='row') for(let col=0;col<5;col++) lineIndices.add(l.index*5+col);
+          if (l.type==='col') for(let row=0;row<5;row++) lineIndices.add(row*5+l.index);
+          if (l.type==='diag'&&l.index===0) [0,6,12,18,24].forEach(i=>lineIndices.add(i));
+          if (l.type==='diag'&&l.index===1) [4,8,12,16,20].forEach(i=>lineIndices.add(i));
+        });
+
+        const sortedAll = ids.map(i => ({id:i, pts: stats?.[i]?.totalPoints||0})).sort((a,b)=>b.pts-a.pts);
+        const isLeader = sortedAll[0]?.id === id && sortedAll[0]?.pts > 0;
+
+        const tiles = challenges.slice(0,25).map((ch, idx) => {
+          const isChecked = !!checked[idx];
+          const isLine = lineIndices.has(idx);
+          return `<div class="tile read-only ${isChecked?'checked':''}${isChecked?' c-'+p.color:''} ${isLine?'in-line':''}">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px;">
+              <span class="tile-icon">${ch.icon||'🎯'}</span>
+              <span class="pts pts-${ch.points}">${ch.points}pt${ch.points>1?'s':''}</span>
+            </div>
+            <div class="tile-title">${ch.title}</div>
+            <div class="tile-desc">${ch.description||''}</div>
+          </div>`;
+        }).join('');
 
         return `
-          <div class="activity-item">
-            <div class="activity-left">
-              <span>${item.challengeIcon}</span>
-              <div>
-                <strong style="color: ${color};">${item.playerName}</strong>
-                ${isCheck ? 'a validé' : 'a décoché'} 
-                <span style="color: #ffffff;">${item.challengeTitle}</span>
-                ${isCheck ? `<span class="pts-badge pts-${item.points}" style="margin-left: 4px;">+${item.points} pts</span>` : ''}
+          <div class="player-panel">
+            <div class="spec-player-header" style="border-color:${c}33;background:${c}08;">
+              <div style="display:flex;align-items:center;gap:10px;">
+                <div style="font-size:22px;width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;border:2px solid ${c};background:${c}18;">${p.avatar}</div>
+                <div>
+                  <div style="font-weight:800;font-size:0.95rem;display:flex;align-items:center;gap:6px;">${p.name} ${isLeader ? '<span class="lead-tag">👑 EN TÊTE</span>' : ''}</div>
+                  <div class="text-xs text-muted">${p.club} · ${s?.tilesCompleted||0}/25 défis · ${s?.completedLines?.length||0} ligne(s)</div>
+                </div>
+              </div>
+              <div style="text-align:right;">
+                <div style="font-size:1.8rem;font-weight:900;line-height:1;color:${c};">${s?.totalPoints||0}</div>
+                <div class="text-xs text-muted">pts</div>
               </div>
             </div>
-            <div class="activity-time">${time}</div>
+            <div class="bingo-wrap">
+              <div class="bingo-grid">${tiles}</div>
+            </div>
           </div>
         `;
       }).join('');
     }
 
-    function updateSpectatorUI(data) {
-      localGameState = data;
-      const p1 = data.players['1'];
-      const p2 = data.players['2'];
-      const s1 = data.stats['1'];
-      const s2 = data.stats['2'];
-
-      // Header duel bar
-      document.getElementById('p1-name').childNodes[0].nodeValue = p1.name + ' ';
-      document.getElementById('p1-club').textContent = p1.club;
-      document.getElementById('p1-avatar').textContent = p1.avatar;
-      document.getElementById('p1-score').textContent = s1.totalPoints;
-
-      document.getElementById('p2-name').childNodes[p2.name ? 1 : 0].nodeValue = ' ' + p2.name;
-      document.getElementById('p2-club').textContent = p2.club;
-      document.getElementById('p2-avatar').textContent = p2.avatar;
-      document.getElementById('p2-score').textContent = s2.totalPoints;
-
-      // Crown / Leader badge
-      const crown1 = document.getElementById('p1-crown');
-      const crown2 = document.getElementById('p2-crown');
-      if (s1.totalPoints > s2.totalPoints) {
-        crown1.style.display = 'inline-flex';
-        crown2.style.display = 'none';
-        document.getElementById('duel-lead-status').textContent = `👑 ${p1.name} MÈNE AU SCORE (+${s1.totalPoints - s2.totalPoints} PTS)`;
-      } else if (s2.totalPoints > s1.totalPoints) {
-        crown1.style.display = 'none';
-        crown2.style.display = 'inline-flex';
-        document.getElementById('duel-lead-status').textContent = `👑 ${p2.name} MÈNE AU SCORE (+${s2.totalPoints - s1.totalPoints} PTS)`;
-      } else {
-        crown1.style.display = 'none';
-        crown2.style.display = 'none';
-        document.getElementById('duel-lead-status').textContent = '⚔️ ÉGALITÉ PARFAITE ⚔️';
+    function renderFeed(history) {
+      const el = document.getElementById('spec-feed');
+      if (!history.length) {
+        el.innerHTML = '<div class="text-muted text-sm" style="text-align:center;padding:12px;">En attente du premier défi…</div>';
+        return;
       }
-
-      // Progress duel bar
-      const total = (s1.totalPoints + s2.totalPoints) || 1;
-      const pct1 = Math.round((s1.totalPoints / total) * 100);
-      const pct2 = 100 - pct1;
-      document.getElementById('duel-bar-p1').style.width = `${pct1}%`;
-      document.getElementById('duel-bar-p2').style.width = `${pct2}%`;
-      document.getElementById('duel-details-text').textContent = `${s1.totalPoints} pts (${s1.completedLines.length} lignes) vs ${s2.totalPoints} pts (${s2.completedLines.length} lignes)`;
-
-      // Panels headers
-      document.getElementById('p1-panel-avatar').textContent = p1.avatar;
-      document.getElementById('p1-panel-title').textContent = p1.name.toUpperCase();
-      document.getElementById('p1-panel-club').textContent = `(${p1.club})`;
-      document.getElementById('p1-tiles-badge').textContent = `${s1.tilesCompleted} / 25 défis (${s1.totalPoints} pts)`;
-      document.getElementById('p1-lines-badge').textContent = `${s1.completedLines.length} ${s1.completedLines.length > 1 ? 'lignes' : 'ligne'} (+${s1.lineBonus} pts)`;
-
-      document.getElementById('p2-panel-avatar').textContent = p2.avatar;
-      document.getElementById('p2-panel-title').textContent = p2.name.toUpperCase();
-      document.getElementById('p2-panel-club').textContent = `(${p2.club})`;
-      document.getElementById('p2-tiles-badge').textContent = `${s2.tilesCompleted} / 25 défis (${s2.totalPoints} pts)`;
-      document.getElementById('p2-lines-badge').textContent = `${s2.completedLines.length} ${s2.completedLines.length > 1 ? 'lignes' : 'ligne'} (+${s2.lineBonus} pts)`;
-
-      // Grids
-      renderSpectatorGrid('grid-p1', data.challenges, p1.checked, s1.completedLines);
-      renderSpectatorGrid('grid-p2', data.challenges, p2.checked, s2.completedLines);
-
-      // Activity Feed
-      renderFeed(data.history);
+      el.innerHTML = [...history].reverse().slice(0, 20).map(item => {
+        const isCheck = item.action === 'check';
+        const time = new Date(item.timestamp).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+        const pColor = state?.players?.[item.playerId] ? COLOR_MAP[state.players[item.playerId].color] : '#ffffff';
+        return `<div class="feed-item">
+          <div class="feed-item-left">
+            <span>${item.challengeIcon||'🎯'}</span>
+            <div><strong style="color:${pColor};">${item.playerName}</strong> ${isCheck?'a validé':'a annulé'} <strong>${item.challengeTitle||'?'}</strong>${isCheck?` <span class="pts-inline">+${item.points}pts</span>`:''}</div>
+          </div>
+          <div class="feed-time">${time}</div>
+        </div>`;
+      }).join('');
     }
 
-    // Socket events
-    socket.on('stateUpdate', (data) => {
-      updateSpectatorUI(data);
-    });
-
-    socket.on('tileToggled', (data) => {
-      if (data.checked) {
-        showToast(data.playerName, data.challenge, data.newLineAchieved, data.newGrandChelem);
-        if (data.newGrandChelem) {
-          window.soundFx.playGrandChelem();
-          window.launchConfetti({ count: 200 });
-        } else if (data.newLineAchieved) {
-          window.soundFx.playBingo();
-          window.launchConfetti({ count: 100 });
-        } else {
-          window.soundFx.playCheck();
-        }
-      } else {
-        window.soundFx.playUncheck();
-      }
-    });
-
-    let toastTimer = null;
     function showToast(playerName, challenge, isLine, isGrandChelem) {
-      const toast = document.getElementById('live-alert-toast');
-      const toastIcon = document.getElementById('toast-icon');
-      const toastSubtitle = document.getElementById('toast-subtitle');
-      const toastTitle = document.getElementById('toast-title');
-      const toastPoints = document.getElementById('toast-points');
-
-      toastIcon.textContent = isGrandChelem ? '🏆' : (isLine ? '⭐' : challenge.icon);
-      toastSubtitle.textContent = isGrandChelem ? '🎉 GRAND CHELEM EN DIRECT !' : (isLine ? `⭐ BINGO LIGNE ! (${playerName})` : `DÉFI VALIDÉ PAR ${playerName.toUpperCase()}`);
-      toastTitle.textContent = challenge.title;
-      toastPoints.textContent = isGrandChelem ? '+10 PTS GRAND CHELEM !' : (isLine ? `+${challenge.points} PTS & BONUS LIGNE (+5 PTS)` : `+${challenge.points} ${challenge.points > 1 ? 'points' : 'point'}`);
-
-      toast.classList.add('show');
-      clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => {
-        toast.classList.remove('show');
-      }, 4500);
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      let cls = 'toast toast-check';
+      if (isGrandChelem) cls = 'toast toast-grand';
+      else if (isLine) cls = 'toast toast-bingo';
+      toast.className = cls;
+      toast.innerHTML = `
+        <div class="toast-big-icon">${isGrandChelem?'🏆':isLine?'⭐':(challenge?.icon||'🎯')}</div>
+        <div>
+          <div class="toast-label">${isGrandChelem?'👑 GRAND CHELEM !':isLine?'⭐ BINGO ! LIGNE':'DÉFI VALIDÉ'}</div>
+          <div class="toast-title">${challenge?.title||'?'}</div>
+          <div class="toast-sub">${playerName} · +${challenge?.points||0} pts</div>
+        </div>
+      `;
+      container.appendChild(toast);
+      requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.add('in')));
+      setTimeout(() => { toast.classList.remove('in'); toast.classList.add('out'); setTimeout(() => toast.remove(), 350); }, 4500);
     }
   </script>
 </body>

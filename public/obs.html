@@ -3,373 +3,308 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BINGO CARRIÈRE MANAGER | Overlay OBS Studio</title>
+  <title>BINGO CARRIÈRE | Overlay OBS</title>
   <link rel="stylesheet" href="/css/style.css">
   <script src="/socket.io/socket.io.js"></script>
   <script src="/js/audio.js"></script>
   <script src="/js/confetti.js"></script>
   <style>
-    body.obs-mode {
+    body {
       background: transparent !important;
       background-image: none !important;
       overflow: hidden;
+      padding: 14px;
       margin: 0;
-      padding: 16px;
     }
 
-    /* OBS Top HUD Bar */
-    .obs-hud-bar {
-      background: rgba(10, 15, 29, 0.88);
-      backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 14px;
-      padding: 10px 18px;
-      display: inline-flex;
-      align-items: center;
-      gap: 16px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
-    }
-
-    .obs-player-hud {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .obs-score {
-      font-size: 1.7rem;
-      font-weight: 900;
-      font-variant-numeric: tabular-nums;
-      line-height: 1;
-    }
-
-    /* Compact OBS Grid */
-    .obs-compact-grid {
-      display: grid;
-      grid-template-columns: repeat(5, 78px);
-      gap: 5px;
-      background: rgba(10, 15, 29, 0.88);
-      backdrop-filter: blur(12px);
-      padding: 8px;
-      border-radius: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      width: fit-content;
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
-    }
-
-    .obs-tile {
-      height: 70px;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 8px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 4px;
-      position: relative;
-      transition: all 0.2s;
-    }
-
-    .obs-tile.checked {
-      background: rgba(16, 185, 129, 0.25);
-      border-color: #10b981;
-      box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
-    }
-
-    .obs-tile.theme-p1.checked {
-      background: rgba(59, 130, 246, 0.28);
-      border-color: #3b82f6;
-      box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
-    }
-
-    .obs-tile.theme-p2.checked {
-      background: rgba(239, 68, 68, 0.28);
-      border-color: #ef4444;
-      box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
-    }
-
-    .obs-tile.in-line {
-      border-color: #fbbf24 !important;
-      box-shadow: 0 0 12px rgba(245, 158, 11, 0.6) !important;
-    }
-
-    .obs-tile-icon {
-      font-size: 20px;
-      line-height: 1;
-      margin-bottom: 2px;
-    }
-
-    .obs-tile-title {
-      font-size: 9px;
-      font-weight: 700;
-      color: #e2e8f0;
-      line-height: 1.1;
-      max-height: 20px;
-      overflow: hidden;
-    }
-
-    .obs-tile-pts {
-      font-size: 8px;
-      font-weight: 800;
-      color: #fbbf24;
-      margin-top: 2px;
-    }
-
-    /* OBS Stream Alert Popup */
-    #obs-alert-banner {
+    /* ---- OBS Controls Panel (visible in browser only) ---- */
+    #obs-controls {
       position: fixed;
-      top: 24px;
+      bottom: 10px;
+      right: 10px;
+      background: rgba(8,12,20,0.9);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      padding: 8px 12px;
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      font-size: 0.72rem;
+      z-index: 9998;
+      flex-wrap: wrap;
+    }
+
+    /* ---- HUD mode ---- */
+    #hud-wrap { display: none; }
+
+    /* ---- Grid mode ---- */
+    #grid-wrap {
+      display: none;
+    }
+
+    .obs-grid-header {
+      background: rgba(8,12,20,0.9);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px 10px 0 0;
+      padding: 7px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* ---- Alert mode ---- */
+    /* Alert is always present, just animates in/out */
+    #obs-alert {
+      /* Start off-screen above */
+      position: fixed;
+      top: 16px;
       left: 50%;
-      transform: translateX(-50%) translateY(-150%);
-      background: rgba(15, 23, 42, 0.95);
-      backdrop-filter: blur(16px);
-      border: 2px solid var(--gold);
-      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.8), 0 0 25px rgba(245, 158, 11, 0.4);
-      border-radius: 14px;
-      padding: 14px 24px;
+      transform: translateX(-50%) translateY(-240px);
+      transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 9999;
+      min-width: 340px;
+      max-width: 500px;
+      background: rgba(8,12,20,0.97);
+      backdrop-filter: blur(24px);
+      border: 2px solid rgba(245,166,35,0.6);
+      border-radius: 16px;
+      padding: 16px 22px;
       display: flex;
       align-items: center;
       gap: 16px;
-      z-index: 10000;
-      transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.95), 0 0 40px rgba(245,166,35,0.18);
       pointer-events: none;
+      will-change: transform;
     }
 
-    #obs-alert-banner.show {
+    #obs-alert.alert-visible {
       transform: translateX(-50%) translateY(0);
     }
 
-    /* On-Screen Mode Selector Switch (Hidden in OBS if url param present) */
-    .obs-controls-panel {
-      position: fixed;
-      bottom: 12px;
-      right: 12px;
-      background: rgba(15, 23, 42, 0.8);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 8px;
-      padding: 6px 10px;
-      display: flex;
-      gap: 6px;
-      font-size: 0.75rem;
-      z-index: 9999;
+    /* The shrinking progress bar at bottom of alert */
+    #obs-alert-bar {
+      position: absolute;
+      bottom: 0; left: 0;
+      height: 3px;
+      background: var(--gold);
+      border-radius: 0 0 16px 16px;
+      width: 100%;
+      transform-origin: left;
     }
+
+    @keyframes alertBarShrink {
+      from { transform: scaleX(1); }
+      to { transform: scaleX(0); }
+    }
+
+    #obs-alert-bar.running {
+      animation: alertBarShrink 5s linear forwards;
+    }
+
+    #obs-alert-icon { font-size: 38px; flex-shrink: 0; }
+    #obs-alert-label { font-size: 0.72rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.1em; color: var(--gold); margin-bottom: 3px; }
+    #obs-alert-title { font-size: 1.1rem; font-weight: 900; color: #fff; }
+    #obs-alert-sub { font-size: 0.82rem; color: var(--muted2); margin-top: 3px; }
   </style>
 </head>
-<body class="obs-mode">
+<body class="obs">
 
-  <!-- Alert Banner Pop-up on stream -->
-  <div id="obs-alert-banner">
-    <div id="obs-alert-icon" style="font-size: 38px;">🎯</div>
+  <!-- ALWAYS-PRESENT ALERT (animates in/out) -->
+  <div id="obs-alert">
+    <div id="obs-alert-icon">🎯</div>
     <div>
-      <div id="obs-alert-tag" style="font-size: 0.75rem; font-weight: 800; color: var(--gold); text-transform: uppercase; letter-spacing: 0.08em;">
-        ⚡ DÉFI CARRIÈRE VALIDÉ !
-      </div>
-      <div id="obs-alert-title" style="font-size: 1.15rem; font-weight: 800; color: #ffffff;">
-        Attaque Mitraillette
-      </div>
-      <div id="obs-alert-points" style="font-size: 0.85rem; color: #94a3b8; font-weight: 600;">
-        +2 PTS • JOUEUR 1
-      </div>
+      <div id="obs-alert-label">⚡ DÉFI VALIDÉ !</div>
+      <div id="obs-alert-title">Titre du défi</div>
+      <div id="obs-alert-sub">+2 pts • Joueur</div>
+    </div>
+    <div id="obs-alert-bar"></div>
+  </div>
+
+  <!-- HUD SCOREBOARD MODE -->
+  <div id="hud-wrap">
+    <div class="obs-hud" id="obs-hud">
+      <div id="hud-players" style="display:flex;align-items:center;gap:10px;"></div>
     </div>
   </div>
 
-  <!-- Container for selected OBS overlay mode -->
-  <div id="obs-content">
-    
-    <!-- Mode HUD Bar -->
-    <div id="hud-container" class="obs-hud-bar" style="display: none;">
-      <!-- P1 -->
-      <div class="obs-player-hud">
-        <span id="hud-p1-avatar" style="font-size: 26px;">⚽</span>
-        <div>
-          <div id="hud-p1-name" style="font-size: 0.85rem; font-weight: 800; color: #60a5fa;">JOUEUR 1</div>
-          <div id="hud-p1-details" style="font-size: 0.7rem; color: var(--text-muted);">0/25 défis • 0 ligne</div>
-        </div>
-        <div id="hud-p1-score" class="obs-score" style="color: #38bdf8;">0</div>
+  <!-- COMPACT GRID MODE -->
+  <div id="grid-wrap">
+    <div class="obs-grid-header">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span id="gw-avatar" style="font-size:18px;">⚽</span>
+        <strong id="gw-name" style="font-size:0.85rem;">Joueur</strong>
+        <span id="gw-club" class="text-xs text-muted"></span>
       </div>
-
-      <!-- Center VS -->
-      <div style="padding: 0 10px; text-align: center;">
-        <span style="font-size: 0.75rem; font-weight: 900; color: var(--gold); letter-spacing: 0.1em;">VS</span>
-        <div style="width: 60px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 4px; margin-top: 2px; overflow: hidden; display: flex;">
-          <div id="hud-bar-p1" style="width: 50%; background: #3b82f6;"></div>
-          <div id="hud-bar-p2" style="width: 50%; background: #ef4444;"></div>
-        </div>
-      </div>
-
-      <!-- P2 -->
-      <div class="obs-player-hud" style="flex-direction: row-reverse; text-align: right;">
-        <span id="hud-p2-avatar" style="font-size: 26px;">🔥</span>
-        <div>
-          <div id="hud-p2-name" style="font-size: 0.85rem; font-weight: 800; color: #f87171;">JOUEUR 2</div>
-          <div id="hud-p2-details" style="font-size: 0.7rem; color: var(--text-muted);">0/25 défis • 0 ligne</div>
-        </div>
-        <div id="hud-p2-score" class="obs-score" style="color: #f87171;">0</div>
-      </div>
+      <div style="font-size:0.9rem;font-weight:900;" id="gw-score" style="color:var(--accent);">0 PTS</div>
     </div>
-
-    <!-- Mode Compact Grid -->
-    <div id="grid-container" style="display: none;">
-      <div style="background: rgba(10, 15, 29, 0.9); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px 12px 0 0; padding: 6px 12px; display: flex; justify-content: space-between; align-items: center; width: 410px;">
-        <div style="display: flex; align-items: center; gap: 6px;">
-          <span id="grid-avatar" style="font-size: 18px;">⚽</span>
-          <strong id="grid-player-title" style="font-size: 0.85rem; color: #60a5fa;">JOUEUR 1</strong>
-        </div>
-        <div style="font-size: 0.85rem; font-weight: 800; color: #fbbf24;">
-          <span id="grid-score-badge">0 PTS</span>
-        </div>
-      </div>
-      <div class="obs-compact-grid" id="compact-grid" style="border-radius: 0 0 12px 12px; border-top: none;">
-        <!-- 25 compact tiles -->
-      </div>
-    </div>
-
+    <div class="obs-mini-grid" id="obs-mini-grid" style="border-top:none;border-radius:0 0 12px 12px;"></div>
   </div>
 
-  <!-- OBS Layout Switcher (Helper visible in browser, transparent URL shortcuts) -->
-  <div class="obs-controls-panel" id="obs-controls">
-    <span style="color: var(--text-muted);">Mode OBS :</span>
-    <a href="/obs.html?mode=hud" class="nav-btn" style="padding: 2px 6px; font-size: 0.75rem;">Scoreboard HUD</a>
-    <a href="/obs.html?mode=grid&p=1" class="nav-btn" style="padding: 2px 6px; font-size: 0.75rem;">Grille Joueur 1</a>
-    <a href="/obs.html?mode=grid&p=2" class="nav-btn" style="padding: 2px 6px; font-size: 0.75rem;">Grille Joueur 2</a>
-    <a href="/obs.html?mode=alerts" class="nav-btn" style="padding: 2px 6px; font-size: 0.75rem;">Alertes Seules</a>
+  <!-- OBS Controls (only visible in browser preview) -->
+  <div id="obs-controls">
+    <span class="text-muted">Mode OBS :</span>
+    <a class="btn btn-sm" href="?mode=hud">📊 Scoreboard</a>
+    <a class="btn btn-sm" href="?mode=grid&p=0">🔲 Grille J1</a>
+    <a class="btn btn-sm" href="?mode=grid&p=1">🔲 Grille J2</a>
+    <a class="btn btn-sm" href="?mode=alerts">🔔 Alertes</a>
+    <a class="btn btn-sm" href="?nocontrols=1&mode=hud">Masquer</a>
   </div>
 
   <script>
     const socket = io();
-    const urlParams = new URLSearchParams(window.location.search);
-    const mode = urlParams.get('mode') || 'hud'; // 'hud', 'grid', 'alerts'
-    const targetPlayer = urlParams.get('p') || '1';
-    const enableSound = urlParams.get('sound') !== '0';
+    const params = new URLSearchParams(window.location.search);
+    const mode = params.get('mode') || 'hud';
+    const targetPlayerIdx = parseInt(params.get('p') || '0');
+    const nocontrols = params.has('nocontrols');
+    if (nocontrols) document.getElementById('obs-controls').style.display = 'none';
 
-    if (!enableSound) {
-      window.soundFx.muted = true;
-    }
+    const COLOR_MAP = {
+      blue:'#4f8ef7',red:'#ef4444',purple:'#8b5cf6',green:'#10b981',
+      gold:'#f5a623',pink:'#ec4899',cyan:'#06b6d4',orange:'#f97316'
+    };
 
-    // Hide controls if specified or in iframe
-    if (urlParams.has('nocontrols')) {
-      document.getElementById('obs-controls').style.display = 'none';
-    }
+    // Show the right container
+    if (mode === 'hud') document.getElementById('hud-wrap').style.display = 'block';
+    else if (mode === 'grid') document.getElementById('grid-wrap').style.display = 'block';
+    // 'alerts' mode: only the alert element is shown (always present)
 
-    const hudContainer = document.getElementById('hud-container');
-    const gridContainer = document.getElementById('grid-container');
-
-    if (mode === 'hud') {
-      hudContainer.style.display = 'inline-flex';
-    } else if (mode === 'grid') {
-      gridContainer.style.display = 'block';
-    }
-
-    let localGameState = null;
-
-    function renderCompactGrid(challenges, checkedArray, completedLines, playerId) {
-      const grid = document.getElementById('compact-grid');
-      grid.innerHTML = '';
-
-      const activeLineIndices = new Set();
-      completedLines.forEach(l => {
-        if (l.type === 'row') for (let c = 0; c < 5; c++) activeLineIndices.add(l.index * 5 + c);
-        if (l.type === 'col') for (let r = 0; r < 5; r++) activeLineIndices.add(r * 5 + l.index);
-        if (l.type === 'diag') {
-          if (l.index === 0) [0, 6, 12, 18, 24].forEach(i => activeLineIndices.add(i));
-          if (l.index === 1) [4, 8, 12, 16, 20].forEach(i => activeLineIndices.add(i));
-        }
-      });
-
-      challenges.forEach((ch, idx) => {
-        const isChecked = !!checkedArray[idx];
-        const isInLine = activeLineIndices.has(idx);
-
-        const tileEl = document.createElement('div');
-        tileEl.className = `obs-tile theme-p${playerId} ${isChecked ? 'checked' : ''} ${isInLine ? 'in-line' : ''}`;
-
-        tileEl.innerHTML = `
-          <div class="obs-tile-icon">${ch.icon}</div>
-          <div class="obs-tile-title">${ch.title}</div>
-          <div class="obs-tile-pts">+${ch.points}</div>
-        `;
-
-        grid.appendChild(tileEl);
-      });
-    }
-
-    function updateObsUI(data) {
-      localGameState = data;
-      const p1 = data.players['1'];
-      const p2 = data.players['2'];
-      const s1 = data.stats['1'];
-      const s2 = data.stats['2'];
-
-      // HUD Mode
-      if (mode === 'hud') {
-        document.getElementById('hud-p1-avatar').textContent = p1.avatar;
-        document.getElementById('hud-p1-name').textContent = p1.name.toUpperCase();
-        document.getElementById('hud-p1-details').textContent = `${s1.tilesCompleted}/25 défis • ${s1.completedLines.length} lig.`;
-        document.getElementById('hud-p1-score').textContent = s1.totalPoints;
-
-        document.getElementById('hud-p2-avatar').textContent = p2.avatar;
-        document.getElementById('hud-p2-name').textContent = p2.name.toUpperCase();
-        document.getElementById('hud-p2-details').textContent = `${s2.tilesCompleted}/25 défis • ${s2.completedLines.length} lig.`;
-        document.getElementById('hud-p2-score').textContent = s2.totalPoints;
-
-        const total = (s1.totalPoints + s2.totalPoints) || 1;
-        const pct1 = Math.round((s1.totalPoints / total) * 100);
-        document.getElementById('hud-bar-p1').style.width = `${pct1}%`;
-        document.getElementById('hud-bar-p2').style.width = `${100 - pct1}%`;
-      }
-
-      // Compact Grid Mode
-      if (mode === 'grid') {
-        const player = data.players[targetPlayer];
-        const stats = data.stats[targetPlayer];
-        document.getElementById('grid-avatar').textContent = player.avatar;
-        document.getElementById('grid-player-title').textContent = `${player.name.toUpperCase()} (${stats.tilesCompleted}/25)`;
-        document.getElementById('grid-score-badge').textContent = `${stats.totalPoints} PTS`;
-        renderCompactGrid(data.challenges, player.checked, stats.completedLines, targetPlayer);
-      }
-    }
-
-    // Alert Banner Popup
-    let alertTimer = null;
-    function triggerStreamAlert(playerName, challenge, isLine, isGrandChelem) {
-      const banner = document.getElementById('obs-alert-banner');
-      const icon = document.getElementById('obs-alert-icon');
-      const tag = document.getElementById('obs-alert-tag');
-      const title = document.getElementById('obs-alert-title');
-      const pts = document.getElementById('obs-alert-points');
-
-      icon.textContent = isGrandChelem ? '🏆' : (isLine ? '⭐' : challenge.icon);
-      tag.textContent = isGrandChelem ? '👑 GRAND CHELEM SUPRÊME !' : (isLine ? '⭐ BINGO ! LIGNE COMPLÉTÉE (+5 PTS)' : '⚡ DÉFI CARRIÈRE VALIDÉ !');
-      title.textContent = challenge.title;
-      pts.textContent = isGrandChelem ? '+10 PTS • GRAND CHELEM !' : (isLine ? `+${challenge.points} PTS & BONUS LIGNE • ${playerName.toUpperCase()}` : `+${challenge.points} PTS • ${playerName.toUpperCase()}`);
-
-      banner.classList.add('show');
-      clearTimeout(alertTimer);
-      alertTimer = setTimeout(() => {
-        banner.classList.remove('show');
-      }, 5000);
-    }
+    let state = null;
+    let alertTimeout = null;
+    let alertBarTimeout = null;
+    let isAlertVisible = false;
 
     socket.on('stateUpdate', (data) => {
-      updateObsUI(data);
+      state = data;
+      if (mode === 'hud') renderHud(data);
+      else if (mode === 'grid') renderGrid(data);
     });
 
-    socket.on('tileToggled', (data) => {
-      if (data.checked) {
-        triggerStreamAlert(data.playerName, data.challenge, data.newLineAchieved, data.newGrandChelem);
-        if (data.newGrandChelem) {
-          window.soundFx.playGrandChelem();
-          window.launchConfetti({ count: 200 });
-        } else if (data.newLineAchieved) {
-          window.soundFx.playBingo();
-          window.launchConfetti({ count: 120 });
-        } else {
-          window.soundFx.playCheck();
-        }
-      }
+    socket.on('tileToggled', (ev) => {
+      if (!ev.checked) return;
+      // Sound
+      if (ev.newGrandChelem) window.soundFx?.playGrandChelem();
+      else if (ev.newLineAchieved) window.soundFx?.playBingo();
+      else window.soundFx?.playCheck();
+
+      // Confetti only for big events
+      if (ev.newGrandChelem) window.launchConfetti?.({ count: 200 });
+      else if (ev.newLineAchieved) window.launchConfetti?.({ count: 100 });
+
+      triggerAlert(ev.playerName, ev.challenge, ev.newLineAchieved, ev.newGrandChelem);
     });
+
+    // ==== HUD ====
+    function renderHud(data) {
+      const { players, stats } = data;
+      const ids = Object.keys(players || {});
+      const sorted = ids.map(id => ({ id, p: players[id], s: stats?.[id] }))
+        .sort((a,b) => (b.s?.totalPoints||0) - (a.s?.totalPoints||0));
+      const total = sorted.reduce((acc, x) => acc + (x.s?.totalPoints||0), 0) || 1;
+
+      const hud = document.getElementById('hud-players');
+      let html = '';
+      sorted.forEach((item, idx) => {
+        const { p, s } = item;
+        const c = COLOR_MAP[p.color] || '#4f8ef7';
+        const pct = Math.round(((s?.totalPoints||0)/total)*100);
+        if (idx > 0) {
+          html += `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;padding:0 4px;">
+            <span style="font-size:0.65rem;font-weight:900;color:var(--gold);">VS</span>
+            <div style="width:50px;height:4px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;display:flex;">
+              <div style="height:100%;background:${COLOR_MAP[sorted[0].p.color]||'#4f8ef7'};width:${Math.round((sorted[0].s?.totalPoints||0)/total*100)}%;"></div>
+              <div style="height:100%;background:${c};width:${100-Math.round((sorted[0].s?.totalPoints||0)/total*100)}%;"></div>
+            </div>
+          </div>`;
+        }
+        html += `<div class="obs-player">
+          <div class="obs-avatar" style="border-color:${c};background:${c}18;">${p.avatar}</div>
+          <div style="margin-right:8px;">
+            <div style="font-size:0.78rem;font-weight:800;color:${c};">${p.name}</div>
+            <div style="font-size:0.62rem;color:var(--muted);">${s?.tilesCompleted||0}/25 · ${s?.completedLines?.length||0} lig.</div>
+          </div>
+          <div class="obs-score" style="color:${c};">${s?.totalPoints||0}</div>
+          <div style="font-size:0.6rem;color:var(--muted);margin-left:2px;align-self:flex-end;margin-bottom:3px;">pts</div>
+        </div>`;
+      });
+      hud.innerHTML = html;
+    }
+
+    // ==== COMPACT GRID ====
+    function renderGrid(data) {
+      const ids = Object.keys(data.players || {});
+      const pid = ids[targetPlayerIdx] || ids[0];
+      if (!pid) return;
+
+      const p = data.players[pid];
+      const s = data.stats?.[pid];
+      const c = COLOR_MAP[p.color] || '#4f8ef7';
+      const checked = p.grids?.[data.activeGrid] || Array(25).fill(false);
+      const challenges = data.grids?.find(g => g.id === data.activeGrid)?.challenges || data.challenges || [];
+
+      document.getElementById('gw-avatar').textContent = p.avatar;
+      document.getElementById('gw-name').textContent = p.name;
+      document.getElementById('gw-club').textContent = p.club;
+      document.getElementById('gw-score').textContent = `${s?.totalPoints||0} PTS`;
+      document.getElementById('gw-score').style.color = c;
+
+      const lineIndices = new Set();
+      (s?.completedLines || []).forEach(l => {
+        if (l.type==='row') for(let col=0;col<5;col++) lineIndices.add(l.index*5+col);
+        if (l.type==='col') for(let row=0;row<5;row++) lineIndices.add(row*5+l.index);
+        if (l.type==='diag'&&l.index===0) [0,6,12,18,24].forEach(i=>lineIndices.add(i));
+        if (l.type==='diag'&&l.index===1) [4,8,12,16,20].forEach(i=>lineIndices.add(i));
+      });
+
+      document.getElementById('obs-mini-grid').innerHTML = challenges.slice(0,25).map((ch, idx) => {
+        const isChecked = !!checked[idx];
+        const isLine = lineIndices.has(idx);
+        return `<div class="obs-tile ${isChecked?'checked':''}${isChecked?' c-'+p.color:''} ${isLine?'in-line':''}">
+          <div class="obs-tile-emoji">${ch.icon||'🎯'}</div>
+          <div class="obs-tile-pts">+${ch.points}</div>
+        </div>`;
+      }).join('');
+    }
+
+    // ==== STREAM ALERT (FIXED) ====
+    function triggerAlert(playerName, challenge, isLine, isGrandChelem) {
+      const alert = document.getElementById('obs-alert');
+      const bar = document.getElementById('obs-alert-bar');
+      const DISPLAY_DURATION = 5000; // 5 seconds
+
+      // Update content BEFORE animating in
+      document.getElementById('obs-alert-icon').textContent = isGrandChelem ? '🏆' : isLine ? '⭐' : (challenge?.icon || '🎯');
+      document.getElementById('obs-alert-label').textContent = isGrandChelem ? '👑 GRAND CHELEM !' : isLine ? '⭐ BINGO ! LIGNE COMPLÉTÉE' : '⚡ DÉFI CARRIÈRE VALIDÉ !';
+      document.getElementById('obs-alert-title').textContent = challenge?.title || '?';
+      document.getElementById('obs-alert-sub').textContent = `+${challenge?.points||0} pts · ${playerName}${isLine ? ' + Bonus Ligne (+5 pts)' : ''}`;
+
+      // Reset bar animation cleanly
+      bar.classList.remove('running');
+      bar.style.animation = 'none';
+      bar.offsetHeight; // force reflow to restart animation
+
+      // If alert already visible, just reset its timer
+      if (isAlertVisible) {
+        clearTimeout(alertTimeout);
+      } else {
+        // Animate in
+        isAlertVisible = true;
+        alert.classList.add('alert-visible');
+      }
+
+      // Start bar animation
+      bar.style.animation = '';
+      bar.classList.add('running');
+      bar.style.animationDuration = DISPLAY_DURATION + 'ms';
+
+      // Schedule hide
+      clearTimeout(alertTimeout);
+      alertTimeout = setTimeout(() => {
+        alert.classList.remove('alert-visible');
+        bar.classList.remove('running');
+        isAlertVisible = false;
+      }, DISPLAY_DURATION);
+    }
   </script>
 </body>
 </html>

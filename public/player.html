@@ -3,396 +3,423 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BINGO CARRIÈRE MANAGER | Grille Joueur</title>
+  <title>BINGO CARRIÈRE | Grille Joueur</title>
   <link rel="stylesheet" href="/css/style.css">
   <script src="/socket.io/socket.io.js"></script>
   <script src="/js/audio.js"></script>
   <script src="/js/confetti.js"></script>
 </head>
-<body id="player-page-body" class="theme-p1">
+<body>
+  <!-- HEADER -->
   <header class="app-header">
-    <a href="/" class="logo-area">
-      <span class="logo-icon" id="header-avatar">⚽</span>
+    <a href="/" class="logo-link">
+      <div class="logo-icon-wrap" id="hdr-avatar" style="background:none;font-size:22px;">⚽</div>
       <div class="logo-text">
-        <h1 id="header-player-name">JOUEUR 1</h1>
-        <span id="header-player-club">FC STREAMER</span>
+        <div class="t1" id="hdr-name">Chargement…</div>
+        <div class="t2" id="hdr-club"></div>
       </div>
     </a>
-    <div class="nav-links">
-      <button id="btn-toggle-sound" class="nav-btn" title="Activer / Désactiver les sons">
-        <span id="sound-icon">🔊</span>
-      </button>
-      <button id="btn-edit-profile" class="nav-btn">
-        <span>✏️</span> Profil & Club
-      </button>
-      <div style="display: flex; gap: 4px; background: rgba(255,255,255,0.05); padding: 3px; border-radius: 8px;">
-        <button id="btn-switch-p1" class="nav-btn active" style="padding: 6px 12px; font-size: 0.8rem;">⚽ Joueur 1</button>
-        <button id="btn-switch-p2" class="nav-btn" style="padding: 6px 12px; font-size: 0.8rem;">🔥 Joueur 2</button>
+    <div class="header-nav">
+      <button class="btn btn-icon" id="btn-sound" title="Son">🔊</button>
+      <button class="btn" onclick="openModal('modal-profile')">✏️ Profil</button>
+      <div style="display:flex;gap:2px;background:rgba(255,255,255,0.04);padding:3px;border-radius:8px;border:1px solid var(--border);" id="player-switcher">
+        <!-- filled by JS -->
       </div>
-      <a href="/spectator.html" target="_blank" class="nav-btn">📺 Spectateur</a>
-      <a href="/obs.html" target="_blank" class="nav-btn">🎥 OBS</a>
+      <a href="/spectator.html" target="_blank" class="btn">📺 Spectateur</a>
     </div>
   </header>
 
-  <main class="container">
-    <!-- Player Score & Stats Ribbon -->
-    <div class="duel-banner">
-      <div class="player-score-card">
-        <div class="player-avatar p1" id="banner-avatar">⚽</div>
-        <div class="player-info">
-          <h3 id="banner-player-name">Joueur 1</h3>
-          <span class="club-tag" id="banner-club-name">FC Streamer</span>
-        </div>
-        <div class="score-badge p1" id="banner-total-points">0</div>
-        <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 700; align-self: flex-end; margin-bottom: 4px;">PTS</span>
-      </div>
+  <main class="container" style="max-width:1100px;">
 
-      <!-- Stats pills inside ribbon -->
-      <div style="display: flex; gap: 14px; flex-wrap: wrap;">
-        <div class="stat-pill">
-          <span class="icon">🎯</span>
+    <!-- PLAYER SCORE BANNER -->
+    <div class="scoreboard mb-4">
+      <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div id="banner-avatar" style="font-size:36px;width:52px;height:52px;border-radius:12px;display:flex;align-items:center;justify-content:center;border:2px solid;background:rgba(255,255,255,0.05);">⚽</div>
           <div>
-            <div class="label">Défis Validés</div>
-            <div class="value" id="stat-tiles-count">0 / 25</div>
+            <div style="font-size:1.2rem;font-weight:900;" id="banner-name">Joueur</div>
+            <div class="text-sm text-muted" id="banner-club"></div>
           </div>
         </div>
-
-        <div class="stat-pill">
-          <span class="icon">⚡</span>
+        <div>
+          <div style="font-size:2.5rem;font-weight:900;line-height:1;font-variant-numeric:tabular-nums;" id="banner-score">0</div>
+          <div class="text-xs text-muted">points</div>
+        </div>
+        <div style="display:flex;gap:14px;flex-wrap:wrap;margin-left:10px;">
           <div>
-            <div class="label">Lignes & Bonus</div>
-            <div class="value" id="stat-lines-count">0 (+0 pts)</div>
+            <div style="font-size:1.1rem;font-weight:800;" id="stat-tiles">0/25</div>
+            <div class="text-xs text-muted">Défis validés</div>
+          </div>
+          <div>
+            <div style="font-size:1.1rem;font-weight:800;" id="stat-lines">0</div>
+            <div class="text-xs text-muted">Lignes (+<span id="stat-line-bonus">0</span> pts)</div>
+          </div>
+          <div>
+            <div style="font-size:1.1rem;font-weight:800;" id="stat-base">0</div>
+            <div class="text-xs text-muted">Pts de base</div>
           </div>
         </div>
-
-        <div class="stat-pill" id="stat-rival-pill" style="border-color: rgba(239, 68, 68, 0.3);">
-          <span class="icon" id="rival-avatar">🔥</span>
-          <div>
-            <div class="label" id="rival-label">Rival (Joueur 2)</div>
-            <div class="value" id="rival-score" style="color: #f87171;">0 pts</div>
-          </div>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
+          <button class="btn btn-danger btn-sm" onclick="resetMyGrid()">🔄 Réinitialiser</button>
         </div>
-      </div>
-
-      <div style="display: flex; align-items: center; gap: 8px;">
-        <button id="btn-reset-grid" class="btn-danger" style="padding: 8px 12px; font-size: 0.8rem;">
-          🔄 Réinitialiser
-        </button>
       </div>
     </div>
 
-    <!-- Completed Lines Active Banner (shows which lines/columns/diagonals are made) -->
-    <div id="completed-lines-container" class="completed-lines-bar" style="margin-bottom: 16px; display: none;">
-      <span style="font-size: 0.8rem; font-weight: 700; color: var(--gold);">LIGNES ACTIVES (+5 PTS) :</span>
-      <div id="lines-tags-list" style="display: inline-flex; gap: 6px; flex-wrap: wrap;"></div>
+    <!-- RIVAL BANNER (compact) -->
+    <div id="rival-bar" style="display:none;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:10px;padding:8px 14px;margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+      <div class="text-xs text-muted fw-700">ADVERSAIRES :</div>
+      <div id="rival-pills" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
     </div>
 
-    <!-- 5x5 Interactive Bingo Grid -->
-    <div class="bingo-grid-container">
-      <div class="bingo-grid" id="bingo-grid">
-        <!-- 25 cards dynamically rendered -->
-      </div>
+    <!-- ACTIVE LINES -->
+    <div id="lines-bar" class="lines-bar hidden" style="margin-bottom:12px;">
+      <span class="text-xs fw-700" style="color:var(--gold);">LIGNES ACTIVES :</span>
+      <div id="lines-tags"></div>
     </div>
+
+    <!-- GRID TITLE -->
+    <div class="flex-between mb-3">
+      <div class="section-title">🎮 <span id="grid-title">Grille Bingo</span></div>
+      <div class="live-dot"><span class="pulse"></span>Sync Temps Réel</div>
+    </div>
+
+    <!-- BINGO GRID -->
+    <div style="background:var(--bg-3);border:1px solid var(--border);border-radius:16px;padding:14px;" class="mb-4">
+      <div class="bingo-grid" id="bingo-grid"></div>
+    </div>
+
+    <!-- HISTORY FEED -->
+    <div class="feed">
+      <div class="feed-title">🔴 Historique des actions</div>
+      <div id="feed-list"><div class="text-muted text-sm" style="text-align:center;padding:12px;">En attente du premier défi…</div></div>
+    </div>
+
   </main>
 
-  <!-- Live Toast Alert for OBS & Spectators -->
-  <div id="live-alert-toast">
-    <div class="toast-icon" id="toast-icon">🎯</div>
-    <div class="toast-content">
-      <h4 id="toast-subtitle">DÉFI VALIDÉ !</h4>
-      <div class="toast-title" id="toast-title">Attaque Mitraillette</div>
-      <div class="toast-subtitle" id="toast-points">+2 points</div>
-    </div>
-  </div>
+  <!-- TOAST CONTAINER -->
+  <div id="toast-container"></div>
 
-  <!-- Profile Edit Modal -->
-  <div class="modal-overlay" id="profile-modal">
+  <!-- PROFILE MODAL -->
+  <div class="modal-overlay" id="modal-profile">
     <div class="modal-box">
       <div class="modal-header">
-        <h2>✏️ Personnaliser le profil</h2>
-        <button class="modal-close" id="btn-close-modal">&times;</button>
+        <div class="modal-title">✏️ Mon Profil</div>
+        <button class="modal-close" onclick="closeModal('modal-profile')">✕</button>
       </div>
-      <form id="profile-form">
-        <div class="form-group">
-          <label>Pseudo / Nom du Joueur</label>
-          <input type="text" id="input-player-name" class="form-input" required maxlength="25">
+      <form onsubmit="submitProfile(event)">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Pseudo</label>
+            <input type="text" class="form-input" id="prof-name" required maxlength="25">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Club</label>
+            <input type="text" class="form-input" id="prof-club" required maxlength="30">
+          </div>
         </div>
         <div class="form-group">
-          <label>Nom du Club / Équipe</label>
-          <input type="text" id="input-club-name" class="form-input" required maxlength="30">
+          <label class="form-label">Emoji / Avatar</label>
+          <div class="emoji-row" id="prof-emoji-picker">
+            <span class="emoji-opt" data-v="⚽">⚽</span>
+            <span class="emoji-opt" data-v="🔥">🔥</span>
+            <span class="emoji-opt" data-v="⚡">⚡</span>
+            <span class="emoji-opt" data-v="👑">👑</span>
+            <span class="emoji-opt" data-v="🦁">🦁</span>
+            <span class="emoji-opt" data-v="🚀">🚀</span>
+            <span class="emoji-opt" data-v="🐺">🐺</span>
+            <span class="emoji-opt" data-v="🎯">🎯</span>
+            <span class="emoji-opt" data-v="🏆">🏆</span>
+            <span class="emoji-opt" data-v="⚔️">⚔️</span>
+            <span class="emoji-opt" data-v="💎">💎</span>
+            <span class="emoji-opt" data-v="🌟">🌟</span>
+          </div>
+          <input type="hidden" id="prof-avatar" value="">
         </div>
         <div class="form-group">
-          <label>Émoji / Logo (ex: ⚽, 🦁, 👑, 🔥, ⚡, 🚀)</label>
-          <input type="text" id="input-avatar" class="form-input" required maxlength="4">
+          <label class="form-label">Nouveau PIN (laisser vide pour ne pas changer)</label>
+          <input type="password" class="form-input" id="prof-pin" maxlength="6" placeholder="Nouveau PIN…">
         </div>
-        <div class="form-group">
-          <label>Code PIN de sécurité (optionnel, 4 chiffres)</label>
-          <input type="password" id="input-pin" class="form-input" maxlength="6" placeholder="ex: 1111">
+        <div class="form-actions">
+          <button type="button" class="btn btn-full" onclick="closeModal('modal-profile')">Annuler</button>
+          <button type="submit" class="btn btn-primary btn-full">💾 Enregistrer</button>
         </div>
-        <button type="submit" class="btn-primary" style="margin-top: 10px;">Enregistrer les modifications</button>
       </form>
     </div>
   </div>
 
   <script>
     const socket = io();
-    const urlParams = new URLSearchParams(window.location.search);
-    let currentPlayerId = urlParams.get('p') || '1';
+    const params = new URLSearchParams(window.location.search);
+    let playerId = params.get('p');
+    let state = null;
+    const COLOR_MAP = {
+      blue:'#4f8ef7',red:'#ef4444',purple:'#8b5cf6',green:'#10b981',
+      gold:'#f5a623',pink:'#ec4899',cyan:'#06b6d4',orange:'#f97316'
+    };
 
-    let localGameState = null;
-    let localChallenges = [];
-
-    // Switch between player 1 and player 2
-    function setPlayer(id) {
-      currentPlayerId = id;
-      window.history.replaceState({}, '', `/player.html?p=${id}`);
-      
-      const body = document.getElementById('player-page-body');
-      const btn1 = document.getElementById('btn-switch-p1');
-      const btn2 = document.getElementById('btn-switch-p2');
-
-      if (id === '1') {
-        body.className = 'theme-p1';
-        btn1.className = 'nav-btn active';
-        btn2.className = 'nav-btn';
-      } else {
-        body.className = 'theme-p2';
-        btn1.className = 'nav-btn';
-        btn2.className = 'nav-btn p2-active';
+    // Pick first player if none specified
+    socket.on('stateUpdate', (data) => {
+      const prevState = state;
+      state = data;
+      if (!playerId || !data.players[playerId]) {
+        const ids = Object.keys(data.players);
+        if (!ids.length) return;
+        playerId = ids[0];
+        window.history.replaceState({}, '', `/player.html?p=${playerId}`);
       }
 
-      if (localGameState) {
-        renderUI(localGameState);
+      // Sound + confetti on line/grand chelem achievement
+      if (prevState) {
+        const ps = prevState.stats?.[playerId];
+        const ns = data.stats?.[playerId];
+        if (ps && ns) {
+          if (ns.isGrandChelem && !ps.isGrandChelem) {
+            window.soundFx?.playGrandChelem();
+            window.launchConfetti?.({ count: 250 });
+          } else if (ns.completedLines?.length > ps.completedLines?.length) {
+            window.soundFx?.playBingo();
+            window.launchConfetti?.({ count: 120 });
+          }
+        }
       }
-    }
 
-    document.getElementById('btn-switch-p1').addEventListener('click', () => setPlayer('1'));
-    document.getElementById('btn-switch-p2').addEventListener('click', () => setPlayer('2'));
-
-    // Sound toggle
-    const soundBtn = document.getElementById('btn-toggle-sound');
-    const soundIcon = document.getElementById('sound-icon');
-    function updateSoundIcon() {
-      soundIcon.textContent = window.soundFx.isMuted() ? '🔇' : '🔊';
-    }
-    soundBtn.addEventListener('click', () => {
-      window.soundFx.toggleMute();
-      updateSoundIcon();
+      renderUI(data);
     });
-    updateSoundIcon();
 
-    // Toggle tile handler
-    function handleTileClick(index) {
-      if (!localGameState) return;
-      const player = localGameState.players[currentPlayerId];
+    socket.on('tileToggled', (ev) => {
+      if (ev.checked) showToast(ev.playerName, ev.challenge, ev.newLineAchieved, ev.newGrandChelem);
+    });
+
+    function renderUI(data) {
+      const player = data.players[playerId];
+      const stats = data.stats?.[playerId];
       if (!player) return;
 
-      const currentChecked = player.checked[index];
-      const newChecked = !currentChecked;
+      const colorHex = COLOR_MAP[player.color] || '#4f8ef7';
 
-      // Play sound
-      if (newChecked) {
-        window.soundFx.playCheck();
-      } else {
-        window.soundFx.playUncheck();
-      }
+      // Header
+      document.getElementById('hdr-avatar').textContent = player.avatar;
+      document.getElementById('hdr-avatar').style.border = `2px solid ${colorHex}`;
+      document.getElementById('hdr-name').textContent = player.name;
+      document.getElementById('hdr-club').textContent = player.club;
 
-      // Optimistic local update
-      player.checked[index] = newChecked;
-      renderGrid(localChallenges, player.checked, localGameState.stats[currentPlayerId].completedLines);
-
-      // Emit through socket
-      socket.emit('toggleTile', {
-        playerId: currentPlayerId,
-        tileIndex: index,
-        checked: newChecked
-      });
-    }
-
-    // Render Bingo Grid
-    function renderGrid(challenges, checkedArray, completedLines = []) {
-      const grid = document.getElementById('bingo-grid');
-      grid.innerHTML = '';
-
-      // Find which tile indices are part of a completed line
-      const activeLineIndices = new Set();
-      completedLines.forEach(l => {
-        if (l.type === 'row') {
-          for (let c = 0; c < 5; c++) activeLineIndices.add(l.index * 5 + c);
-        } else if (l.type === 'col') {
-          for (let r = 0; r < 5; r++) activeLineIndices.add(r * 5 + l.index);
-        } else if (l.type === 'diag') {
-          if (l.index === 0) [0, 6, 12, 18, 24].forEach(i => activeLineIndices.add(i));
-          if (l.index === 1) [4, 8, 12, 16, 20].forEach(i => activeLineIndices.add(i));
-        }
-      });
-
-      challenges.forEach((ch, idx) => {
-        const isChecked = !!checkedArray[idx];
-        const isInLine = activeLineIndices.has(idx);
-
-        const tileEl = document.createElement('div');
-        tileEl.className = `bingo-tile ${isChecked ? 'checked' : ''} ${isInLine ? 'in-line' : ''}`;
-        tileEl.onclick = () => handleTileClick(idx);
-
-        tileEl.innerHTML = `
-          <div class="tile-top">
-            <span class="tile-icon">${ch.icon}</span>
-            <span class="pts-badge pts-${ch.points}">+${ch.points} ${ch.points > 1 ? 'PTS' : 'PT'}</span>
-          </div>
-          <div class="tile-title">${ch.title}</div>
-          <div class="tile-desc">${ch.description}</div>
-          <div class="tile-bottom">
-            <span class="tile-constraint" title="${ch.constraint}">${ch.constraint}</span>
-            <div class="tile-checkbox">${isChecked ? '✓' : ''}</div>
-          </div>
-        `;
-
-        grid.appendChild(tileEl);
-      });
-    }
-
-    // Render full UI
-    function renderUI(data) {
-      localGameState = data;
-      localChallenges = data.challenges;
-
-      const player = data.players[currentPlayerId];
-      const stats = data.stats[currentPlayerId];
-      const rivalId = currentPlayerId === '1' ? '2' : '1';
-      const rival = data.players[rivalId];
-      const rivalStats = data.stats[rivalId];
-
-      if (!player || !stats) return;
-
-      // Update header
-      document.getElementById('header-avatar').textContent = player.avatar;
-      document.getElementById('header-player-name').textContent = player.name.toUpperCase();
-      document.getElementById('header-player-club').textContent = player.club.toUpperCase();
-
-      // Update banner
+      // Banner
       const bannerAvatar = document.getElementById('banner-avatar');
       bannerAvatar.textContent = player.avatar;
-      bannerAvatar.className = `player-avatar p${currentPlayerId}`;
+      bannerAvatar.style.borderColor = colorHex;
+      bannerAvatar.style.background = colorHex + '18';
+      document.getElementById('banner-name').textContent = player.name;
+      document.getElementById('banner-club').textContent = player.club;
+      document.getElementById('banner-score').textContent = stats?.totalPoints || 0;
+      document.getElementById('banner-score').style.color = colorHex;
+      document.getElementById('stat-tiles').textContent = `${stats?.tilesCompleted||0}/25`;
+      document.getElementById('stat-lines').textContent = stats?.completedLines?.length || 0;
+      document.getElementById('stat-line-bonus').textContent = stats?.lineBonus || 0;
+      document.getElementById('stat-base').textContent = stats?.basePoints || 0;
 
-      document.getElementById('banner-player-name').textContent = player.name;
-      document.getElementById('banner-club-name').textContent = player.club;
-      
-      const bannerScore = document.getElementById('banner-total-points');
-      bannerScore.textContent = stats.totalPoints;
-      bannerScore.className = `score-badge p${currentPlayerId}`;
+      // Grid title
+      const activeGrid = data.grids?.find(g => g.id === data.activeGrid);
+      document.getElementById('grid-title').textContent = activeGrid?.name || 'Grille Bingo';
 
-      // Update stats
-      document.getElementById('stat-tiles-count').textContent = `${stats.tilesCompleted} / 25`;
-      document.getElementById('stat-lines-count').textContent = `${stats.completedLines.length} (+${stats.lineBonus} pts)`;
-
-      // Update rival
-      document.getElementById('rival-avatar').textContent = rival.avatar;
-      document.getElementById('rival-label').textContent = `${rival.name} (${rival.club})`;
-      document.getElementById('rival-score').textContent = `${rivalStats.totalPoints} pts (${rivalStats.tilesCompleted}/25)`;
-
-      // Completed lines bar
-      const linesContainer = document.getElementById('completed-lines-container');
-      const linesList = document.getElementById('lines-tags-list');
-      if (stats.completedLines.length > 0) {
-        linesContainer.style.display = 'flex';
-        linesList.innerHTML = stats.completedLines.map(l => `<span class="line-tag">⭐ ${l.name}</span>`).join('');
+      // Rival bar
+      const rivals = Object.keys(data.players).filter(id => id !== playerId);
+      if (rivals.length > 0) {
+        document.getElementById('rival-bar').style.display = 'flex';
+        document.getElementById('rival-pills').innerHTML = rivals.map(rid => {
+          const rp = data.players[rid], rs = data.stats?.[rid];
+          const rc = COLOR_MAP[rp.color] || '#ef4444';
+          return `<div style="display:flex;align-items:center;gap:6px;background:${rc}12;border:1px solid ${rc}33;border-radius:8px;padding:4px 10px;font-size:0.8rem;">
+            <span>${rp.avatar}</span>
+            <span style="font-weight:700;">${rp.name}</span>
+            <span style="color:${rc};font-weight:900;">${rs?.totalPoints||0} pts</span>
+            <span class="text-xs text-muted">${rs?.tilesCompleted||0}/25</span>
+          </div>`;
+        }).join('');
       } else {
-        linesContainer.style.display = 'none';
+        document.getElementById('rival-bar').style.display = 'none';
       }
 
-      // Render grid
-      renderGrid(data.challenges, player.checked, stats.completedLines);
+      // Lines bar
+      const lines = stats?.completedLines || [];
+      if (lines.length > 0) {
+        document.getElementById('lines-bar').classList.remove('hidden');
+        document.getElementById('lines-tags').innerHTML = lines.map(l => `<span class="line-tag">⭐ ${l.name}</span>`).join('');
+      } else {
+        document.getElementById('lines-bar').classList.add('hidden');
+      }
+
+      // Player switcher
+      const ids = Object.keys(data.players);
+      document.getElementById('player-switcher').innerHTML = ids.map(id => {
+        const p = data.players[id];
+        const c = COLOR_MAP[p.color] || '#4f8ef7';
+        const active = id === playerId;
+        return `<button onclick="switchPlayer('${id}')" class="btn btn-sm" style="${active ? `background:${c};border-color:${c};color:${c === '#f5a623' ? '#000':'#fff'}` : ''};">${p.avatar} ${p.name.split(' ')[0]}</button>`;
+      }).join('');
+
+      // Grid
+      const challenges = activeGrid?.challenges || data.challenges || [];
+      const checkedArr = player.grids?.[data.activeGrid] || Array(25).fill(false);
+      renderGrid(challenges, checkedArr, lines, player.color, playerId);
+
+      // Feed
+      renderFeed(data.history || []);
     }
 
-    // Socket listeners
-    socket.on('stateUpdate', (data) => {
-      const prevStats = localGameState && localGameState.stats ? localGameState.stats[currentPlayerId] : null;
-      renderUI(data);
-
-      // Check if current player just unlocked a line or grand chelem
-      const currentStats = data.stats[currentPlayerId];
-      if (prevStats && currentStats) {
-        if (currentStats.completedLines.length > prevStats.completedLines.length) {
-          window.soundFx.playBingo();
-          window.launchConfetti({ count: 120 });
-        }
-        if (currentStats.isGrandChelem && !prevStats.isGrandChelem) {
-          window.soundFx.playGrandChelem();
-          window.launchConfetti({ count: 250 });
-        }
-      }
-    });
-
-    // Alert toast on tile check
-    socket.on('tileToggled', (data) => {
-      if (data.checked) {
-        showToast(data.playerName, data.challenge, data.newLineAchieved, data.newGrandChelem);
-      }
-    });
-
-    let toastTimer = null;
-    function showToast(playerName, challenge, isLine, isGrandChelem) {
-      const toast = document.getElementById('live-alert-toast');
-      const toastIcon = document.getElementById('toast-icon');
-      const toastSubtitle = document.getElementById('toast-subtitle');
-      const toastTitle = document.getElementById('toast-title');
-      const toastPoints = document.getElementById('toast-points');
-
-      toastIcon.textContent = isGrandChelem ? '🏆' : (isLine ? '⭐' : challenge.icon);
-      toastSubtitle.textContent = isGrandChelem ? '🎉 GRAND CHELEM !' : (isLine ? `⭐ BINGO LIGNE ! (${playerName})` : `DÉFI VALIDÉ PAR ${playerName.toUpperCase()}`);
-      toastTitle.textContent = challenge.title;
-      toastPoints.textContent = isGrandChelem ? '+10 PTS GRAND CHELEM !' : (isLine ? `+${challenge.points} PTS & BONUS LIGNE (+5 PTS)` : `+${challenge.points} ${challenge.points > 1 ? 'points' : 'point'}`);
-
-      toast.classList.add('show');
-      clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => {
-        toast.classList.remove('show');
-      }, 4000);
-    }
-
-    // Reset grid
-    document.getElementById('btn-reset-grid').addEventListener('click', () => {
-      const player = localGameState ? localGameState.players[currentPlayerId] : null;
-      const name = player ? player.name : `Joueur ${currentPlayerId}`;
-      if (confirm(`Voulez-vous vraiment réinitialiser toutes les coches pour ${name} ?`)) {
-        socket.emit('resetGrid', { target: currentPlayerId });
-      }
-    });
-
-    // Profile modal
-    const modal = document.getElementById('profile-modal');
-    document.getElementById('btn-edit-profile').addEventListener('click', () => {
-      const player = localGameState.players[currentPlayerId];
-      document.getElementById('input-player-name').value = player.name;
-      document.getElementById('input-club-name').value = player.club;
-      document.getElementById('input-avatar').value = player.avatar;
-      document.getElementById('input-pin').value = player.pin || '';
-      modal.classList.add('open');
-    });
-
-    document.getElementById('btn-close-modal').addEventListener('click', () => {
-      modal.classList.remove('open');
-    });
-
-    document.getElementById('profile-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const name = document.getElementById('input-player-name').value;
-      const club = document.getElementById('input-club-name').value;
-      const avatar = document.getElementById('input-avatar').value;
-      const pin = document.getElementById('input-pin').value;
-
-      await fetch('/api/profile', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ playerId: currentPlayerId, name, club, avatar, pin })
+    function renderGrid(challenges, checked, completedLines, color, pid) {
+      const grid = document.getElementById('bingo-grid');
+      const lineIndices = new Set();
+      (completedLines || []).forEach(l => {
+        if (l.type==='row') for(let c=0;c<5;c++) lineIndices.add(l.index*5+c);
+        if (l.type==='col') for(let r=0;r<5;r++) lineIndices.add(r*5+l.index);
+        if (l.type==='diag' && l.index===0) [0,6,12,18,24].forEach(i=>lineIndices.add(i));
+        if (l.type==='diag' && l.index===1) [4,8,12,16,20].forEach(i=>lineIndices.add(i));
       });
 
-      modal.classList.remove('open');
+      grid.innerHTML = challenges.slice(0,25).map((ch, idx) => {
+        const isChecked = !!checked[idx];
+        const isLine = lineIndices.has(idx);
+        return `
+          <div class="tile ${isChecked?'checked':''}${isChecked?' c-'+color:''} ${isLine?'in-line':''}" onclick="toggleTile(${idx},${isChecked})">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:5px;">
+              <span class="tile-icon">${ch.icon||'🎯'}</span>
+              <span class="pts pts-${ch.points}">${ch.points}pt${ch.points>1?'s':''}</span>
+            </div>
+            <div class="tile-title">${ch.title}</div>
+            <div class="tile-desc">${ch.description||''}</div>
+            <div class="tile-footer">
+              <span class="tile-constraint" title="${ch.constraint||''}">${ch.constraint||''}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderFeed(history) {
+      const el = document.getElementById('feed-list');
+      if (!history.length) {
+        el.innerHTML = '<div class="text-muted text-sm" style="text-align:center;padding:12px;">En attente du premier défi…</div>';
+        return;
+      }
+      el.innerHTML = [...history].reverse().slice(0, 25).map(item => {
+        const isCheck = item.action === 'check';
+        const time = new Date(item.timestamp).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+        const color = state?.players?.[item.playerId] ? COLOR_MAP[state.players[item.playerId].color] : '#fff';
+        return `<div class="feed-item">
+          <div class="feed-item-left">
+            <span>${item.challengeIcon||'🎯'}</span>
+            <div>
+              <strong style="color:${color};">${item.playerName}</strong>
+              ${isCheck ? 'a validé' : '<span style="color:var(--muted2);">a annulé</span>'}
+              <strong>${item.challengeTitle||'?'}</strong>
+              ${isCheck ? `<span class="pts-inline">+${item.points} pt${item.points>1?'s':''}</span>` : ''}
+            </div>
+          </div>
+          <div class="feed-time">${time}</div>
+        </div>`;
+      }).join('');
+    }
+
+    function toggleTile(idx, currentChecked) {
+      if (!state || !playerId) return;
+      const newChecked = !currentChecked;
+      if (newChecked) window.soundFx?.playCheck();
+      else window.soundFx?.playUncheck();
+
+      // Optimistic UI
+      const player = state.players[playerId];
+      if (!player.grids) player.grids = {};
+      if (!player.grids[state.activeGrid]) player.grids[state.activeGrid] = Array(25).fill(false);
+      player.grids[state.activeGrid][idx] = newChecked;
+      const activeGrid = state.grids?.find(g => g.id === state.activeGrid);
+      const challenges = activeGrid?.challenges || state.challenges || [];
+      const stats = state.stats?.[playerId] || {};
+      renderGrid(challenges, player.grids[state.activeGrid], stats.completedLines || [], player.color, playerId);
+
+      socket.emit('toggleTile', { playerId, tileIndex: idx, checked: newChecked, gridId: state.activeGrid });
+    }
+
+    function switchPlayer(id) {
+      playerId = id;
+      window.history.replaceState({}, '', `/player.html?p=${id}`);
+      if (state) renderUI(state);
+    }
+
+    function resetMyGrid() {
+      if (!confirm('Réinitialiser toutes vos coches ?')) return;
+      socket.emit('resetGrid', { target: `player:${playerId}`, gridId: state?.activeGrid });
+    }
+
+    // Profile modal
+    function openModal(id) {
+      const modal = document.getElementById(id);
+      modal.classList.add('open');
+      if (id === 'modal-profile' && state) {
+        const p = state.players[playerId];
+        if (!p) return;
+        document.getElementById('prof-name').value = p.name;
+        document.getElementById('prof-club').value = p.club;
+        document.getElementById('prof-avatar').value = p.avatar;
+        document.getElementById('prof-pin').value = '';
+        document.querySelectorAll('#prof-emoji-picker .emoji-opt').forEach(x => x.classList.toggle('selected', x.dataset.v === p.avatar));
+      }
+    }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+    document.querySelectorAll('.modal-overlay').forEach(el => {
+      el.addEventListener('click', e => { if (e.target===el) el.classList.remove('open'); });
     });
 
-    // Initialize with current player
-    setPlayer(currentPlayerId);
+    document.getElementById('prof-emoji-picker').addEventListener('click', e => {
+      const opt = e.target.closest('.emoji-opt');
+      if (!opt) return;
+      document.querySelectorAll('#prof-emoji-picker .emoji-opt').forEach(x => x.classList.remove('selected'));
+      opt.classList.add('selected');
+      document.getElementById('prof-avatar').value = opt.dataset.v;
+    });
+
+    async function submitProfile(e) {
+      e.preventDefault();
+      await fetch('/api/profile', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          playerId,
+          name: document.getElementById('prof-name').value.trim(),
+          club: document.getElementById('prof-club').value.trim(),
+          avatar: document.getElementById('prof-avatar').value,
+          pin: document.getElementById('prof-pin').value
+        })
+      });
+      closeModal('modal-profile');
+    }
+
+    // Sound toggle
+    document.getElementById('btn-sound').addEventListener('click', () => {
+      const m = window.soundFx?.toggleMute?.();
+      document.getElementById('btn-sound').textContent = m ? '🔇' : '🔊';
+    });
+
+    // Toast
+    function showToast(playerName, challenge, isLine, isGrandChelem) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      let cls = 'toast toast-check';
+      if (isGrandChelem) cls = 'toast toast-grand';
+      else if (isLine) cls = 'toast toast-bingo';
+      toast.className = cls;
+      toast.innerHTML = `
+        <div class="toast-big-icon">${isGrandChelem?'🏆':isLine?'⭐':(challenge?.icon||'🎯')}</div>
+        <div>
+          <div class="toast-label">${isGrandChelem?'👑 GRAND CHELEM !':isLine?'⭐ BINGO ! LIGNE':'DÉFI VALIDÉ'}</div>
+          <div class="toast-title">${challenge?.title||'?'}</div>
+          <div class="toast-sub">${playerName} · +${challenge?.points||0} pts${isLine?' + bonus ligne':''}</div>
+        </div>
+      `;
+      container.appendChild(toast);
+      requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.add('in')));
+      setTimeout(() => { toast.classList.remove('in'); toast.classList.add('out'); setTimeout(() => toast.remove(), 350); }, 4000);
+    }
   </script>
 </body>
 </html>

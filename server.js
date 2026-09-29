@@ -1,83 +1,133 @@
+/**
+ * Bingo Carrière Manager — Server
+ * Express + Socket.io + CORS
+ * Multi-player | Multi-grid | Per-player per-grid checked state
+ */
+
+'use strict';
+
 const express = require('express');
-const http = require('http');
+const http    = require('http');
 const { Server } = require('socket.io');
-const cors = require('cors');
-const fs = require('fs');
-const path = require('path');
+const cors    = require('cors');
+const fs      = require('fs');
+const path    = require('path');
 
-const app = express();
-const server = http.createServer(app);
-const io = new Server(server, {
-  cors: { origin: '*' }
-});
+// ─── Constants ────────────────────────────────────────────────────────────────
 
-const PORT = process.env.PORT || 3000;
-const DATA_DIR = path.join(__dirname, 'data');
+const PORT           = process.env.PORT || 3000;
+const DATA_DIR       = path.join(__dirname, 'data');
 const CHALLENGES_FILE = path.join(DATA_DIR, 'challenges.json');
-const STATE_FILE = path.join(DATA_DIR, 'game_state.json');
+const STATE_FILE     = path.join(DATA_DIR, 'game_state.json');
 
-// Ensure data folder exists
+// ─── App bootstrap ────────────────────────────────────────────────────────────
+
+const app    = express();
+const server = http.createServer(app);
+const io     = new Server(server, { cors: { origin: '*' } });
+
+app.use(cors());
+app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
+
+// ─── Ensure data directory ────────────────────────────────────────────────────
+
 if (!fs.existsSync(DATA_DIR)) {
   fs.mkdirSync(DATA_DIR, { recursive: true });
 }
 
-// Load default challenges
-let challenges = [];
+// ─── Load raw challenges from challenges.json ─────────────────────────────────
+
+let rawChallenges = [];
 if (fs.existsSync(CHALLENGES_FILE)) {
   try {
-    challenges = JSON.parse(fs.readFileSync(CHALLENGES_FILE, 'utf8'));
+    rawChallenges = JSON.parse(fs.readFileSync(CHALLENGES_FILE, 'utf8'));
   } catch (e) {
-    console.error('Error reading challenges.json', e);
+    console.error('[BINGO] Error reading challenges.json:', e.message);
   }
 }
 
-// Initial game state template
-const initialGameState = {
-  players: {
-    '1': {
-      id: '1',
-      name: 'Joueur 1',
-      club: 'FC Streamer',
-      avatar: '⚽',
-      pin: '1111',
-      color: '#3b82f6',
-      checked: new Array(25).fill(false)
-    },
-    '2': {
-      id: '2',
-      name: 'Joueur 2',
-      club: 'Rival FC',
-      avatar: '🔥',
-      pin: '2222',
-      color: '#ef4444',
-      checked: new Array(25).fill(false)
-    }
-  },
-  settings: {
-    lineBonus: 5,
-    grandChelemBonus: 10,
-    requirePin: false
-  },
-  history: []
-};
+// ─── State shape ──────────────────────────────────────────────────────────────
+//
+// gameState = {
+//   activeGridId: string | null,
+//   grids: {
+//     [gridId]: {
+//       id: string,
+//       name: string,
+//       description: string,
+//       challenges: [ { id, icon, title, description, points, constraint, category } x25 ]
+//     }
+//   },
+//   players: {
+//     [playerId]: {
+//       id: string,
+//       name: string,
+//       club: string,
+//       avatar: string,  // emoji
+//       color: string,   // hex
+//       pin: string,
+//       grids: {
+//         [gridId]: boolean[25]   // checked array per grid
+//       },
+//       createdAt: ISO string
+//     }
+//   },
+//   settings: {
+//     lineBonus: number,
+//     grandChelemBonus: number
+//   },
+//   history: []
+// }
 
-// Load or initialize state
-let gameState = initialGameState;
-if (fs.existsSync(STATE_FILE)) {
+// ─── Load or initialize state ─────────────────────────────────────────────────
+
+let gameState = loadState();
+
+function emptyState() {
+  return {
+    activeGridId: null,
+    grids: {},
+    players: {},
+    settings: {
+      lineBonus: 5,
+      grandChelemBonus: 10
+    },
+    history: []
+  };
+}
+
+function loadState() {
+  if (!fs.existsSync(STATE_FILE)) {
+    return emptyState();
+  }
   try {
-    gameState = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
-    // Ensure 25 tiles array
-    for (const pId of ['1', '2']) {
-      if (!gameState.players[pId]) {
-        gameState.players[pId] = initialGameState.players[pId];
+    const raw = JSON.parse(fs.readFileSync(STATE_FILE, 'utf8'));
+    // Migrate older format if needed (no grids key)
+    if (!raw.grids)   raw.grids   = {};
+    if (!raw.players) raw.players = {};
+    if (!raw.settings) raw.settings = { lineBonus: 5, grandChelemBonus: 10 };
+    if (!raw.history)  raw.history  = [];
+    if (!('activeGridId' in raw)) raw.activeGridId = null;
+    // Ensure each player has a grids sub-object
+    for (const pId of Object.keys(raw.players)) {
+      const p = raw.players[pId];
+      if (!p.grids) p.grids = {};
+      // Legacy: if player had a top-level 'checked' array move it to activeGridId slot
+      if (Array.isArray(p.checked) && raw.activeGridId) {
+        if (!p.grids[raw.activeGridId]) {
+          p.grids[raw.activeGridId] = p.checked;
+        }
+        delete p.checked;
+      } else if (Array.isArray(p.checked)) {
+        delete p.checked; // can't associate without a grid
       }
-      if (!Array.isArray(gameState.players[pId].checked) || gameState.players[pId].checked.length !== 25) {
-        gameState.players[pId].checked = new Array(25).fill(false);
-      }
+      if (!p.createdAt) p.createdAt = new Date().toISOString();
     }
+    return raw;
   } catch (e) {
-    console.error('Error reading state file, using initial state', e);
-    gameState = initialGameState;
+    console.error('[BINGO] Error reading state file, using empty state:', e.message);
+    return emptyState();
   }
 }
 
@@ -85,333 +135,544 @@ function saveState() {
   try {
     fs.writeFileSync(STATE_FILE, JSON.stringify(gameState, null, 2), 'utf8');
   } catch (err) {
-    console.error('Error saving state:', err);
+    console.error('[BINGO] Error saving state:', err.message);
   }
 }
 
-// Calculate scores, completed lines, and status for a player
-function calculatePlayerStats(player) {
-  const checked = player.checked;
-  let basePoints = 0;
+// ─── Bootstrap default grid from challenges.json ──────────────────────────────
+
+function bootstrapDefaultGrid() {
+  if (Object.keys(gameState.grids).length === 0 && rawChallenges.length === 25) {
+    const gridId = 'grid_default_s1';
+    gameState.grids[gridId] = {
+      id: gridId,
+      name: 'Bingo Carrière Saison 1',
+      description: 'La grille officielle de la saison 1.',
+      challenges: rawChallenges.map((c, i) => ({
+        id:          c.id !== undefined ? c.id : i,
+        icon:        c.icon        || '🎯',
+        title:       c.title       || `Défi ${i + 1}`,
+        description: c.description || '',
+        points:      typeof c.points === 'number' ? c.points : 1,
+        constraint:  c.constraint  || '',
+        category:    c.category    || 'Général'
+      }))
+    };
+    gameState.activeGridId = gridId;
+    saveState();
+    console.log('[BINGO] Default grid "Bingo Carrière Saison 1" created.');
+  }
+}
+
+bootstrapDefaultGrid();
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/** Generate a simple unique id */
+function makeId() {
+  return `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+/** Get or create a 25-bool checked array for player+grid */
+function getChecked(player, gridId) {
+  if (!player.grids) player.grids = {};
+  if (!Array.isArray(player.grids[gridId]) || player.grids[gridId].length !== 25) {
+    player.grids[gridId] = new Array(25).fill(false);
+  }
+  return player.grids[gridId];
+}
+
+/** Return the challenges array for a given grid, or [] */
+function gridChallenges(gridId) {
+  const grid = gameState.grids[gridId];
+  return grid ? grid.challenges : [];
+}
+
+// ─── Stats calculation ────────────────────────────────────────────────────────
+
+/**
+ * Calculate per-player stats for a specific grid.
+ * @param {object} player
+ * @param {string} gridId
+ */
+function calculateStats(player, gridId) {
+  const challenges = gridChallenges(gridId);
+  const checked    = getChecked(player, gridId);
+  let basePoints   = 0;
   let tilesCompleted = 0;
 
   checked.forEach((isChecked, idx) => {
     if (isChecked) {
       tilesCompleted++;
       const ch = challenges[idx];
-      if (ch) {
-        basePoints += ch.points;
-      }
+      if (ch) basePoints += (ch.points || 0);
     }
   });
 
-  // Calculate lines
+  // Lines
   const completedLines = [];
 
-  // Rows (0-4)
+  // Rows
   for (let r = 0; r < 5; r++) {
-    let rowComplete = true;
+    let ok = true;
     for (let c = 0; c < 5; c++) {
-      if (!checked[r * 5 + c]) {
-        rowComplete = false;
-        break;
-      }
+      if (!checked[r * 5 + c]) { ok = false; break; }
     }
-    if (rowComplete) {
-      completedLines.push({ type: 'row', index: r, name: `Ligne ${r + 1}` });
-    }
+    if (ok) completedLines.push({ type: 'row', index: r, name: `Ligne ${r + 1}` });
   }
 
-  // Columns (0-4)
+  // Columns
   for (let c = 0; c < 5; c++) {
-    let colComplete = true;
+    let ok = true;
     for (let r = 0; r < 5; r++) {
-      if (!checked[r * 5 + c]) {
-        colComplete = false;
-        break;
-      }
+      if (!checked[r * 5 + c]) { ok = false; break; }
     }
-    if (colComplete) {
-      completedLines.push({ type: 'col', index: c, name: `Colonne ${c + 1}` });
-    }
+    if (ok) completedLines.push({ type: 'col', index: c, name: `Colonne ${c + 1}` });
   }
 
-  // Diagonal 1: (0,0), (1,1), (2,2), (3,3), (4,4)
+  // Diagonals
   if (checked[0] && checked[6] && checked[12] && checked[18] && checked[24]) {
     completedLines.push({ type: 'diag', index: 0, name: 'Diagonale \\' });
   }
-
-  // Diagonal 2: (0,4), (1,3), (2,2), (3,1), (4,0)
   if (checked[4] && checked[8] && checked[12] && checked[16] && checked[20]) {
     completedLines.push({ type: 'diag', index: 1, name: 'Diagonale /' });
   }
 
-  const lineBonus = (gameState.settings.lineBonus || 5) * completedLines.length;
-  const isGrandChelem = tilesCompleted === 25;
+  const lineBonusPts    = (gameState.settings.lineBonus || 5) * completedLines.length;
+  const isGrandChelem   = tilesCompleted === 25;
   const grandChelemBonus = isGrandChelem ? (gameState.settings.grandChelemBonus || 10) : 0;
-  const totalPoints = basePoints + lineBonus + grandChelemBonus;
+  const totalPoints     = basePoints + lineBonusPts + grandChelemBonus;
 
   return {
     tilesCompleted,
     totalTiles: 25,
     basePoints,
     completedLines,
-    lineBonus,
+    lineBonus: lineBonusPts,
     isGrandChelem,
     grandChelemBonus,
     totalPoints
   };
 }
 
-// Compute full state payload with computed statistics
+// ─── Full computed state ───────────────────────────────────────────────────────
+
 function getComputedState() {
-  const stats = {
-    '1': calculatePlayerStats(gameState.players['1']),
-    '2': calculatePlayerStats(gameState.players['2'])
-  };
+  const activeGridId = gameState.activeGridId;
+  const stats        = {};
+  const playersOut   = {};
+
+  for (const [pId, player] of Object.entries(gameState.players)) {
+    // Build player output with checked array for active grid
+    playersOut[pId] = {
+      id:        player.id,
+      name:      player.name,
+      club:      player.club,
+      avatar:    player.avatar,
+      color:     player.color,
+      createdAt: player.createdAt,
+      // Include all grids checked data (so client can switch grids if needed)
+      grids:     player.grids || {}
+    };
+
+    if (activeGridId) {
+      stats[pId] = calculateStats(player, activeGridId);
+    }
+  }
 
   return {
-    players: gameState.players,
+    activeGrid: activeGridId,
+    activeGridId,
+    grids:    Object.values(gameState.grids),
+    players:  playersOut,
     settings: gameState.settings,
-    history: gameState.history.slice(-30), // last 30 actions
-    stats,
-    challenges
+    history:  gameState.history.slice(-50),
+    stats
   };
 }
 
-// Express Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+// ─── REST: State ──────────────────────────────────────────────────────────────
 
-// REST Endpoints
 app.get('/api/state', (req, res) => {
   res.json(getComputedState());
 });
 
-app.get('/api/challenges', (req, res) => {
-  res.json(challenges);
+// ─── REST: Grids ──────────────────────────────────────────────────────────────
+
+app.get('/api/grids', (req, res) => {
+  res.json(Object.values(gameState.grids));
 });
 
-// Login / Verify PIN
+app.post('/api/grids', (req, res) => {
+  const { name, description, challenges } = req.body;
+
+  if (!name || !Array.isArray(challenges) || challenges.length !== 25) {
+    return res.status(400).json({ success: false, message: 'name and exactly 25 challenges required.' });
+  }
+
+  const gridId = `grid_${makeId()}`;
+  const sanitized = challenges.map((c, i) => ({
+    id:          c.id !== undefined ? c.id : i,
+    icon:        c.icon        || '🎯',
+    title:       c.title       || `Défi ${i + 1}`,
+    description: c.description || '',
+    points:      typeof c.points === 'number' ? c.points : 1,
+    constraint:  c.constraint  || '',
+    category:    c.category    || 'Général'
+  }));
+
+  gameState.grids[gridId] = {
+    id: gridId,
+    name: name.trim(),
+    description: (description || '').trim(),
+    challenges: sanitized
+  };
+
+  saveState();
+  io.emit('stateUpdate', getComputedState());
+  res.json({ success: true, grid: gameState.grids[gridId] });
+});
+
+app.delete('/api/grids/:id', (req, res) => {
+  const { id } = req.params;
+  if (!gameState.grids[id]) {
+    return res.status(404).json({ success: false, message: 'Grid not found.' });
+  }
+  delete gameState.grids[id];
+  // If active grid was deleted, clear activeGridId
+  if (gameState.activeGridId === id) {
+    gameState.activeGridId = Object.keys(gameState.grids)[0] || null;
+  }
+  saveState();
+  io.emit('stateUpdate', getComputedState());
+  res.json({ success: true });
+});
+
+// ─── REST: Activate grid ──────────────────────────────────────────────────────
+
+app.post('/api/grid/activate', (req, res) => {
+  const { gridId } = req.body;
+  if (!gameState.grids[gridId]) {
+    return res.status(404).json({ success: false, message: 'Grid not found.' });
+  }
+  gameState.activeGridId = gridId;
+  // Ensure all players have a fresh checked array for this grid (don't reset if already exists)
+  for (const player of Object.values(gameState.players)) {
+    getChecked(player, gridId); // initialises if missing
+  }
+  saveState();
+  const state = getComputedState();
+  io.emit('stateUpdate', state);
+  io.emit('gridActivated', { gridId, gridName: gameState.grids[gridId].name });
+  res.json({ success: true, state });
+});
+
+// ─── REST: Players ────────────────────────────────────────────────────────────
+
+app.post('/api/players', (req, res) => {
+  const { name, club, avatar, color, pin } = req.body;
+  if (!name) {
+    return res.status(400).json({ success: false, message: 'name is required.' });
+  }
+
+  const playerId = `player_${makeId()}`;
+  const player = {
+    id:        playerId,
+    name:      name.trim(),
+    club:      (club   || 'FC Unknown').trim(),
+    avatar:    (avatar || '⚽').trim(),
+    color:     (color  || '#3b82f6').trim(),
+    pin:       (pin    || '0000').trim(),
+    grids:     {},
+    createdAt: new Date().toISOString()
+  };
+
+  // Pre-initialise checked array for active grid
+  if (gameState.activeGridId) {
+    player.grids[gameState.activeGridId] = new Array(25).fill(false);
+  }
+
+  gameState.players[playerId] = player;
+  saveState();
+
+  const state = getComputedState();
+  io.emit('stateUpdate', state);
+  io.emit('playerAdded', { playerId, playerName: player.name, avatar: player.avatar, color: player.color });
+
+  res.json({ success: true, player, state });
+});
+
+app.delete('/api/players/:id', (req, res) => {
+  const { id } = req.params;
+  if (!gameState.players[id]) {
+    return res.status(404).json({ success: false, message: 'Player not found.' });
+  }
+  const playerName = gameState.players[id].name;
+  delete gameState.players[id];
+  saveState();
+
+  const state = getComputedState();
+  io.emit('stateUpdate', state);
+  io.emit('playerRemoved', { playerId: id, playerName });
+  res.json({ success: true });
+});
+
+// ─── REST: Login ──────────────────────────────────────────────────────────────
+
 app.post('/api/login', (req, res) => {
   const { playerId, pin } = req.body;
   const player = gameState.players[playerId];
   if (!player) {
-    return res.status(404).json({ success: false, message: 'Joueur introuvable' });
+    return res.status(404).json({ success: false, message: 'Joueur introuvable.' });
   }
-
-  if (gameState.settings.requirePin && player.pin && player.pin !== pin) {
-    return res.status(401).json({ success: false, message: 'Code PIN incorrect' });
+  if (player.pin && player.pin !== String(pin)) {
+    return res.status(401).json({ success: false, message: 'Code PIN incorrect.' });
   }
-
-  res.json({ success: true, player: { id: player.id, name: player.name, club: player.club, avatar: player.avatar, color: player.color } });
+  res.json({
+    success: true,
+    player: {
+      id:     player.id,
+      name:   player.name,
+      club:   player.club,
+      avatar: player.avatar,
+      color:  player.color
+    }
+  });
 });
 
-// Toggle Tile
-app.post('/api/toggle', (req, res) => {
-  const { playerId, tileIndex, checked, pin } = req.body;
-  const player = gameState.players[playerId];
+// ─── REST: Profile ────────────────────────────────────────────────────────────
 
+app.post('/api/profile', (req, res) => {
+  const { playerId, name, club, avatar, color, pin } = req.body;
+  const player = gameState.players[playerId];
   if (!player) {
-    return res.status(404).json({ success: false, message: 'Joueur introuvable' });
+    return res.status(404).json({ success: false, message: 'Joueur introuvable.' });
   }
 
-  if (gameState.settings.requirePin && player.pin && player.pin !== pin) {
-    return res.status(401).json({ success: false, message: 'Non autorisé: Code PIN incorrect' });
+  if (name   !== undefined) player.name   = String(name).trim();
+  if (club   !== undefined) player.club   = String(club).trim();
+  if (avatar !== undefined) player.avatar = String(avatar).trim();
+  if (color  !== undefined) player.color  = String(color).trim();
+  if (pin    !== undefined) player.pin    = String(pin).trim();
+
+  saveState();
+  const state = getComputedState();
+  io.emit('stateUpdate', state);
+  res.json({ success: true, player });
+});
+
+// ─── REST: Toggle tile ────────────────────────────────────────────────────────
+
+app.post('/api/toggle', (req, res) => {
+  const { playerId, tileIndex, checked, gridId } = req.body;
+
+  const player = gameState.players[playerId];
+  if (!player) {
+    return res.status(404).json({ success: false, message: 'Joueur introuvable.' });
+  }
+
+  const gId = gridId || gameState.activeGridId;
+  if (!gId || !gameState.grids[gId]) {
+    return res.status(400).json({ success: false, message: 'Grille invalide.' });
   }
 
   if (tileIndex < 0 || tileIndex >= 25) {
-    return res.status(400).json({ success: false, message: 'Index de tuile invalide' });
+    return res.status(400).json({ success: false, message: 'Index de tuile invalide.' });
   }
 
-  const prevStats = calculatePlayerStats(player);
-  const isNowChecked = typeof checked === 'boolean' ? checked : !player.checked[tileIndex];
-  player.checked[tileIndex] = isNowChecked;
+  const prevStats    = calculateStats(player, gId);
+  const checkedArr   = getChecked(player, gId);
+  const isNowChecked = typeof checked === 'boolean' ? checked : !checkedArr[tileIndex];
+  checkedArr[tileIndex] = isNowChecked;
 
-  const newStats = calculatePlayerStats(player);
-  const challenge = challenges[tileIndex];
+  const newStats      = calculateStats(player, gId);
+  const challenges    = gridChallenges(gId);
+  const challenge     = challenges[tileIndex] || null;
 
-  // Log in history
-  const historyItem = {
-    id: Date.now(),
-    timestamp: new Date().toISOString(),
+  // History
+  gameState.history.push({
+    id:             Date.now(),
+    timestamp:      new Date().toISOString(),
     playerId,
-    playerName: player.name,
-    challengeId: tileIndex,
+    playerName:     player.name,
+    gridId:         gId,
+    challengeId:    tileIndex,
     challengeTitle: challenge ? challenge.title : `Défi #${tileIndex + 1}`,
-    challengeIcon: challenge ? challenge.icon : '🎯',
-    points: challenge ? challenge.points : 0,
-    action: isNowChecked ? 'check' : 'uncheck'
-  };
-
-  gameState.history.push(historyItem);
-  if (gameState.history.length > 100) {
-    gameState.history.shift();
-  }
+    challengeIcon:  challenge ? challenge.icon  : '🎯',
+    points:         challenge ? challenge.points : 0,
+    action:         isNowChecked ? 'check' : 'uncheck'
+  });
+  if (gameState.history.length > 100) gameState.history.shift();
 
   saveState();
 
-  const computedState = getComputedState();
-
-  // Check for line bonus event
   const newLineAchieved = newStats.completedLines.length > prevStats.completedLines.length;
-  const newGrandChelem = newStats.isGrandChelem && !prevStats.isGrandChelem;
+  const newGrandChelem  = newStats.isGrandChelem && !prevStats.isGrandChelem;
 
-  // Broadcast to all clients
-  io.emit('stateUpdate', computedState);
-
-  // Broadcast specific alert event for OBS/Spectator
+  const state = getComputedState();
+  io.emit('stateUpdate', state);
   io.emit('tileToggled', {
     playerId,
     playerName: player.name,
     challenge,
-    checked: isNowChecked,
+    checked:   isNowChecked,
     newStats,
     newLineAchieved,
     newGrandChelem
   });
 
-  res.json({ success: true, state: computedState });
+  res.json({ success: true, state });
 });
 
-// Update Profile
-app.post('/api/profile', (req, res) => {
-  const { playerId, name, club, avatar, color, pin, currentPin } = req.body;
-  const player = gameState.players[playerId];
+// ─── REST: Reset ──────────────────────────────────────────────────────────────
 
-  if (!player) {
-    return res.status(404).json({ success: false, message: 'Joueur introuvable' });
-  }
-
-  if (gameState.settings.requirePin && player.pin && player.pin !== currentPin) {
-    return res.status(401).json({ success: false, message: 'Code PIN actuel incorrect' });
-  }
-
-  if (name) player.name = name.trim();
-  if (club) player.club = club.trim();
-  if (avatar) player.avatar = avatar.trim();
-  if (color) player.color = color.trim();
-  if (pin) player.pin = pin.trim();
-
-  saveState();
-  const computedState = getComputedState();
-  io.emit('stateUpdate', computedState);
-
-  res.json({ success: true, player });
-});
-
-// Reset Grid
 app.post('/api/reset', (req, res) => {
-  const { playerId, target, pin } = req.body; // target: '1', '2', or 'all'
-  const player = gameState.players[playerId];
+  const { target, gridId } = req.body;
+  // target: 'player:<id>' | 'all'
+  const gId = gridId || gameState.activeGridId;
 
-  if (gameState.settings.requirePin && player && player.pin && player.pin !== pin) {
-    return res.status(401).json({ success: false, message: 'Code PIN incorrect' });
+  if (!target) {
+    return res.status(400).json({ success: false, message: 'target required.' });
   }
 
-  if (target === '1' || target === '2') {
-    gameState.players[target].checked = new Array(25).fill(false);
-  } else if (target === 'all') {
-    gameState.players['1'].checked = new Array(25).fill(false);
-    gameState.players['2'].checked = new Array(25).fill(false);
+  if (target === 'all') {
+    for (const player of Object.values(gameState.players)) {
+      if (gId) {
+        player.grids[gId] = new Array(25).fill(false);
+      }
+    }
     gameState.history = [];
+  } else if (target.startsWith('player:')) {
+    const pId = target.slice(7);
+    const player = gameState.players[pId];
+    if (!player) {
+      return res.status(404).json({ success: false, message: 'Joueur introuvable.' });
+    }
+    if (gId) {
+      player.grids[gId] = new Array(25).fill(false);
+    }
+  } else {
+    return res.status(400).json({ success: false, message: 'Invalid target. Use "all" or "player:<id>".' });
   }
 
   saveState();
-  const computedState = getComputedState();
-  io.emit('stateUpdate', computedState);
-  io.emit('gameReset', { target });
-
-  res.json({ success: true, state: computedState });
+  const state = getComputedState();
+  io.emit('stateUpdate', state);
+  io.emit('gameReset', { target, gridId: gId });
+  res.json({ success: true, state });
 });
 
-// Toggle Settings (like PIN requirement, bonus points)
-app.post('/api/settings', (req, res) => {
-  const { requirePin, lineBonus, grandChelemBonus } = req.body;
-  if (typeof requirePin === 'boolean') gameState.settings.requirePin = requirePin;
-  if (typeof lineBonus === 'number') gameState.settings.lineBonus = lineBonus;
-  if (typeof grandChelemBonus === 'number') gameState.settings.grandChelemBonus = grandChelemBonus;
+// ─── REST: Settings ───────────────────────────────────────────────────────────
 
+app.post('/api/settings', (req, res) => {
+  const { lineBonus, grandChelemBonus } = req.body;
+  if (typeof lineBonus       === 'number') gameState.settings.lineBonus       = lineBonus;
+  if (typeof grandChelemBonus === 'number') gameState.settings.grandChelemBonus = grandChelemBonus;
   saveState();
-  const computedState = getComputedState();
-  io.emit('stateUpdate', computedState);
+  const state = getComputedState();
+  io.emit('stateUpdate', state);
   res.json({ success: true, settings: gameState.settings });
 });
 
-// Socket.io handlers
+// ─── REST: Raw challenges (convenience) ───────────────────────────────────────
+
+app.get('/api/challenges', (req, res) => {
+  res.json(rawChallenges);
+});
+
+// ─── Socket.io ────────────────────────────────────────────────────────────────
+
 io.on('connection', (socket) => {
-  // Send current state on connect
   socket.emit('stateUpdate', getComputedState());
 
-  socket.on('toggleTile', (data) => {
-    const { playerId, tileIndex, checked } = data;
+  // Handle tile toggle from client
+  socket.on('toggleTile', ({ playerId, tileIndex, checked, gridId }) => {
     const player = gameState.players[playerId];
-    if (!player || tileIndex < 0 || tileIndex >= 25) return;
+    if (!player) return;
+    const gId = gridId || gameState.activeGridId;
+    if (!gId || !gameState.grids[gId]) return;
+    if (tileIndex < 0 || tileIndex >= 25) return;
 
-    const prevStats = calculatePlayerStats(player);
-    const isNowChecked = typeof checked === 'boolean' ? checked : !player.checked[tileIndex];
-    player.checked[tileIndex] = isNowChecked;
+    const prevStats   = calculateStats(player, gId);
+    const checkedArr  = getChecked(player, gId);
+    const isNowChecked = typeof checked === 'boolean' ? checked : !checkedArr[tileIndex];
+    checkedArr[tileIndex] = isNowChecked;
 
-    const newStats = calculatePlayerStats(player);
-    const challenge = challenges[tileIndex];
+    const newStats   = calculateStats(player, gId);
+    const challenges = gridChallenges(gId);
+    const challenge  = challenges[tileIndex] || null;
 
-    const historyItem = {
+    gameState.history.push({
       id: Date.now(),
       timestamp: new Date().toISOString(),
       playerId,
       playerName: player.name,
+      gridId: gId,
       challengeId: tileIndex,
       challengeTitle: challenge ? challenge.title : `Défi #${tileIndex + 1}`,
       challengeIcon: challenge ? challenge.icon : '🎯',
       points: challenge ? challenge.points : 0,
       action: isNowChecked ? 'check' : 'uncheck'
-    };
-
-    gameState.history.push(historyItem);
+    });
     if (gameState.history.length > 100) gameState.history.shift();
 
     saveState();
 
-    const computedState = getComputedState();
     const newLineAchieved = newStats.completedLines.length > prevStats.completedLines.length;
-    const newGrandChelem = newStats.isGrandChelem && !prevStats.isGrandChelem;
+    const newGrandChelem  = newStats.isGrandChelem && !prevStats.isGrandChelem;
 
-    io.emit('stateUpdate', computedState);
-    io.emit('tileToggled', {
-      playerId,
-      playerName: player.name,
-      challenge,
-      checked: isNowChecked,
-      newStats,
-      newLineAchieved,
-      newGrandChelem
-    });
+    const state = getComputedState();
+    io.emit('stateUpdate', state);
+    io.emit('tileToggled', { playerId, playerName: player.name, challenge, checked: isNowChecked, newStats, newLineAchieved, newGrandChelem });
   });
 
-  socket.on('resetGrid', (data) => {
-    const { target } = data;
-    if (target === '1' || target === '2') {
-      gameState.players[target].checked = new Array(25).fill(false);
-    } else if (target === 'all') {
-      gameState.players['1'].checked = new Array(25).fill(false);
-      gameState.players['2'].checked = new Array(25).fill(false);
+  // Handle grid reset from client
+  socket.on('resetGrid', ({ target, gridId }) => {
+    const gId = gridId || gameState.activeGridId;
+    if (target === 'all') {
+      for (const player of Object.values(gameState.players)) {
+        if (gId) player.grids[gId] = new Array(25).fill(false);
+      }
       gameState.history = [];
+    } else if (target && target.startsWith('player:')) {
+      const pId = target.slice(7);
+      const player = gameState.players[pId];
+      if (player && gId) player.grids[gId] = new Array(25).fill(false);
     }
     saveState();
     io.emit('stateUpdate', getComputedState());
-    io.emit('gameReset', { target });
+    io.emit('gameReset', { target, gridId: gId });
   });
+
+  socket.on('disconnect', () => {});
 });
 
+// ─── Start ────────────────────────────────────────────────────────────────────
+
 server.listen(PORT, () => {
-  console.log(`===============================================`);
-  console.log(`🎮 BINGO CARRIÈRE MANAGER SERVER IS RUNNING !`);
-  console.log(`-----------------------------------------------`);
-  console.log(`🏠 Accueil / Sélecteur : http://localhost:${PORT}`);
-  console.log(`⚽ Joueur 1 (Streamer) : http://localhost:${PORT}/player.html?p=1`);
-  console.log(`🔥 Joueur 2 (Rival)    : http://localhost:${PORT}/player.html?p=2`);
-  console.log(`📺 Vue Spectateur Live : http://localhost:${PORT}/spectator.html`);
-  console.log(`🎥 Overlay OBS Studio  : http://localhost:${PORT}/obs.html`);
-  console.log(`===============================================`);
+  const activeGrid = gameState.activeGridId ? gameState.grids[gameState.activeGridId] : null;
+  const playerCount = Object.keys(gameState.players).length;
+  const gridCount   = Object.keys(gameState.grids).length;
+
+  console.log(`\n╔═══════════════════════════════════════════════════╗`);
+  console.log(`║     🎮 BINGO CARRIÈRE MANAGER  —  RUNNING         ║`);
+  console.log(`╠═══════════════════════════════════════════════════╣`);
+  console.log(`║  Port       : ${PORT}                                 `.padEnd(52) + '║');
+  console.log(`║  Players    : ${playerCount}                                 `.padEnd(52) + '║');
+  console.log(`║  Grids      : ${gridCount}                                 `.padEnd(52) + '║');
+  if (activeGrid) {
+    console.log(`║  Active Grid: ${activeGrid.name}`.padEnd(52) + '║');
+  }
+  console.log(`╠═══════════════════════════════════════════════════╣`);
+  console.log(`║  🏠 Accueil        http://localhost:${PORT}/          `.padEnd(52) + '║');
+  console.log(`║  🎮 Joueur         http://localhost:${PORT}/player.html`.padEnd(52) + '║');
+  console.log(`║  📺 Spectateur     http://localhost:${PORT}/spectator.html`.padEnd(52) + '║');
+  console.log(`║  🎥 Overlay OBS    http://localhost:${PORT}/obs.html  `.padEnd(52) + '║');
+  console.log(`╠═══════════════════════════════════════════════════╣`);
+  console.log(`║  API /api/state    GET  — full computed state      ║`);
+  console.log(`║  API /api/grids    GET/POST — list/create grids    ║`);
+  console.log(`║  API /api/players  POST — add player               ║`);
+  console.log(`║  API /api/toggle   POST — toggle tile              ║`);
+  console.log(`║  API /api/reset    POST — reset player or all      ║`);
+  console.log(`╚═══════════════════════════════════════════════════╝\n`);
 });

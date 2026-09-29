@@ -3,204 +3,647 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BINGO CARRIÈRE MANAGER | Accueil & Sélecteur</title>
+  <title>BINGO CARRIÈRE | Accueil</title>
   <link rel="stylesheet" href="/css/style.css">
   <script src="/socket.io/socket.io.js"></script>
-  <script src="/js/audio.js"></script>
-  <script src="/js/confetti.js"></script>
 </head>
 <body>
+  <!-- HEADER -->
   <header class="app-header">
-    <a href="/" class="logo-area">
-      <span class="logo-icon">⚽</span>
+    <a href="/" class="logo-link">
+      <div class="logo-icon-wrap">⚽</div>
       <div class="logo-text">
-        <h1>BINGO CARRIÈRE MANAGER</h1>
-        <span>100% SIMULATION • FC 25 / FIFA</span>
+        <div class="t1">BINGO CARRIÈRE</div>
+        <div class="t2">100% Simulation • Mode Manager</div>
       </div>
     </a>
-    <div class="nav-links">
-      <span class="live-indicator"><span class="pulse-dot"></span> EN DIRECT</span>
-      <a href="/spectator.html" class="nav-btn">📺 Vue Spectateur</a>
-      <a href="/obs.html" class="nav-btn">🎥 Overlay OBS</a>
+    <div class="header-nav">
+      <span class="live-dot"><span class="pulse"></span>LIVE</span>
+      <a href="/spectator.html" class="btn">📺 Spectateur</a>
+      <a href="/obs.html" class="btn">🎥 Overlay OBS</a>
+      <button class="btn btn-primary" onclick="openModal('modal-admin')">⚙️ Admin</button>
     </div>
   </header>
 
   <main class="container">
-    <!-- Live Duel Summary Banner -->
-    <div class="duel-banner" id="home-duel-banner">
-      <div class="player-score-card">
-        <div class="player-avatar p1" id="p1-avatar">⚽</div>
-        <div class="player-info">
-          <h3 id="p1-name">Joueur 1</h3>
-          <span class="club-tag" id="p1-club">FC Streamer</span>
-        </div>
-        <div class="score-badge p1" id="p1-score">0</div>
-      </div>
 
-      <div class="duel-center">
-        <div class="duel-vs">⚡ DUEL EN COURS ⚡</div>
-        <div class="duel-progress-bar">
-          <div class="duel-fill-p1" id="duel-bar-p1" style="width: 50%;"></div>
-          <div class="duel-fill-p2" id="duel-bar-p2" style="width: 50%;"></div>
-        </div>
-        <div class="duel-status-text" id="duel-summary-text">0 pts vs 0 pts</div>
-      </div>
-
-      <div class="player-score-card" style="flex-direction: row-reverse; text-align: right;">
-        <div class="player-avatar p2" id="p2-avatar">🔥</div>
-        <div class="player-info">
-          <h3 id="p2-name">Joueur 2</h3>
-          <span class="club-tag" id="p2-club">Rival FC</span>
-        </div>
-        <div class="score-badge p2" id="p2-score">0</div>
+    <!-- SCOREBOARD BANNER -->
+    <div class="scoreboard mb-4" id="scoreboard">
+      <div class="scoreboard-inner" id="scoreboard-players">
+        <div class="text-muted text-sm" style="padding: 12px;">Chargement des joueurs…</div>
       </div>
     </div>
 
-    <!-- Mode Selection Cards Grid -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 30px;">
-      
-      <!-- Card Joueur 1 -->
-      <a href="/player.html?p=1" style="text-decoration: none; color: inherit;">
-        <div class="bingo-tile" style="padding: 24px; min-height: 200px; border-color: rgba(59, 130, 246, 0.4); background: linear-gradient(145deg, rgba(15, 23, 42, 0.9), rgba(30, 58, 138, 0.25));">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
-            <span style="font-size: 38px;">⚽</span>
-            <span class="pts-badge pts-2" style="font-size: 0.8rem; padding: 4px 10px;">STREAMER / JOUEUR 1</span>
-          </div>
-          <h2 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 8px; color: #ffffff;">Grille Joueur 1</h2>
-          <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 16px;">
-            Accédez à votre grille interactive pour voir et cocher vos 25 défis en direct pendant votre session de jeu.
-          </p>
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-top: auto;">
-            <span style="font-size: 0.8rem; color: #60a5fa; font-weight: 700;">Ouvrir la grille &rarr;</span>
-            <span id="p1-progress-badge" class="line-tag" style="background: rgba(59, 130, 246, 0.15); color: #93c5fd; border-color: rgba(59, 130, 246, 0.3);">0 / 25 défis</span>
-          </div>
+    <!-- PAGE INTRO + QUICK LINKS -->
+    <div class="section-head">
+      <div class="section-title">🕹️ Accès Rapide</div>
+      <div class="live-dot"><span class="pulse"></span> <span id="grid-active-label">Grille active</span></div>
+    </div>
+
+    <div class="home-cards-grid" id="player-cards-grid">
+      <!-- Cartes joueurs injectées ici -->
+    </div>
+
+    <!-- Static action cards -->
+    <div class="home-cards-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+
+      <a href="/spectator.html" class="home-card" style="border-color: rgba(16,185,129,0.25); background: linear-gradient(145deg, var(--card), rgba(16,185,129,0.06));">
+        <div class="home-card-icon">📺</div>
+        <div class="home-card-title">Vue Spectateur</div>
+        <div class="home-card-desc">Écran grand format avec toutes les grilles, le duel et le feed en temps réel. Parfait pour votre 2ème écran.</div>
+        <div class="home-card-footer">
+          <span style="color: var(--green);">Ouvrir →</span>
+          <span class="line-tag">Temps réel</span>
         </div>
       </a>
 
-      <!-- Card Joueur 2 -->
-      <a href="/player.html?p=2" style="text-decoration: none; color: inherit;">
-        <div class="bingo-tile" style="padding: 24px; min-height: 200px; border-color: rgba(239, 68, 68, 0.4); background: linear-gradient(145deg, rgba(15, 23, 42, 0.9), rgba(153, 27, 27, 0.25));">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
-            <span style="font-size: 38px;">🔥</span>
-            <span class="pts-badge" style="background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.4); font-size: 0.8rem; padding: 4px 10px;">RIVAL / JOUEUR 2</span>
-          </div>
-          <h2 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 8px; color: #ffffff;">Grille Joueur 2</h2>
-          <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 16px;">
-            Grille pour votre adversaire ou rival. Il peut s'y connecter depuis son PC ou smartphone pour cocher ses défis.
-          </p>
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-top: auto;">
-            <span style="font-size: 0.8rem; color: #f87171; font-weight: 700;">Ouvrir la grille &rarr;</span>
-            <span id="p2-progress-badge" class="line-tag" style="background: rgba(239, 68, 68, 0.15); color: #fca5a5; border-color: rgba(239, 68, 68, 0.3);">0 / 25 défis</span>
-          </div>
+      <a href="/obs.html" class="home-card" style="border-color: rgba(245,166,35,0.25); background: linear-gradient(145deg, var(--card), rgba(245,166,35,0.05));">
+        <div class="home-card-icon">🎥</div>
+        <div class="home-card-title">Overlay OBS Studio</div>
+        <div class="home-card-desc">Source navigateur transparente avec alertes animées. Intégrez le bingo directement dans votre stream.</div>
+        <div class="home-card-footer">
+          <span style="color: var(--gold);">Configurer →</span>
+          <span class="line-tag" style="color: #fbbf24; border-color: rgba(245,166,35,0.35);">Transparent</span>
         </div>
       </a>
 
-      <!-- Card Spectateur Live -->
-      <a href="/spectator.html" style="text-decoration: none; color: inherit;">
-        <div class="bingo-tile" style="padding: 24px; min-height: 200px; border-color: rgba(16, 185, 129, 0.4); background: linear-gradient(145deg, rgba(15, 23, 42, 0.9), rgba(6, 95, 70, 0.25));">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
-            <span style="font-size: 38px;">📺</span>
-            <span class="pts-badge pts-1" style="font-size: 0.8rem; padding: 4px 10px;">SPECTATEUR LIVE</span>
-          </div>
-          <h2 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 8px; color: #ffffff;">Écran Spectateur</h2>
-          <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 16px;">
-            Vue en direct pour les viewers et votre second écran : duel côte-à-côte, animations en direct et historique temps réel.
-          </p>
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-top: auto;">
-            <span style="font-size: 0.8rem; color: #34d399; font-weight: 700;">Voir le live &rarr;</span>
-            <span class="line-tag" style="background: rgba(16, 185, 129, 0.15); color: #6ee7b7; border-color: rgba(16, 185, 129, 0.3);">Temps Réel</span>
-          </div>
+      <div class="home-card" style="border-color: rgba(79,142,247,0.25); background: linear-gradient(145deg, var(--card), rgba(79,142,247,0.05)); cursor: pointer;" onclick="openModal('modal-admin')">
+        <div class="home-card-icon">⚙️</div>
+        <div class="home-card-title">Panneau Admin</div>
+        <div class="home-card-desc">Ajouter / supprimer des joueurs, créer de nouveaux grilles bingo personnalisées, réinitialiser la partie.</div>
+        <div class="home-card-footer">
+          <span style="color: var(--accent);">Gérer →</span>
+          <span class="line-tag" style="color: #93c5fd; border-color: rgba(79,142,247,0.35);">Complet</span>
         </div>
-      </a>
-
-      <!-- Card Overlay OBS -->
-      <a href="/obs.html" style="text-decoration: none; color: inherit;">
-        <div class="bingo-tile" style="padding: 24px; min-height: 200px; border-color: rgba(245, 158, 11, 0.4); background: linear-gradient(145deg, rgba(15, 23, 42, 0.9), rgba(120, 53, 15, 0.25));">
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
-            <span style="font-size: 38px;">🎥</span>
-            <span class="pts-badge pts-5" style="font-size: 0.8rem; padding: 4px 10px;">OVERLAY STREAM</span>
-          </div>
-          <h2 style="font-size: 1.25rem; font-weight: 800; margin-bottom: 8px; color: #ffffff;">Overlay OBS Studio</h2>
-          <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 16px;">
-            Fond 100% transparent à intégrer en "Source Navigateur" dans OBS Studio / Streamlabs avec alertes animées.
-          </p>
-          <div style="display: flex; align-items: center; justify-content: space-between; margin-top: auto;">
-            <span style="font-size: 0.8rem; color: #fbbf24; font-weight: 700;">Configurer l'overlay &rarr;</span>
-            <span class="line-tag" style="background: rgba(245, 158, 11, 0.15); color: #fde68a; border-color: rgba(245, 158, 11, 0.3);">Transparent</span>
-          </div>
-        </div>
-      </a>
+      </div>
 
     </div>
 
-    <!-- Rules & Tips Section -->
-    <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 22px; margin-bottom: 24px;">
-      <h3 style="font-size: 1.05rem; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-        <span>📋</span> Règles officielles & Système de points
-      </h3>
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; font-size: 0.85rem; color: var(--text-muted);">
-        <div style="background: rgba(255, 255, 255, 0.03); padding: 12px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.05);">
-          <strong style="color: #60a5fa; display: block; margin-bottom: 4px;">🎯 25 Défis Carrière</strong>
-          Chaque défi rapporte entre 1 et 5 points selon la difficulté. 20 défis sur 25 sont réalisables dès la 2ème division !
+    <!-- RÈGLES -->
+    <div class="card" style="padding: 20px; margin-top: 4px;">
+      <div class="section-title mb-3">📋 Règles & Système de points</div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; font-size: 0.84rem; color: var(--muted2);">
+        <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 9px; border: 1px solid var(--border);">
+          <strong style="color: #93c5fd; display: block; margin-bottom: 4px;">🎯 25 Défis</strong>
+          1 à 5 pts selon la difficulté. 20/25 faisables dès la D2.
         </div>
-        <div style="background: rgba(255, 255, 255, 0.03); padding: 12px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.05);">
-          <strong style="color: #fbbf24; display: block; margin-bottom: 4px;">⚡ Bonus Sprint (+5 pts)</strong>
-          Chaque ligne, colonne ou diagonale complétée accorde automatiquement <strong>+5 points bonus</strong> supplémentaires !
+        <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 9px; border: 1px solid var(--border);">
+          <strong style="color: var(--gold); display: block; margin-bottom: 4px;">⚡ Bonus Sprint +5 pts</strong>
+          Chaque ligne, colonne ou diagonale complétée rapporte +5 pts bonus.
         </div>
-        <div style="background: rgba(255, 255, 255, 0.03); padding: 12px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.05);">
-          <strong style="color: #34d399; display: block; margin-bottom: 4px;">🏆 Grand Chelem (+10 pts)</strong>
-          Compléter l'intégralité des 25 défis de la grille déclenche la célébration suprême et +10 pts bonus !
+        <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 9px; border: 1px solid var(--border);">
+          <strong style="color: #c4b5fd; display: block; margin-bottom: 4px;">🏆 Grand Chelem +10 pts</strong>
+          Tous les 25 défis validés déclenchent la célébration suprême !
+        </div>
+        <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 9px; border: 1px solid var(--border);">
+          <strong style="color: var(--green); display: block; margin-bottom: 4px;">🔴 Temps Réel</strong>
+          Chaque coche se synchronise instantanément sur tous les écrans.
         </div>
       </div>
     </div>
 
-    <!-- Match Controls & Management -->
-    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 14px 18px; background: rgba(15, 23, 42, 0.6); border-radius: 12px; border: 1px solid var(--border-subtle);">
-      <div style="font-size: 0.85rem; color: var(--text-muted);">
-        💡 Synchronisation instantanée via WebSockets : toute coche sur mobile ou PC s'affiche directement sur votre stream !
-      </div>
-      <div>
-        <button id="btn-reset-match" class="btn-danger" style="display: inline-flex; align-items: center; gap: 6px;">
-          <span>🔄</span> Réinitialiser la partie
-        </button>
-      </div>
-    </div>
   </main>
+
+  <!-- ======================= ADMIN MODAL ======================= -->
+  <div class="modal-overlay" id="modal-admin">
+    <div class="modal-box" style="max-width: 700px;">
+      <div class="modal-header">
+        <div class="modal-title">⚙️ Panneau Administrateur</div>
+        <button class="modal-close" onclick="closeModal('modal-admin')">✕</button>
+      </div>
+
+      <!-- TABS -->
+      <div class="tabs mb-4" style="margin-bottom: 20px;">
+        <button class="tab active" data-tab="tab-players" onclick="switchTab(this)">👥 Joueurs</button>
+        <button class="tab" data-tab="tab-grids" onclick="switchTab(this)">📋 Grilles Bingo</button>
+        <button class="tab" data-tab="tab-settings" onclick="switchTab(this)">🔧 Paramètres</button>
+      </div>
+
+      <!-- PLAYERS TAB -->
+      <div id="tab-players">
+        <div class="flex-between mb-3">
+          <div class="section-title">Joueurs actifs</div>
+          <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-player')">+ Ajouter un joueur</button>
+        </div>
+        <div id="admin-player-list">
+          <div class="text-muted text-sm">Chargement…</div>
+        </div>
+        <div class="divider"></div>
+        <div class="flex-between">
+          <span class="text-sm text-muted">Réinitialiser toutes les coches (partie) :</span>
+          <button class="btn btn-danger btn-sm" onclick="resetAll()">🔄 Reset Partie</button>
+        </div>
+      </div>
+
+      <!-- GRIDS TAB -->
+      <div id="tab-grids" class="hidden">
+        <div class="flex-between mb-3">
+          <div class="section-title">Grilles Bingo disponibles</div>
+          <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-grid')">+ Créer une grille</button>
+        </div>
+        <div id="admin-grid-list">
+          <div class="text-muted text-sm">Chargement…</div>
+        </div>
+      </div>
+
+      <!-- SETTINGS TAB -->
+      <div id="tab-settings" class="hidden">
+        <div class="section-title mb-3">Bonus de score</div>
+        <div class="form-row mb-3">
+          <div class="form-group">
+            <label class="form-label">Bonus par ligne/colonne/diagonale (pts)</label>
+            <input type="number" class="form-input" id="input-line-bonus" value="5" min="0" max="50">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Bonus Grand Chelem (25/25) (pts)</label>
+            <input type="number" class="form-input" id="input-grand-bonus" value="10" min="0" max="100">
+          </div>
+        </div>
+        <button class="btn btn-primary btn-full" onclick="saveSettings()">💾 Enregistrer les paramètres</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ======================= ADD PLAYER MODAL ======================= -->
+  <div class="modal-overlay" id="modal-add-player">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title">👤 Ajouter un joueur</div>
+        <button class="modal-close" onclick="closeModal('modal-add-player')">✕</button>
+      </div>
+      <form onsubmit="submitAddPlayer(event)">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Pseudo / Nom</label>
+            <input type="text" class="form-input" id="new-p-name" required maxlength="25" placeholder="ex: Tonton-riton">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nom du Club</label>
+            <input type="text" class="form-input" id="new-p-club" required maxlength="30" placeholder="ex: AS Monaco">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Emoji / Avatar</label>
+          <div class="emoji-row" id="emoji-picker">
+            <span class="emoji-opt selected" data-v="⚽">⚽</span>
+            <span class="emoji-opt" data-v="🔥">🔥</span>
+            <span class="emoji-opt" data-v="⚡">⚡</span>
+            <span class="emoji-opt" data-v="👑">👑</span>
+            <span class="emoji-opt" data-v="🦁">🦁</span>
+            <span class="emoji-opt" data-v="🚀">🚀</span>
+            <span class="emoji-opt" data-v="🐺">🐺</span>
+            <span class="emoji-opt" data-v="🎯">🎯</span>
+            <span class="emoji-opt" data-v="🏆">🏆</span>
+            <span class="emoji-opt" data-v="⚔️">⚔️</span>
+            <span class="emoji-opt" data-v="💎">💎</span>
+            <span class="emoji-opt" data-v="🌟">🌟</span>
+          </div>
+          <input type="hidden" id="new-p-avatar" value="⚽">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Couleur du joueur</label>
+          <div class="color-picker-row" id="color-picker">
+            <div class="color-swatch selected" data-v="blue" style="background:#4f8ef7;color:#4f8ef7;" title="Bleu"></div>
+            <div class="color-swatch" data-v="red" style="background:#ef4444;color:#ef4444;" title="Rouge"></div>
+            <div class="color-swatch" data-v="purple" style="background:#8b5cf6;color:#8b5cf6;" title="Violet"></div>
+            <div class="color-swatch" data-v="green" style="background:#10b981;color:#10b981;" title="Vert"></div>
+            <div class="color-swatch" data-v="gold" style="background:#f5a623;color:#f5a623;" title="Or"></div>
+            <div class="color-swatch" data-v="pink" style="background:#ec4899;color:#ec4899;" title="Rose"></div>
+            <div class="color-swatch" data-v="cyan" style="background:#06b6d4;color:#06b6d4;" title="Cyan"></div>
+            <div class="color-swatch" data-v="orange" style="background:#f97316;color:#f97316;" title="Orange"></div>
+          </div>
+          <input type="hidden" id="new-p-color" value="blue">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Code PIN (optionnel, 4-6 chiffres)</label>
+          <input type="password" class="form-input" id="new-p-pin" maxlength="6" placeholder="ex: 1234 (laissez vide si non requis)">
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-full" onclick="closeModal('modal-add-player')">Annuler</button>
+          <button type="submit" class="btn btn-primary btn-full">✅ Ajouter le joueur</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================= ADD GRID MODAL ======================= -->
+  <div class="modal-overlay" id="modal-add-grid">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title">📋 Créer une nouvelle grille Bingo</div>
+        <button class="modal-close" onclick="closeModal('modal-add-grid')">✕</button>
+      </div>
+      <form onsubmit="submitAddGrid(event)">
+        <div class="form-group">
+          <label class="form-label">Nom de la grille</label>
+          <input type="text" class="form-input" id="new-grid-name" required maxlength="50" placeholder="ex: Bingo Saison 2 - D1">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Description (optionnel)</label>
+          <textarea class="form-input" id="new-grid-desc" placeholder="ex: Défis pour la saison 2 en Ligue 1…" rows="2"></textarea>
+        </div>
+        <div class="divider"></div>
+        <div class="section-title mb-3" style="margin-bottom: 12px;">🃏 25 Défis personnalisés</div>
+        <div style="font-size: 0.78rem; color: var(--muted2); margin-bottom: 10px;">
+          Entrez les 25 défis de votre grille. Format : <strong>Emoji | Titre | Points | Description | Contrainte</strong>
+        </div>
+        <div id="grid-challenges-inputs" style="max-height: 380px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 4px;">
+          <!-- Generated dynamically -->
+        </div>
+        <div class="form-actions" style="margin-top: 16px;">
+          <button type="button" class="btn btn-full" onclick="closeModal('modal-add-grid')">Annuler</button>
+          <button type="submit" class="btn btn-primary btn-full">✅ Créer la grille</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- TOAST CONTAINER -->
+  <div id="toast-container"></div>
 
   <script>
     const socket = io();
+    let state = null;
 
+    // ==== Socket ====
     socket.on('stateUpdate', (data) => {
-      const p1 = data.players['1'];
-      const p2 = data.players['2'];
-      const s1 = data.stats['1'];
-      const s2 = data.stats['2'];
-
-      document.getElementById('p1-name').textContent = p1.name;
-      document.getElementById('p1-club').textContent = p1.club;
-      document.getElementById('p1-avatar').textContent = p1.avatar;
-      document.getElementById('p1-score').textContent = s1.totalPoints;
-      document.getElementById('p1-progress-badge').textContent = `${s1.tilesCompleted} / 25 défis (${s1.totalPoints} pts)`;
-
-      document.getElementById('p2-name').textContent = p2.name;
-      document.getElementById('p2-club').textContent = p2.club;
-      document.getElementById('p2-avatar').textContent = p2.avatar;
-      document.getElementById('p2-score').textContent = s2.totalPoints;
-      document.getElementById('p2-progress-badge').textContent = `${s2.tilesCompleted} / 25 défis (${s2.totalPoints} pts)`;
-
-      const total = (s1.totalPoints + s2.totalPoints) || 1;
-      const pct1 = Math.round((s1.totalPoints / total) * 100);
-      const pct2 = 100 - pct1;
-      document.getElementById('duel-bar-p1').style.width = `${pct1}%`;
-      document.getElementById('duel-bar-p2').style.width = `${pct2}%`;
-      document.getElementById('duel-summary-text').textContent = `${s1.totalPoints} pts (${s1.completedLines.length} lignes) vs ${s2.totalPoints} pts (${s2.completedLines.length} lignes)`;
-    });
-
-    document.getElementById('btn-reset-match').addEventListener('click', () => {
-      if (confirm('Voulez-vous vraiment réinitialiser toutes les coches pour Joueur 1 et Joueur 2 ?')) {
-        socket.emit('resetGrid', { target: 'all' });
+      state = data;
+      renderScoreboard(data);
+      renderPlayerCards(data);
+      renderAdminPlayerList(data);
+      renderAdminGridList(data);
+      if (data.settings) {
+        document.getElementById('input-line-bonus').value = data.settings.lineBonus ?? 5;
+        document.getElementById('input-grand-bonus').value = data.settings.grandChelemBonus ?? 10;
+      }
+      if (data.activeGrid) {
+        const grid = data.grids ? data.grids.find(g => g.id === data.activeGrid) : null;
+        document.getElementById('grid-active-label').textContent = grid ? grid.name : 'Grille active';
       }
     });
+
+    socket.on('tileToggled', (ev) => {
+      if (ev.checked) showToast(ev.playerName, ev.challenge, ev.newLineAchieved, ev.newGrandChelem);
+    });
+
+    // ==== Scoreboard ====
+    function renderScoreboard(data) {
+      const { players, stats, activeGrid } = data;
+      const ids = Object.keys(players || {});
+      if (!ids.length) {
+        document.getElementById('scoreboard-players').innerHTML = '<div class="text-muted text-sm" style="padding: 12px;">Aucun joueur — Ajoutez-en via Admin.</div>';
+        return;
+      }
+      // Sort by score desc
+      const sorted = ids
+        .map(id => ({ id, p: players[id], s: stats?.[id] }))
+        .sort((a, b) => (b.s?.totalPoints || 0) - (a.s?.totalPoints || 0));
+
+      const total = sorted.reduce((acc, x) => acc + (x.s?.totalPoints || 0), 0) || 1;
+      const maxScore = sorted[0]?.s?.totalPoints || 0;
+
+      let html = '<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;width:100%;">';
+      sorted.forEach((item, idx) => {
+        const { p, s } = item;
+        const colorHex = COLOR_MAP[p.color] || '#4f8ef7';
+        const isLeader = idx === 0 && maxScore > 0;
+        const pct = total > 0 ? Math.round(((s?.totalPoints||0)/total)*100) : Math.round(100/sorted.length);
+        html += `
+          <div class="player-chip ${isLeader ? 'leader' : ''}" style="border-color: ${colorHex}22;">
+            ${isLeader ? '<div class="leader-crown">👑</div>' : ''}
+            <div class="player-chip-avatar" style="border-color:${colorHex};background:${colorHex}18;font-size:20px;">${p.avatar}</div>
+            <div class="player-chip-info">
+              <div class="player-chip-name">${p.name}</div>
+              <div class="player-chip-club">${p.club}</div>
+              <div class="player-chip-meta">${s?.tilesCompleted||0}/25 défis · ${s?.completedLines?.length||0} ligne(s)</div>
+            </div>
+            <div>
+              <div class="player-chip-score" style="color:${colorHex}">${s?.totalPoints||0}</div>
+              <div class="text-xs text-muted" style="text-align:right;">pts</div>
+            </div>
+          </div>
+        `;
+      });
+
+      // Progress bar if 2+ players
+      if (sorted.length >= 2) {
+        html += '<div class="scoreboard-center" style="min-width:160px;flex:1;">';
+        html += '<div class="vs-label">Score comparatif</div>';
+        html += '<div class="scoreboard-bar">';
+        sorted.forEach(item => {
+          const pct = Math.round(((item.s?.totalPoints||0)/total)*100);
+          const colorHex = COLOR_MAP[item.p.color] || '#4f8ef7';
+          html += `<div class="scoreboard-bar-fill" style="width:${pct}%;background:${colorHex};"></div>`;
+        });
+        html += '</div>';
+        html += `<div class="text-xs text-muted" style="text-align:center;">${sorted.map(x=>`${x.p.name}: ${x.s?.totalPoints||0} pts`).join(' · ')}</div>`;
+        html += '</div>';
+      }
+
+      html += '</div>';
+      document.getElementById('scoreboard-players').innerHTML = html;
+    }
+
+    // ==== Player Cards ====
+    function renderPlayerCards(data) {
+      const { players, stats } = data;
+      const ids = Object.keys(players || {});
+      const grid = document.getElementById('player-cards-grid');
+      if (!ids.length) {
+        grid.innerHTML = '<div class="text-muted text-sm card" style="padding:20px;grid-column:1/-1;">Aucun joueur. Cliquez sur <strong>Admin → Ajouter un joueur</strong> pour commencer !</div>';
+        return;
+      }
+      grid.innerHTML = ids.map(id => {
+        const p = players[id], s = stats?.[id];
+        const colorHex = COLOR_MAP[p.color] || '#4f8ef7';
+        return `
+          <a href="/player.html?p=${id}" class="home-card" style="border-color:${colorHex}33;background:linear-gradient(145deg,var(--card),${colorHex}08);">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+              <div style="width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;border:2px solid ${colorHex};background:${colorHex}18;">${p.avatar}</div>
+              <div>
+                <div class="home-card-title" style="margin-bottom:2px;">${p.name}</div>
+                <div class="text-xs text-muted">${p.club}</div>
+              </div>
+              <div style="margin-left:auto;text-align:right;">
+                <div style="font-size:2rem;font-weight:900;line-height:1;color:${colorHex};">${s?.totalPoints||0}</div>
+                <div class="text-xs text-muted">pts</div>
+              </div>
+            </div>
+            <div style="height:4px;background:rgba(255,255,255,0.06);border-radius:4px;overflow:hidden;margin-bottom:10px;">
+              <div style="height:100%;width:${Math.round((s?.tilesCompleted||0)/25*100)}%;background:${colorHex};border-radius:4px;transition:width 0.4s;"></div>
+            </div>
+            <div class="home-card-footer">
+              <span style="color:${colorHex};font-size:0.82rem;">Ouvrir ma grille →</span>
+              <span class="line-tag" style="color:${colorHex};border-color:${colorHex}44;">${s?.tilesCompleted||0}/25 défis</span>
+            </div>
+          </a>
+        `;
+      }).join('');
+    }
+
+    // ==== Admin Panels ====
+    function renderAdminPlayerList(data) {
+      const { players, stats } = data;
+      const ids = Object.keys(players || {});
+      const container = document.getElementById('admin-player-list');
+      if (!ids.length) {
+        container.innerHTML = '<div class="text-muted text-sm">Aucun joueur. Ajoutez-en ci-dessus.</div>';
+        return;
+      }
+      container.innerHTML = ids.map(id => {
+        const p = players[id], s = stats?.[id];
+        const colorHex = COLOR_MAP[p.color] || '#4f8ef7';
+        return `
+          <div class="player-admin-item">
+            <div class="player-admin-avatar" style="border-color:${colorHex};background:${colorHex}18;">${p.avatar}</div>
+            <div style="flex:1;min-width:0;">
+              <div class="fw-700">${p.name}</div>
+              <div class="text-xs text-muted">${p.club} · ${s?.totalPoints||0} pts · ${s?.tilesCompleted||0}/25</div>
+            </div>
+            <a href="/player.html?p=${id}" class="btn btn-sm" title="Ouvrir la grille">🎮</a>
+            <button class="btn btn-sm" onclick="editPlayer('${id}')" title="Modifier">✏️</button>
+            <button class="btn btn-danger btn-sm" onclick="deletePlayer('${id}','${p.name}')" title="Supprimer">🗑️</button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderAdminGridList(data) {
+      const { grids, activeGrid } = data;
+      const container = document.getElementById('admin-grid-list');
+      if (!grids || !grids.length) {
+        container.innerHTML = '<div class="text-muted text-sm">Aucune grille. Créez-en une ci-dessus.</div>';
+        return;
+      }
+      container.innerHTML = grids.map(g => `
+        <div class="grid-item ${g.id === activeGrid ? 'active-grid' : ''}">
+          <div>
+            <div class="fw-700">${g.name} ${g.id === activeGrid ? '<span class="line-tag" style="margin-left:6px;font-size:0.65rem;">ACTIVE</span>' : ''}</div>
+            <div class="text-xs text-muted">${g.description || ''} · ${g.challenges?.length || 0} défis</div>
+          </div>
+          <div style="display:flex;gap:6px;">
+            ${g.id !== activeGrid ? `<button class="btn btn-primary btn-sm" onclick="activateGrid('${g.id}')">▶ Activer</button>` : ''}
+            ${grids.length > 1 ? `<button class="btn btn-danger btn-sm" onclick="deleteGrid('${g.id}','${g.name}')">🗑️</button>` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ==== Tab switching ====
+    function switchTab(btn) {
+      document.querySelectorAll('#modal-admin .tab').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      ['tab-players','tab-grids','tab-settings'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+      });
+      document.getElementById(btn.dataset.tab).classList.remove('hidden');
+    }
+
+    // ==== Actions ====
+    async function submitAddPlayer(e) {
+      e.preventDefault();
+      await fetch('/api/players', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          name: document.getElementById('new-p-name').value.trim(),
+          club: document.getElementById('new-p-club').value.trim(),
+          avatar: document.getElementById('new-p-avatar').value,
+          color: document.getElementById('new-p-color').value,
+          pin: document.getElementById('new-p-pin').value
+        })
+      });
+      closeModal('modal-add-player');
+      e.target.reset();
+      document.getElementById('new-p-avatar').value = '⚽';
+      document.querySelectorAll('#emoji-picker .emoji-opt').forEach(x => x.classList.toggle('selected', x.dataset.v === '⚽'));
+      document.getElementById('new-p-color').value = 'blue';
+      document.querySelectorAll('#color-picker .color-swatch').forEach(x => x.classList.toggle('selected', x.dataset.v === 'blue'));
+    }
+
+    async function deletePlayer(id, name) {
+      if (!confirm(`Supprimer ${name} ? Toutes ses coches seront perdues.`)) return;
+      await fetch(`/api/players/${id}`, { method: 'DELETE' });
+    }
+
+    function editPlayer(id) {
+      if (!state) return;
+      const p = state.players[id];
+      // Reuse profile modal on player page or quick-edit here
+      alert(`Pour modifier le profil de ${p.name}, accédez à sa grille via le bouton 🎮 puis utilisez "Profil".`);
+    }
+
+    async function activateGrid(id) {
+      await fetch('/api/grid/activate', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ gridId: id })
+      });
+    }
+
+    async function deleteGrid(id, name) {
+      if (!confirm(`Supprimer la grille "${name}" ? Les coches associées seront perdues.`)) return;
+      await fetch(`/api/grids/${id}`, { method: 'DELETE' });
+    }
+
+    async function resetAll() {
+      if (!confirm('Réinitialiser toutes les coches de tous les joueurs ?')) return;
+      const gid = state?.activeGrid;
+      await fetch('/api/reset', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ target: 'all', gridId: gid })
+      });
+    }
+
+    async function saveSettings() {
+      await fetch('/api/settings', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          lineBonus: parseInt(document.getElementById('input-line-bonus').value) || 5,
+          grandChelemBonus: parseInt(document.getElementById('input-grand-bonus').value) || 10
+        })
+      });
+      showSimpleToast('Paramètres enregistrés !', '✅');
+    }
+
+    // ==== Add Grid ====
+    function buildGridChallengeInputs() {
+      const defaultChallenges = [
+        {icon:'🛡️',title:'Invincibilité Domicile',pts:2,desc:'0 défaite à domicile en championnat',c:'1 saison | D2'},
+        {icon:'💰',title:'Balance Positive',pts:1,desc:'Bénéfice transferts >= +10M€',c:'1 saison | D2'},
+        {icon:'🌱',title:'Éclosion Académie',pts:1,desc:'3 jeunes promus (10+ matchs)',c:'1 saison | D2'},
+        {icon:'📋',title:'Tactique Immuable',pts:1,desc:'Même dispositif 100% des matchs',c:'1 saison | D2'},
+        {icon:'🟥',title:'Discipline & Podium',pts:2,desc:'5+ cartons rouges & Top 5',c:'1 saison | D2'},
+        {icon:'🎯',title:'Attaque Mitraillette',pts:2,desc:'80+ buts en championnat',c:'1 saison | D2'},
+        {icon:'📈',title:'Plus-Value x3',pts:3,desc:'Revendre un joueur >= 3x son achat',c:'1-3 saisons | D2'},
+        {icon:'⭐',title:'Pépite Générationnelle',pts:3,desc:'Amener un jeune à 80+ GEN',c:'2-4 saisons | D2'},
+        {icon:'🧱',title:'Forteresse Défensive',pts:2,desc:'Meilleure défense (< 30 buts)',c:'1 saison | D2'},
+        {icon:'🔒',title:'Mercato Gelé',pts:2,desc:'0 achat et 0 prêt entrant',c:'1 saison | D2'},
+        {icon:'🚀',title:'Montée Directe',pts:2,desc:'Promotion en D1 (1er ou 2ème)',c:'1-2 saisons | D2'},
+        {icon:'💎',title:'Vente Galactique',pts:2,desc:'Vente sèche >= 50M€',c:'1-3 saisons | D2/D1'},
+        {icon:'🃏',title:'JOKER ADVERSAIRE',pts:2,desc:'Défi imposé par le rival',c:'1 saison | Choix rival'},
+        {icon:'🎓',title:'Onze 100% Formation',pts:3,desc:'Titulariser 7+ jeunes',c:'1-3 saisons | D2'},
+        {icon:'👑',title:'Sacrifice du Capitaine',pts:1,desc:'Vendre son meilleur GEN sans chuter',c:'1 saison | D2'},
+        {icon:'🏆',title:'Épopée en Coupe',pts:3,desc:'Atteindre la demi-finale',c:'1-2 saisons | D2/D1'},
+        {icon:'📉',title:'Rigueur Salariale',pts:1,desc:'Baisser masse salariale de 20%',c:'1 saison | D2'},
+        {icon:'🌍',title:'Vocation Internationale',pts:1,desc:'Un formé appelé en sélection',c:'1-3 saisons | D2'},
+        {icon:'👟',title:'Roi de la Passe',pts:1,desc:'Meilleur passeur (15+ passes)',c:'1 saison | D2'},
+        {icon:'👔',title:'Confiance Totale',pts:1,desc:"Note Conseil d'Admin > 85",c:'1 saison | D2'},
+        {icon:'🥇',title:'Titre Suprême D1',pts:5,desc:'Champion de D1',c:'2-4 saisons | D1'},
+        {icon:'🏦',title:'Coffre-Fort 100M€',pts:2,desc:'100M€ budget disponible',c:'2-4 saisons | D2/D1'},
+        {icon:'🌟',title:'Trophée Continental',pts:5,desc:'Joueur dans Équipe de l\'Année',c:'2-4 saisons | D1'},
+        {icon:'⚽',title:"Soulier d'Or Club",pts:2,desc:'Meilleur buteur (25+ buts)',c:'1 saison | D2'},
+        {icon:'⚔️',title:'Maître du Derby',pts:3,desc:'Battre son rival historique x2',c:'1 saison | D2'}
+      ];
+
+      const container = document.getElementById('grid-challenges-inputs');
+      container.innerHTML = defaultChallenges.map((ch, i) => `
+        <div style="display:grid;grid-template-columns:44px 1fr 60px 1fr 1fr;gap:5px;align-items:center;background:rgba(255,255,255,0.02);border-radius:7px;padding:6px;">
+          <div style="font-size:0.65rem;color:var(--muted);text-align:center;font-weight:700;">${i+1}</div>
+          <input type="text" class="form-input" style="padding:5px 8px;font-size:0.78rem;" placeholder="Titre" value="${ch.title}" data-ci="${i}" data-field="title" required>
+          <input type="number" class="form-input" style="padding:5px 8px;font-size:0.78rem;" placeholder="Pts" value="${ch.pts}" min="1" max="10" data-ci="${i}" data-field="points" required>
+          <input type="text" class="form-input" style="padding:5px 8px;font-size:0.78rem;" placeholder="Description" value="${ch.desc}" data-ci="${i}" data-field="description">
+          <input type="text" class="form-input" style="padding:5px 8px;font-size:0.78rem;" placeholder="Contrainte" value="${ch.c}" data-ci="${i}" data-field="constraint">
+        </div>
+      `).join('');
+    }
+
+    async function submitAddGrid(e) {
+      e.preventDefault();
+      const name = document.getElementById('new-grid-name').value.trim();
+      const desc = document.getElementById('new-grid-desc').value.trim();
+      const container = document.getElementById('grid-challenges-inputs');
+      const rows = container.querySelectorAll('[data-ci]');
+      const map = {};
+      rows.forEach(el => {
+        const ci = el.dataset.ci;
+        if (!map[ci]) map[ci] = { id: parseInt(ci), row: Math.floor(ci/5), col: parseInt(ci)%5, icon: '🎯', category: 'Défi' };
+        map[ci][el.dataset.field] = el.dataset.field === 'points' ? parseInt(el.value) : el.value;
+      });
+      const challenges = Object.values(map).map((c, i) => ({...c, id: i}));
+
+      await fetch('/api/grids', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ name, description: desc, challenges })
+      });
+      closeModal('modal-add-grid');
+      e.target.reset();
+    }
+
+    // ==== Modal helpers ====
+    function openModal(id) {
+      document.getElementById(id).classList.add('open');
+      if (id === 'modal-add-grid') buildGridChallengeInputs();
+    }
+    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+    // Close on overlay click
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+      overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
+    });
+
+    // ==== Emoji + color pickers ====
+    document.getElementById('emoji-picker').addEventListener('click', e => {
+      const opt = e.target.closest('.emoji-opt');
+      if (!opt) return;
+      document.querySelectorAll('#emoji-picker .emoji-opt').forEach(x => x.classList.remove('selected'));
+      opt.classList.add('selected');
+      document.getElementById('new-p-avatar').value = opt.dataset.v;
+    });
+
+    document.getElementById('color-picker').addEventListener('click', e => {
+      const sw = e.target.closest('.color-swatch');
+      if (!sw) return;
+      document.querySelectorAll('#color-picker .color-swatch').forEach(x => x.classList.remove('selected'));
+      sw.classList.add('selected');
+      document.getElementById('new-p-color').value = sw.dataset.v;
+    });
+
+    // ==== Toast ====
+    function showToast(playerName, challenge, isLine, isGrandChelem) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      const dur = 4000;
+      let cls = 'toast toast-check';
+      if (isGrandChelem) cls = 'toast toast-grand';
+      else if (isLine) cls = 'toast toast-bingo';
+      toast.className = cls;
+      toast.innerHTML = `
+        <div class="toast-big-icon">${isGrandChelem ? '🏆' : isLine ? '⭐' : (challenge?.icon || '🎯')}</div>
+        <div>
+          <div class="toast-label">${isGrandChelem ? '👑 GRAND CHELEM !' : isLine ? '⭐ BINGO ! LIGNE COMPLÉTÉE' : 'DÉFI VALIDÉ'}</div>
+          <div class="toast-title">${challenge?.title || '?'}</div>
+          <div class="toast-sub">${playerName} · +${challenge?.points || 0} pts${isLine ? ' + bonus ligne (+5)' : ''}</div>
+        </div>
+      `;
+      container.appendChild(toast);
+      requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.add('in')));
+      setTimeout(() => {
+        toast.classList.remove('in');
+        toast.classList.add('out');
+        setTimeout(() => toast.remove(), 350);
+      }, dur);
+    }
+
+    function showSimpleToast(msg, icon = '✅') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'toast toast-check';
+      toast.innerHTML = `<div class="toast-big-icon">${icon}</div><div><div class="toast-title">${msg}</div></div>`;
+      container.appendChild(toast);
+      requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.add('in')));
+      setTimeout(() => { toast.classList.remove('in'); toast.classList.add('out'); setTimeout(() => toast.remove(), 350); }, 3000);
+    }
+
+    // Color map helper
+    const COLOR_MAP = {
+      blue: '#4f8ef7', red: '#ef4444', purple: '#8b5cf6', green: '#10b981',
+      gold: '#f5a623', pink: '#ec4899', cyan: '#06b6d4', orange: '#f97316'
+    };
   </script>
 </body>
 </html>
