@@ -111,10 +111,11 @@ function loadState() {
     if (!raw.settings.adminPassword) raw.settings.adminPassword = 'admin1234';
     if (!raw.history)  raw.history  = [];
     if (!('activeGridId' in raw)) raw.activeGridId = null;
-    // Ensure each player has a grids sub-object
+    // Ensure each player has a grids sub-object and valid avatar
     for (const pId of Object.keys(raw.players)) {
       const p = raw.players[pId];
       if (!p.grids) p.grids = {};
+      p.avatar = sanitizeAvatar(p.avatar);
       // Legacy: if player had a top-level 'checked' array move it to activeGridId slot
       if (Array.isArray(p.checked) && raw.activeGridId) {
         if (!p.grids[raw.activeGridId]) {
@@ -131,6 +132,35 @@ function loadState() {
     console.error('[BINGO] Error reading state file, using empty state:', e.message);
     return emptyState();
   }
+}
+
+function sanitizeAvatar(av) {
+  if (!av) return '⚽';
+  const str = String(av).trim();
+  const lower = str.toLowerCase().replace(/^:|:$/g, '');
+  const map = {
+    'ball': '⚽', 'soccer': '⚽', 'foot': '⚽',
+    'fire': '🔥', 'flame': '🔥',
+    'zap': '⚡', 'bolt': '⚡', 'lightning': '⚡',
+    'crown': '👑', 'king': '👑',
+    'lion': '🦁',
+    'rocket': '🚀',
+    'wolf': '🐺',
+    'target': '🎯',
+    'trophy': '🏆', 'cup': '🏆',
+    'swords': '⚔️', 'sword': '⚔️',
+    'diamond': '💎', 'gem': '💎',
+    'star': '🌟',
+    'eagle': '🦅',
+    'dragon': '🐉',
+    'fox': '🦊',
+    'shield': '🛡️',
+    'controller': '🎮', 'game': '🎮',
+    'glove': '🧤',
+    'box': '🥊',
+    'medal': '🥇'
+  };
+  return map[lower] || str;
 }
 
 function saveState() {
@@ -382,7 +412,7 @@ app.post('/api/players', (req, res) => {
     id:        playerId,
     name:      name.trim(),
     club:      (club   || 'FC Unknown').trim(),
-    avatar:    (avatar || '⚽').trim(),
+    avatar:    sanitizeAvatar(avatar),
     color:     (color  || '#3b82f6').trim(),
     pin:       (pin    || '0000').trim(),
     grids:     {},
@@ -453,7 +483,7 @@ app.post('/api/profile', (req, res) => {
 
   if (name   !== undefined) player.name   = String(name).trim();
   if (club   !== undefined) player.club   = String(club).trim();
-  if (avatar !== undefined) player.avatar = String(avatar).trim();
+  if (avatar !== undefined) player.avatar = sanitizeAvatar(avatar);
   if (color  !== undefined) player.color  = String(color).trim();
   if (pin    !== undefined) player.pin    = String(pin).trim();
 

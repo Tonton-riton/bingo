@@ -8,6 +8,7 @@
   <script src="/socket.io/socket.io.js"></script>
   <script src="/js/audio.js"></script>
   <script src="/js/confetti.js"></script>
+  <script src="/js/avatar.js"></script>
 </head>
 <body>
   <!-- HEADER -->
@@ -119,7 +120,11 @@
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label">Emoji / Avatar</label>
+          <label class="form-label">Emoji / Avatar (ou lien image)</label>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+            <div id="prof-avatar-preview" style="width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:24px;background:rgba(255,255,255,0.06);border:2px solid var(--accent);overflow:hidden;flex-shrink:0;">⚽</div>
+            <input type="text" class="form-input" id="prof-avatar" value="⚽" placeholder="Cliquez un emoji ou tapez/collez un emoji/lien" style="flex:1;">
+          </div>
           <div class="emoji-row" id="prof-emoji-picker">
             <span class="emoji-opt" data-v="⚽">⚽</span>
             <span class="emoji-opt" data-v="🔥">🔥</span>
@@ -133,8 +138,15 @@
             <span class="emoji-opt" data-v="⚔️">⚔️</span>
             <span class="emoji-opt" data-v="💎">💎</span>
             <span class="emoji-opt" data-v="🌟">🌟</span>
+            <span class="emoji-opt" data-v="🦅">🦅</span>
+            <span class="emoji-opt" data-v="🐉">🐉</span>
+            <span class="emoji-opt" data-v="🦊">🦊</span>
+            <span class="emoji-opt" data-v="🛡️">🛡️</span>
+            <span class="emoji-opt" data-v="🧤">🧤</span>
+            <span class="emoji-opt" data-v="🥊">🥊</span>
+            <span class="emoji-opt" data-v="🎮">🎮</span>
+            <span class="emoji-opt" data-v="🥇">🥇</span>
           </div>
-          <input type="hidden" id="prof-avatar" value="">
         </div>
         <div class="form-group">
           <label class="form-label">Nouveau PIN (laisser vide pour ne pas changer)</label>
@@ -199,14 +211,14 @@
       const colorHex = COLOR_MAP[player.color] || '#4f8ef7';
 
       // Header
-      document.getElementById('hdr-avatar').textContent = player.avatar;
+      document.getElementById('hdr-avatar').innerHTML = renderAvatar(player.avatar);
       document.getElementById('hdr-avatar').style.border = `2px solid ${colorHex}`;
       document.getElementById('hdr-name').textContent = player.name;
       document.getElementById('hdr-club').textContent = player.club;
 
       // Banner
       const bannerAvatar = document.getElementById('banner-avatar');
-      bannerAvatar.textContent = player.avatar;
+      bannerAvatar.innerHTML = renderAvatar(player.avatar);
       bannerAvatar.style.borderColor = colorHex;
       bannerAvatar.style.background = colorHex + '18';
       document.getElementById('banner-name').textContent = player.name;
@@ -230,7 +242,7 @@
           const rp = data.players[rid], rs = data.stats?.[rid];
           const rc = COLOR_MAP[rp.color] || '#ef4444';
           return `<div style="display:flex;align-items:center;gap:6px;background:${rc}12;border:1px solid ${rc}33;border-radius:8px;padding:4px 10px;font-size:0.8rem;">
-            <span>${rp.avatar}</span>
+            <span>${renderAvatar(rp.avatar)}</span>
             <span style="font-weight:700;">${rp.name}</span>
             <span style="color:${rc};font-weight:900;">${rs?.totalPoints||0} pts</span>
             <span class="text-xs text-muted">${rs?.tilesCompleted||0}/25</span>
@@ -255,7 +267,7 @@
         const p = data.players[id];
         const c = COLOR_MAP[p.color] || '#4f8ef7';
         const active = id === playerId;
-        return `<button onclick="switchPlayer('${id}')" class="btn btn-sm" style="${active ? `background:${c};border-color:${c};color:${c === '#f5a623' ? '#000':'#fff'}` : ''};">${p.avatar} ${p.name.split(' ')[0]}</button>`;
+        return `<button onclick="switchPlayer('${id}')" class="btn btn-sm" style="${active ? `background:${c};border-color:${c};color:${c === '#f5a623' ? '#000':'#fff'}` : ''};">${renderAvatar(p.avatar)} ${p.name.split(' ')[0]}</button>`;
       }).join('');
 
       // Grid
@@ -361,6 +373,8 @@
         document.getElementById('prof-name').value = p.name;
         document.getElementById('prof-club').value = p.club;
         document.getElementById('prof-avatar').value = p.avatar;
+        const prev = document.getElementById('prof-avatar-preview');
+        if (prev) prev.innerHTML = renderAvatar(p.avatar);
         document.getElementById('prof-pin').value = '';
         document.querySelectorAll('#prof-emoji-picker .emoji-opt').forEach(x => x.classList.toggle('selected', x.dataset.v === p.avatar));
       }
@@ -371,13 +385,7 @@
       el.addEventListener('click', e => { if (e.target===el) el.classList.remove('open'); });
     });
 
-    document.getElementById('prof-emoji-picker').addEventListener('click', e => {
-      const opt = e.target.closest('.emoji-opt');
-      if (!opt) return;
-      document.querySelectorAll('#prof-emoji-picker .emoji-opt').forEach(x => x.classList.remove('selected'));
-      opt.classList.add('selected');
-      document.getElementById('prof-avatar').value = opt.dataset.v;
-    });
+    setupEmojiPicker('prof-emoji-picker', 'prof-avatar', 'prof-avatar-preview');
 
     async function submitProfile(e) {
       e.preventDefault();

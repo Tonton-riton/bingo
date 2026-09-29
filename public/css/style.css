@@ -31,7 +31,7 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif;
   background-color: var(--bg);
   background-image:
     radial-gradient(ellipse 80% 60% at 10% 5%, rgba(79,142,247,0.08) 0%, transparent 60%),
@@ -315,6 +315,20 @@ body {
   font-size: 20px;
   border: 2px solid;
   flex-shrink: 0;
+  overflow: hidden;
+  font-family: 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif;
+}
+
+.player-chip-avatar img,
+.player-mini-avatar img,
+.player-admin-avatar img,
+.player-card-avatar img,
+.obs-avatar img,
+.hud-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
 }
 
 .player-chip-info {

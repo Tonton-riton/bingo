@@ -239,7 +239,7 @@
       "id": "player_1790716547784_btwelu",
       "name": "Tonton-riton",
       "club": "AS Monaco",
-      "avatar": "ball",
+      "avatar": "⚽",
       "color": "blue",
       "pin": "0000",
       "grids": {
@@ -277,7 +277,7 @@
       "id": "player_1790716547802_jbzzbl",
       "name": "Rival FC",
       "club": "PSG",
-      "avatar": "fire",
+      "avatar": "🔥",
       "color": "red",
       "pin": "0000",
       "grids": {
@@ -314,7 +314,8 @@
   },
   "settings": {
     "lineBonus": 5,
-    "grandChelemBonus": 10
+    "grandChelemBonus": 10,
+    "adminPassword": "admin1234"
   },
   "history": []
 }

@@ -6,6 +6,7 @@
   <title>BINGO CARRIÈRE | Accueil</title>
   <link rel="stylesheet" href="/css/style.css">
   <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/avatar.js"></script>
 </head>
 <body>
   <!-- HEADER -->
@@ -184,7 +185,11 @@
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label">Emoji / Avatar</label>
+          <label class="form-label">Emoji / Avatar (ou lien image)</label>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+            <div id="new-p-avatar-preview" style="width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:24px;background:rgba(255,255,255,0.06);border:2px solid var(--accent);overflow:hidden;flex-shrink:0;">⚽</div>
+            <input type="text" class="form-input" id="new-p-avatar" value="⚽" placeholder="Cliquez un emoji ou tapez/collez un emoji/lien" style="flex:1;">
+          </div>
           <div class="emoji-row" id="emoji-picker">
             <span class="emoji-opt selected" data-v="⚽">⚽</span>
             <span class="emoji-opt" data-v="🔥">🔥</span>
@@ -198,8 +203,15 @@
             <span class="emoji-opt" data-v="⚔️">⚔️</span>
             <span class="emoji-opt" data-v="💎">💎</span>
             <span class="emoji-opt" data-v="🌟">🌟</span>
+            <span class="emoji-opt" data-v="🦅">🦅</span>
+            <span class="emoji-opt" data-v="🐉">🐉</span>
+            <span class="emoji-opt" data-v="🦊">🦊</span>
+            <span class="emoji-opt" data-v="🛡️">🛡️</span>
+            <span class="emoji-opt" data-v="🧤">🧤</span>
+            <span class="emoji-opt" data-v="🥊">🥊</span>
+            <span class="emoji-opt" data-v="🎮">🎮</span>
+            <span class="emoji-opt" data-v="🥇">🥇</span>
           </div>
-          <input type="hidden" id="new-p-avatar" value="⚽">
         </div>
         <div class="form-group">
           <label class="form-label">Couleur du joueur</label>
@@ -312,7 +324,7 @@
         html += `
           <div class="player-chip ${isLeader ? 'leader' : ''}" style="border-color: ${colorHex}22;">
             ${isLeader ? '<div class="leader-crown">👑</div>' : ''}
-            <div class="player-chip-avatar" style="border-color:${colorHex};background:${colorHex}18;font-size:20px;">${p.avatar}</div>
+            <div class="player-chip-avatar" style="border-color:${colorHex};background:${colorHex}18;font-size:20px;">${renderAvatar(p.avatar)}</div>
             <div class="player-chip-info">
               <div class="player-chip-name">${p.name}</div>
               <div class="player-chip-club">${p.club}</div>
@@ -360,7 +372,7 @@
         return `
           <a href="/player.html?p=${id}" class="home-card" style="border-color:${colorHex}33;background:linear-gradient(145deg,var(--card),${colorHex}08);">
             <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
-              <div style="width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;border:2px solid ${colorHex};background:${colorHex}18;">${p.avatar}</div>
+              <div style="width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;border:2px solid ${colorHex};background:${colorHex}18;overflow:hidden;">${renderAvatar(p.avatar)}</div>
               <div>
                 <div class="home-card-title" style="margin-bottom:2px;">${p.name}</div>
                 <div class="text-xs text-muted">${p.club}</div>
@@ -396,7 +408,7 @@
         const colorHex = COLOR_MAP[p.color] || '#4f8ef7';
         return `
           <div class="player-admin-item">
-            <div class="player-admin-avatar" style="border-color:${colorHex};background:${colorHex}18;">${p.avatar}</div>
+            <div class="player-admin-avatar" style="border-color:${colorHex};background:${colorHex}18;overflow:hidden;">${renderAvatar(p.avatar)}</div>
             <div style="flex:1;min-width:0;">
               <div class="fw-700">${p.name}</div>
               <div class="text-xs text-muted">${p.club} · ${s?.totalPoints||0} pts · ${s?.tilesCompleted||0}/25</div>
@@ -457,6 +469,8 @@
       closeModal('modal-add-player');
       e.target.reset();
       document.getElementById('new-p-avatar').value = '⚽';
+      const prev = document.getElementById('new-p-avatar-preview');
+      if (prev) prev.innerHTML = '⚽';
       document.querySelectorAll('#emoji-picker .emoji-opt').forEach(x => x.classList.toggle('selected', x.dataset.v === '⚽'));
       document.getElementById('new-p-color').value = 'blue';
       document.querySelectorAll('#color-picker .color-swatch').forEach(x => x.classList.toggle('selected', x.dataset.v === 'blue'));
@@ -587,13 +601,7 @@
     });
 
     // ==== Emoji + color pickers ====
-    document.getElementById('emoji-picker').addEventListener('click', e => {
-      const opt = e.target.closest('.emoji-opt');
-      if (!opt) return;
-      document.querySelectorAll('#emoji-picker .emoji-opt').forEach(x => x.classList.remove('selected'));
-      opt.classList.add('selected');
-      document.getElementById('new-p-avatar').value = opt.dataset.v;
-    });
+    setupEmojiPicker('emoji-picker', 'new-p-avatar', 'new-p-avatar-preview');
 
     document.getElementById('color-picker').addEventListener('click', e => {
       const sw = e.target.closest('.color-swatch');
@@ -613,7 +621,7 @@
       else if (isLine) cls = 'toast toast-bingo';
       toast.className = cls;
       toast.innerHTML = `
-        <div class="toast-big-icon">${isGrandChelem ? '🏆' : isLine ? '⭐' : (challenge?.icon || '🎯')}</div>
+        <div class="toast-big-icon">${isGrandChelem ? '🏆' : isLine ? '⭐' : renderAvatar(challenge?.icon || '🎯')}</div>
         <div>
           <div class="toast-label">${isGrandChelem ? '👑 GRAND CHELEM !' : isLine ? '⭐ BINGO ! LIGNE COMPLÉTÉE' : 'DÉFI VALIDÉ'}</div>
           <div class="toast-title">${challenge?.title || '?'}</div>

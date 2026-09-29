@@ -8,6 +8,7 @@
   <script src="/socket.io/socket.io.js"></script>
   <script src="/js/audio.js"></script>
   <script src="/js/confetti.js"></script>
+  <script src="/js/avatar.js"></script>
   <style>
     .spec-grids-wrap {
       display: grid;
@@ -143,8 +144,8 @@
       const ids = Object.keys(data.players || {});
       const t1 = document.getElementById('tab-p1');
       const t2 = document.getElementById('tab-p2');
-      if (ids[0]) { t1.textContent = data.players[ids[0]].avatar + ' ' + data.players[ids[0]].name.split(' ')[0]; t1.onclick = () => setViewMode(t1, 'single-0'); }
-      if (ids[1]) { t2.textContent = data.players[ids[1]].avatar + ' ' + data.players[ids[1]].name.split(' ')[0]; t2.onclick = () => setViewMode(t2, 'single-1'); }
+      if (ids[0]) { t1.innerHTML = renderAvatar(data.players[ids[0]].avatar) + ' ' + data.players[ids[0]].name.split(' ')[0]; t1.onclick = () => setViewMode(t1, 'single-0'); }
+      if (ids[1]) { t2.innerHTML = renderAvatar(data.players[ids[1]].avatar) + ' ' + data.players[ids[1]].name.split(' ')[0]; t2.onclick = () => setViewMode(t2, 'single-1'); }
       else t2.style.display = 'none';
     }
 
@@ -166,7 +167,7 @@
         html += `
           <div class="player-chip ${isLeader ? 'leader':''}" style="border-color:${c}22;">
             ${isLeader ? '<div class="leader-crown">👑</div>' : ''}
-            <div class="player-chip-avatar" style="border-color:${c};background:${c}18;">${p.avatar}</div>
+            <div class="player-chip-avatar" style="border-color:${c};background:${c}18;">${renderAvatar(p.avatar)}</div>
             <div class="player-chip-info">
               <div class="player-chip-name">${p.name}</div>
               <div class="player-chip-club">${p.club} · ${s?.completedLines?.length||0} ligne(s)</div>
@@ -258,7 +259,7 @@
           <div class="player-panel">
             <div class="spec-player-header" style="border-color:${c}33;background:${c}08;">
               <div style="display:flex;align-items:center;gap:10px;">
-                <div style="font-size:22px;width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;border:2px solid ${c};background:${c}18;">${p.avatar}</div>
+                <div style="font-size:22px;width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;border:2px solid ${c};background:${c}18;overflow:hidden;">${renderAvatar(p.avatar)}</div>
                 <div>
                   <div style="font-weight:800;font-size:0.95rem;display:flex;align-items:center;gap:6px;">${p.name} ${isLeader ? '<span class="lead-tag">👑 EN TÊTE</span>' : ''}</div>
                   <div class="text-xs text-muted">${p.club} · ${s?.tilesCompleted||0}/25 défis · ${s?.completedLines?.length||0} ligne(s)</div>
@@ -289,7 +290,7 @@
         const pColor = state?.players?.[item.playerId] ? COLOR_MAP[state.players[item.playerId].color] : '#ffffff';
         return `<div class="feed-item">
           <div class="feed-item-left">
-            <span>${item.challengeIcon||'🎯'}</span>
+            <span>${renderAvatar(item.challengeIcon||'🎯')}</span>
             <div><strong style="color:${pColor};">${item.playerName}</strong> ${isCheck?'a validé':'a annulé'} <strong>${item.challengeTitle||'?'}</strong>${isCheck?` <span class="pts-inline">+${item.points}pts</span>`:''}</div>
           </div>
           <div class="feed-time">${time}</div>
@@ -305,7 +306,7 @@
       else if (isLine) cls = 'toast toast-bingo';
       toast.className = cls;
       toast.innerHTML = `
-        <div class="toast-big-icon">${isGrandChelem?'🏆':isLine?'⭐':(challenge?.icon||'🎯')}</div>
+        <div class="toast-big-icon">${isGrandChelem?'🏆':isLine?'⭐':renderAvatar(challenge?.icon||'🎯')}</div>
         <div>
           <div class="toast-label">${isGrandChelem?'👑 GRAND CHELEM !':isLine?'⭐ BINGO ! LIGNE':'DÉFI VALIDÉ'}</div>
           <div class="toast-title">${challenge?.title||'?'}</div>

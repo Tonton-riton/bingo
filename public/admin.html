@@ -6,6 +6,7 @@
   <title>BINGO CARRIÈRE | Admin</title>
   <link rel="stylesheet" href="/css/style.css">
   <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/avatar.js"></script>
   <style>
     /* Login screen */
     #login-screen {
@@ -292,7 +293,11 @@
             </div>
 
             <div class="form-group">
-              <label class="form-label">Avatar (emoji)</label>
+              <label class="form-label">Avatar (emoji ou lien image)</label>
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+                <div id="np-avatar-preview" style="width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:24px;background:rgba(255,255,255,0.06);border:2px solid var(--accent);overflow:hidden;flex-shrink:0;">⚽</div>
+                <input type="text" class="form-input" id="np-avatar" value="⚽" placeholder="Cliquez un emoji ou tapez/collez un emoji/lien" style="flex:1;">
+              </div>
               <div class="emoji-row" id="np-emoji-row">
                 <span class="emoji-opt selected" data-v="⚽">⚽</span>
                 <span class="emoji-opt" data-v="🔥">🔥</span>
@@ -309,8 +314,12 @@
                 <span class="emoji-opt" data-v="🦅">🦅</span>
                 <span class="emoji-opt" data-v="🐉">🐉</span>
                 <span class="emoji-opt" data-v="🦊">🦊</span>
+                <span class="emoji-opt" data-v="🛡️">🛡️</span>
+                <span class="emoji-opt" data-v="🧤">🧤</span>
+                <span class="emoji-opt" data-v="🥊">🥊</span>
+                <span class="emoji-opt" data-v="🎮">🎮</span>
+                <span class="emoji-opt" data-v="🥇">🥇</span>
               </div>
-              <input type="hidden" id="np-avatar" value="⚽">
             </div>
 
             <div class="form-group">
@@ -458,7 +467,11 @@
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label">Avatar (emoji)</label>
+          <label class="form-label">Avatar (emoji ou lien image)</label>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+            <div id="ep-avatar-preview" style="width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:24px;background:rgba(255,255,255,0.06);border:2px solid var(--accent);overflow:hidden;flex-shrink:0;">⚽</div>
+            <input type="text" class="form-input" id="ep-avatar" value="" placeholder="Cliquez un emoji ou tapez/collez un emoji/lien" style="flex:1;">
+          </div>
           <div class="emoji-row" id="ep-emoji-row">
             <span class="emoji-opt" data-v="⚽">⚽</span>
             <span class="emoji-opt" data-v="🔥">🔥</span>
@@ -475,8 +488,12 @@
             <span class="emoji-opt" data-v="🦅">🦅</span>
             <span class="emoji-opt" data-v="🐉">🐉</span>
             <span class="emoji-opt" data-v="🦊">🦊</span>
+            <span class="emoji-opt" data-v="🛡️">🛡️</span>
+            <span class="emoji-opt" data-v="🧤">🧤</span>
+            <span class="emoji-opt" data-v="🥊">🥊</span>
+            <span class="emoji-opt" data-v="🎮">🎮</span>
+            <span class="emoji-opt" data-v="🥇">🥇</span>
           </div>
-          <input type="hidden" id="ep-avatar" value="">
         </div>
         <div class="form-group">
           <label class="form-label">Couleur</label>
@@ -627,7 +644,7 @@
         const c = COLOR_MAP[p.color] || '#4f8ef7';
         return `
           <div class="player-card">
-            <div class="player-card-avatar" style="border-color:${c};background:${c}18;font-size:24px;">${p.avatar}</div>
+            <div class="player-card-avatar" style="border-color:${c};background:${c}18;font-size:24px;">${renderAvatar(p.avatar)}</div>
             <div style="flex:1;min-width:0;">
               <div style="font-weight:800;font-size:0.95rem;">${p.name}</div>
               <div class="text-xs text-muted">${p.club}</div>
@@ -708,6 +725,8 @@
 
     function resetNewPlayerForm() {
       document.getElementById('np-avatar').value = '⚽';
+      const prev = document.getElementById('np-avatar-preview');
+      if (prev) prev.innerHTML = '⚽';
       document.querySelectorAll('#np-emoji-row .emoji-opt').forEach(x => x.classList.toggle('selected', x.dataset.v === '⚽'));
       document.getElementById('np-color').value = 'blue';
       document.querySelectorAll('#np-color-row .color-swatch').forEach(x => x.classList.toggle('selected', x.dataset.v === 'blue'));
@@ -727,6 +746,8 @@
       document.getElementById('ep-name').value = p.name;
       document.getElementById('ep-club').value = p.club;
       document.getElementById('ep-avatar').value = p.avatar;
+      const prev = document.getElementById('ep-avatar-preview');
+      if (prev) prev.innerHTML = renderAvatar(p.avatar);
       document.getElementById('ep-pin').value = '';
       document.querySelectorAll('#ep-emoji-row .emoji-opt').forEach(x => x.classList.toggle('selected', x.dataset.v === p.avatar));
       document.getElementById('ep-color').value = p.color;
@@ -939,21 +960,20 @@
       el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
     });
 
-    function makePicker(rowId, hiddenId) {
+    function makeColorPicker(rowId, hiddenId) {
       document.getElementById(rowId)?.addEventListener('click', e => {
-        const opt = e.target.closest('.emoji-opt') || e.target.closest('.color-swatch');
+        const opt = e.target.closest('.color-swatch');
         if (!opt) return;
-        const isEmoji = opt.classList.contains('emoji-opt');
-        document.querySelectorAll(`#${rowId} .${isEmoji ? 'emoji-opt' : 'color-swatch'}`).forEach(x => x.classList.remove('selected'));
+        document.querySelectorAll(`#${rowId} .color-swatch`).forEach(x => x.classList.remove('selected'));
         opt.classList.add('selected');
         document.getElementById(hiddenId).value = opt.dataset.v;
       });
     }
 
-    makePicker('np-emoji-row', 'np-avatar');
-    makePicker('np-color-row', 'np-color');
-    makePicker('ep-emoji-row', 'ep-avatar');
-    makePicker('ep-color-row', 'ep-color');
+    setupEmojiPicker('np-emoji-row', 'np-avatar', 'np-avatar-preview');
+    setupEmojiPicker('ep-emoji-row', 'ep-avatar', 'ep-avatar-preview');
+    makeColorPicker('np-color-row', 'np-color');
+    makeColorPicker('ep-color-row', 'ep-color');
 
     let notifTimer = null;
     function notify(msg, isError = false) {

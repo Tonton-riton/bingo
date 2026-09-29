@@ -6,6 +6,7 @@
   <script src="/socket.io/socket.io.js"></script>
   <script src="/js/audio.js"></script>
   <script src="/js/confetti.js"></script>
+  <script src="/js/avatar.js"></script>
   <style>
     /* =====================================================
        RESET TOTAL - fond chromakey transparent
@@ -16,9 +17,17 @@
       background: transparent !important;
       background-color: transparent !important;
       overflow: hidden;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif;
       -webkit-font-smoothing: antialiased;
       color: #eef2ff;
+    }
+
+    .hud-avatar img, #gp-avatar img, #obs-alert-icon img {
+      width: 100%; height: 100%; object-fit: cover; border-radius: inherit;
+    }
+    .hud-avatar, #gp-avatar, #obs-alert-icon {
+      font-family: 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif;
+      overflow: hidden;
     }
 
     /* Wrapper de la page - top-left pour la plupart des modes */
@@ -444,7 +453,7 @@
       }
 
       html += `<div class="hud-player">
-        <div class="hud-avatar" style="border-color:${c};background:${c}18;">${p.avatar}</div>
+        <div class="hud-avatar" style="border-color:${c};background:${c}18;">${renderAvatar(p.avatar)}</div>
         <div style="margin-right:6px;">
           <div style="font-size:0.75rem;font-weight:800;color:${c};">${p.name}</div>
           <div style="font-size:0.6rem;color:#64748b;">${s?.tilesCompleted||0}/25 · ${s?.completedLines?.length||0} lig.</div>
@@ -469,7 +478,7 @@
     const challenges = data.grids?.find(g => g.id === data.activeGrid)?.challenges || [];
     const checked = p.grids?.[data.activeGrid] || Array(25).fill(false);
 
-    document.getElementById('gp-avatar').textContent = p.avatar;
+    document.getElementById('gp-avatar').innerHTML = renderAvatar(p.avatar);
     document.getElementById('gp-name').textContent = p.name;
     document.getElementById('gp-name').style.color = c;
     document.getElementById('gp-club').textContent = p.club;
@@ -507,8 +516,8 @@
 
   function triggerAlert(playerName, challenge, isLine, isGrandChelem) {
     // 1. Mettre à jour le contenu
-    document.getElementById('obs-alert-icon').textContent =
-      isGrandChelem ? '🏆' : isLine ? '⭐' : (challenge?.icon || '🎯');
+    document.getElementById('obs-alert-icon').innerHTML =
+      isGrandChelem ? '🏆' : isLine ? '⭐' : renderAvatar(challenge?.icon || '🎯');
 
     document.getElementById('obs-alert-tag').textContent =
       isGrandChelem ? '👑 GRAND CHELEM !' :
