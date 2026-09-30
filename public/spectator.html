@@ -11,39 +11,336 @@
   <script src="/js/avatar.js"></script>
   <script src="/js/social.js"></script>
   <style>
+    /* Full-width broadcast container */
+    .container.spec-container {
+      max-width: 98vw !important;
+      width: 98vw !important;
+      padding: 14px 18px 50px !important;
+      margin: 0 auto;
+    }
+
+    /* Scoreboard Broadcast Banner */
+    .spec-scoreboard-wrapper {
+      background: #090c14;
+      border: 1px solid #1a2333;
+      border-radius: 12px;
+      padding: 14px 18px;
+      margin-bottom: 18px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    }
+
+    .spec-scoreboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .spec-chip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: #0d121f;
+      border: 1px solid #1e293b;
+      border-radius: 8px;
+      padding: 10px 14px;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+
+    .spec-chip.is-leader {
+      background: linear-gradient(135deg, rgba(187, 242, 70, 0.08), #0d121f);
+      border-color: rgba(187, 242, 70, 0.45) !important;
+      box-shadow: 0 0 16px rgba(187, 242, 70, 0.12);
+    }
+
+    .spec-chip-avatar {
+      width: 42px;
+      height: 42px;
+      border-radius: 8px;
+      border: 2px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .spec-chip-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .spec-chip-name {
+      font-weight: 800;
+      font-size: 0.95rem;
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .spec-chip-club {
+      font-size: 0.75rem;
+      color: #94a3b8;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .spec-chip-meta {
+      font-size: 0.72rem;
+      color: #64748b;
+      font-weight: 600;
+    }
+
+    .spec-chip-score {
+      font-family: var(--font-display);
+      font-size: 1.8rem;
+      font-weight: 900;
+      line-height: 1;
+      text-align: right;
+    }
+
+    .spec-tug-wrap {
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    /* Grids layout */
     .spec-grids-wrap {
       display: grid;
-      gap: 18px;
+      gap: 16px;
+      align-items: start;
     }
-    .spec-grids-wrap.mode-1 { grid-template-columns: 1fr; }
-    .spec-grids-wrap.mode-2 { grid-template-columns: 1fr 1fr; }
-    .spec-grids-wrap.mode-3 { grid-template-columns: 1fr 1fr 1fr; }
-    .spec-grids-wrap.mode-4 { grid-template-columns: 1fr 1fr; }
-    @media (max-width: 900px) {
-      .spec-grids-wrap { grid-template-columns: 1fr !important; }
+    .spec-grids-wrap.mode-1 {
+      grid-template-columns: minmax(320px, 680px);
+      justify-content: center;
+    }
+    .spec-grids-wrap.mode-2 {
+      grid-template-columns: 1fr 1fr;
+    }
+    .spec-grids-wrap.mode-3 {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+    .spec-grids-wrap.mode-4 {
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    }
+    @media (max-width: 1100px) {
+      .spec-grids-wrap.mode-3 { grid-template-columns: 1fr !important; }
+      .spec-grids-wrap.mode-2 { grid-template-columns: 1fr !important; }
+    }
+
+    /* Player panels */
+    .player-panel {
+      background: #0a0d16;
+      border: 1px solid #1a2333;
+      border-radius: 10px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
 
     .spec-player-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 12px 16px;
-      border-radius: 0px;
-      margin-bottom: 10px;
-      border: 1px solid var(--border);
+      padding: 10px 14px;
+      border-bottom: 1px solid #1a2333;
       border-left: 4px solid var(--accent);
-      background: #11131c;
+      background: #0f1422;
     }
 
     .lead-tag {
-      background: var(--accent);
+      background: var(--lime);
+      color: #000000;
+      font-size: 0.65rem;
+      font-weight: 900;
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    /* Grid & Tiles */
+    .bingo-wrap {
+      padding: 10px;
+    }
+
+    .bingo-grid {
+      display: grid;
+      gap: 6px;
+    }
+
+    .spec-grids-wrap .tile {
+      background: #0d121e;
+      border: 1px solid #1e283d;
+      border-radius: 6px;
+      padding: 8px 8px 6px;
+      min-height: 82px;
+      max-height: 110px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.15s ease;
+      box-sizing: border-box;
+    }
+
+    .spec-grids-wrap .tile-top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 4px;
+      margin-bottom: 4px;
+    }
+
+    .spec-grids-wrap .tile-icon {
+      font-size: 1.15rem;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+
+    .spec-grids-wrap .pts {
+      font-size: 0.64rem !important;
+      font-weight: 900 !important;
+      padding: 1px 5px !important;
+      border-radius: 3px !important;
+      white-space: nowrap !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      flex-shrink: 0 !important;
+      line-height: 1.2 !important;
+    }
+
+    .spec-grids-wrap .tile-title {
+      font-size: 0.74rem;
+      font-weight: 800;
+      line-height: 1.18;
       color: #ffffff;
+      margin-bottom: 3px;
+      word-break: normal !important;
+      overflow-wrap: break-word !important;
+      hyphens: none !important;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .spec-grids-wrap .tile-desc {
+      font-size: 0.64rem;
+      line-height: 1.18;
+      color: #94a3b8;
+      word-break: normal !important;
+      overflow-wrap: break-word !important;
+      hyphens: none !important;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      flex: 1;
+    }
+
+    /* 3 or 4 players specific responsive styles */
+    .spec-grids-wrap.mode-3 .bingo-wrap,
+    .spec-grids-wrap.mode-4 .bingo-wrap {
+      padding: 8px 6px;
+    }
+    .spec-grids-wrap.mode-3 .bingo-grid,
+    .spec-grids-wrap.mode-4 .bingo-grid {
+      gap: 5px;
+    }
+    .spec-grids-wrap.mode-3 .tile,
+    .spec-grids-wrap.mode-4 .tile {
+      padding: 6px 6px 5px !important;
+      min-height: 72px !important;
+      max-height: 94px !important;
+    }
+    .spec-grids-wrap.mode-3 .tile-icon,
+    .spec-grids-wrap.mode-4 .tile-icon {
+      font-size: 0.95rem !important;
+    }
+    .spec-grids-wrap.mode-3 .tile-title,
+    .spec-grids-wrap.mode-4 .tile-title {
+      font-size: 0.67rem !important;
+      line-height: 1.15 !important;
+    }
+    .spec-grids-wrap.mode-3 .tile-desc,
+    .spec-grids-wrap.mode-4 .tile-desc {
+      font-size: 0.58rem !important;
+      line-height: 1.12 !important;
+      color: #818cf8ba;
+    }
+    .spec-grids-wrap.mode-3 .tile.checked::after,
+    .spec-grids-wrap.mode-4 .tile.checked::after {
+      width: 16px !important;
+      height: 16px !important;
+      font-size: 10px !important;
+      top: 3px !important;
+      right: 3px !important;
+    }
+
+    /* Compact mode */
+    .spec-grids-wrap.compact-mode .tile-desc {
+      display: none !important;
+    }
+    .spec-grids-wrap.compact-mode .tile {
+      min-height: 56px !important;
+      max-height: 70px !important;
+      padding: 5px 6px !important;
+      justify-content: center !important;
+    }
+    .spec-grids-wrap.compact-mode .tile-title {
+      -webkit-line-clamp: 2 !important;
+      font-size: 0.68rem !important;
+    }
+
+    /* Tabs enhancements */
+    .tabs .tab {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.82rem;
+      padding: 6px 12px;
+      white-space: nowrap;
+    }
+    .tab-score {
       font-size: 0.68rem;
       font-weight: 900;
-      padding: 3px 8px;
-      border-radius: 0px;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
+      color: var(--lime);
+      background: rgba(187, 242, 70, 0.15);
+      padding: 1px 5px;
+      border-radius: 3px;
+    }
+    .btn-toggle-compact {
+      background: #111625;
+      border: 1px solid #1e293b;
+      color: #94a3b8;
+      font-size: 0.8rem;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+    }
+    .btn-toggle-compact:hover, .btn-toggle-compact.active {
+      color: #ffffff;
+      border-color: var(--lime);
+      background: rgba(187, 242, 70, 0.1);
     }
   </style>
 </head>
@@ -56,21 +353,21 @@
       </a>
       <span style="font-size:0.75rem;font-weight:900;color:var(--lime);background:rgba(187,242,70,0.12);border:1px solid rgba(187,242,70,0.3);padding:4px 8px;border-radius:4px;margin-left:10px;">📺 SPECTATEUR LIVE</span>
     </div>
-    <div class="header-nav">
-      <div class="tabs" style="margin:0;border-radius:8px;">
-        <button class="tab active" onclick="setViewMode(this,'auto')">⚔️ Auto</button>
-        <button class="tab" onclick="setViewMode(this,'all')">👥 Tous</button>
-        <button class="tab" id="tab-p1" onclick="setViewMode(this,'single-0')">Joueur 1</button>
-        <button class="tab" id="tab-p2" onclick="setViewMode(this,'single-1')">Joueur 2</button>
-      </div>
-      <button class="btn btn-icon" id="btn-sound">🔊</button>
+    <div class="header-nav" style="gap:10px;">
+      <!-- Dynamic tabs for players -->
+      <div class="tabs" id="spec-tabs-container" style="margin:0;border-radius:8px;"></div>
+      <!-- Compact mode button -->
+      <button class="btn-toggle-compact" id="btn-compact-toggle" onclick="toggleCompactMode()" title="Afficher ou masquer les descriptions">
+        <span>🔲</span> <span id="compact-label">Vue Compacte</span>
+      </button>
+      <button class="btn btn-icon" id="btn-sound" title="Son">🔊</button>
       <button class="btn btn-icon" onclick="toggleFullscreen()" title="Plein écran">⛶</button>
       <div id="auth-nav-slot"></div>
-      <a href="/obs.html" target="_blank" class="btn">🎥 OBS</a>
+      <a href="/obs.html" target="_blank" class="btn btn-sm" style="border-color:#2a3648;color:#fff;">🎥 OBS</a>
     </div>
   </header>
 
-  <main class="container">
+  <main class="container spec-container">
 
     <!-- PRIVATE ROOM BANNER -->
     <div id="room-banner" style="display:none;background:linear-gradient(135deg,#0e1526,#0a0e1a);border:1px solid #1e293b;border-left:4px solid var(--lime);border-radius:12px;padding:14px 20px;margin-bottom:18px;">
@@ -98,7 +395,7 @@
     </div>
 
     <!-- ROOM CODE SWITCHER (Quand on n'est pas dans une room) -->
-    <div id="global-room-switcher" style="display:none;background:#0d121c;border:1px solid #1e293b;border-radius:10px;padding:12px 18px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+    <div id="global-room-switcher" style="display:none;background:#0d121c;border:1px solid #1e293b;border-radius:10px;padding:12px 18px;margin-bottom:18px;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
       <div style="display:flex;align-items:center;gap:8px;font-size:0.85rem;color:#cbd5e1;">
         <span style="font-size:1.1rem;">🔑</span>
         <span>Vous avez un code pour regarder une <strong>partie privée</strong> ?</span>
@@ -118,10 +415,8 @@
     </div>
 
     <!-- SCOREBOARD -->
-    <div class="scoreboard mb-4">
-      <div id="spec-scoreboard" class="scoreboard-inner" style="flex-wrap:wrap;">
-        <div class="text-muted text-sm" style="padding:12px;">Chargement…</div>
-      </div>
+    <div id="spec-scoreboard" class="spec-scoreboard-wrapper">
+      <div class="text-muted text-sm" style="text-align:center;padding:14px;">Chargement du tableau des scores…</div>
     </div>
 
     <!-- GRIDS -->
@@ -146,7 +441,18 @@
       gold:'#f5a623',pink:'#ec4899',cyan:'#06b6d4',orange:'#f97316',lime:'#bbf246'
     };
     let state = null;
-    let viewMode = 'auto'; // 'auto', 'all', 'single-N'
+    let viewMode = 'all'; // 'all', 'single-0', 'single-1', etc.
+    let isCompact = false;
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
 
     document.getElementById('btn-sound').addEventListener('click', () => {
       const m = window.soundFx?.toggleMute?.();
@@ -158,11 +464,28 @@
       else document.exitFullscreen().catch(()=>{});
     }
 
-    function setViewMode(btn, mode) {
-      document.querySelectorAll('.app-header .tab').forEach(t => t.classList.remove('active'));
-      btn.classList.add('active');
-      viewMode = mode;
+    function toggleCompactMode() {
+      isCompact = !isCompact;
+      const btn = document.getElementById('btn-compact-toggle');
+      const label = document.getElementById('compact-label');
+      if (isCompact) {
+        btn.classList.add('active');
+        label.textContent = 'Vue Détaillée';
+      } else {
+        btn.classList.remove('active');
+        label.textContent = 'Vue Compacte';
+      }
       if (state) renderGrids(state);
+    }
+
+    function setViewMode(btn, mode) {
+      document.querySelectorAll('#spec-tabs-container .tab').forEach(t => t.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      viewMode = mode;
+      if (state) {
+        updateSingleTabs(state);
+        renderGrids(state);
+      }
     }
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -302,70 +625,107 @@
 
     function updateSingleTabs(data) {
       const ids = Object.keys(data.players || {});
-      const t1 = document.getElementById('tab-p1');
-      const t2 = document.getElementById('tab-p2');
-      if (ids[0]) { t1.innerHTML = renderAvatar(data.players[ids[0]].avatar) + ' ' + data.players[ids[0]].name.split(' ')[0]; t1.onclick = () => setViewMode(t1, 'single-0'); }
-      if (ids[1]) { t2.innerHTML = renderAvatar(data.players[ids[1]].avatar) + ' ' + data.players[ids[1]].name.split(' ')[0]; t2.onclick = () => setViewMode(t2, 'single-1'); }
-      else t2.style.display = 'none';
+      const container = document.getElementById('spec-tabs-container');
+      if (!container) return;
+
+      const isAllActive = viewMode === 'all' || viewMode === 'auto';
+      let html = `<button class="tab ${isAllActive ? 'active' : ''}" onclick="setViewMode(this,'all')">👥 Tous (${ids.length})</button>`;
+      
+      ids.forEach((id, idx) => {
+        const p = data.players[id];
+        const s = data.stats?.[id];
+        const isSingleActive = viewMode === `single-${idx}`;
+        const c = COLOR_MAP[p.color] || '#4f8ef7';
+        html += `
+          <button class="tab ${isSingleActive ? 'active' : ''}" onclick="setViewMode(this,'single-${idx}')" style="${isSingleActive ? `border-color:${c};color:${c};background:${c}15;`:''}">
+            <span>${renderAvatar(p.avatar)}</span>
+            <span>${escapeHtml(p.name.split(' ')[0])}</span>
+            <span class="tab-score">${s?.totalPoints||0}pts</span>
+          </button>
+        `;
+      });
+
+      container.innerHTML = html;
     }
 
     function renderScoreboard(data) {
       const { players, stats } = data;
       const ids = Object.keys(players || {});
-      if (!ids.length) { document.getElementById('spec-scoreboard').innerHTML = '<div class="text-muted text-sm" style="padding:12px;">Aucun joueur</div>'; return; }
+      const container = document.getElementById('spec-scoreboard');
+      if (!container) return;
+
+      if (!ids.length) {
+        container.innerHTML = '<div class="text-muted text-sm" style="text-align:center;padding:12px;">Aucun joueur dans la partie</div>';
+        return;
+      }
 
       const sorted = ids.map(id => ({ id, p: players[id], s: stats?.[id] }))
         .sort((a,b) => (b.s?.totalPoints||0) - (a.s?.totalPoints||0));
       const total = sorted.reduce((acc, x) => acc + (x.s?.totalPoints||0), 0) || 1;
       const maxScore = sorted[0]?.s?.totalPoints || 0;
 
-      let html = '<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;width:100%;">';
+      let html = '<div class="spec-scoreboard-grid">';
       sorted.forEach((item, idx) => {
         const { p, s } = item;
         const c = COLOR_MAP[p.color] || '#4f8ef7';
         const isLeader = idx === 0 && maxScore > 0;
         html += `
-          <div class="player-chip ${isLeader ? 'leader':''}" style="border-color:${c}22;">
-            ${isLeader ? '<div class="leader-crown">👑</div>' : ''}
-            <div class="player-chip-avatar" style="border-color:${c};background:${c}18;">${renderAvatar(p.avatar)}</div>
-            <div class="player-chip-info">
-              <div class="player-chip-name">${p.name}</div>
-              <div class="player-chip-club">${p.club} · ${s?.completedLines?.length||0} ligne(s)</div>
-              <div class="player-chip-meta">${s?.tilesCompleted||0}/${s?.totalTiles || 25} défis</div>
+          <div class="spec-chip ${isLeader ? 'is-leader':''}" style="border-left: 4px solid ${c}; border-color: ${isLeader ? 'rgba(187,242,70,0.5)' : c + '33'};">
+            <div class="spec-chip-avatar" style="border-color:${c};background:${c}18;">
+              ${renderAvatar(p.avatar)}
+            </div>
+            <div class="spec-chip-info">
+              <div class="spec-chip-name">
+                <span>${escapeHtml(p.name)}</span>
+                ${isLeader ? '<span class="lead-tag">👑 LEADER</span>' : ''}
+              </div>
+              <div class="spec-chip-club">${escapeHtml(p.club || 'Club')} · ${s?.completedLines?.length||0} ligne(s)</div>
+              <div class="spec-chip-meta">${s?.tilesCompleted||0}/${s?.totalTiles || 25} défis complétés</div>
             </div>
             <div>
-              <div class="player-chip-score" style="color:${c}">${s?.totalPoints||0}</div>
-              <div class="text-xs text-muted" style="text-align:right;">pts</div>
+              <div class="spec-chip-score" style="color:${c}">${s?.totalPoints||0}</div>
+              <div class="text-xs text-muted" style="text-align:right;font-weight:700;">PTS</div>
             </div>
           </div>
         `;
       });
+      html += '</div>';
 
       if (sorted.length >= 2) {
-        html += '<div class="scoreboard-center" style="flex:1;min-width:150px;">';
-        html += '<div class="vs-label">Score</div>';
-        html += '<div class="scoreboard-bar">';
+        html += '<div class="spec-tug-wrap">';
+        html += '<div class="scoreboard-bar" style="height:10px;border-radius:4px;">';
         sorted.forEach(item => {
           const pct = Math.round(((item.s?.totalPoints||0)/total)*100);
           const c = COLOR_MAP[item.p.color] || '#4f8ef7';
-          html += `<div class="scoreboard-bar-fill" style="width:${pct}%;background:${c};"></div>`;
+          html += `<div class="scoreboard-bar-fill" style="width:${pct}%;background:${c};" title="${escapeHtml(item.p.name)}: ${pct}%"></div>`;
         });
         html += '</div>';
         const lead = sorted[0], trail = sorted[1];
         const diff = (lead.s?.totalPoints||0) - (trail.s?.totalPoints||0);
-        html += `<div class="text-xs text-muted" style="text-align:center;margin-top:4px;">${diff > 0 ? `${lead.p.name} mène de <strong>+${diff} pts</strong>` : 'Égalité !'}</div>`;
+        html += `
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;font-size:0.75rem;color:#94a3b8;">
+            <span>🏆 <strong>${escapeHtml(lead.p.name)}</strong></span>
+            <span style="font-weight:800;color:${diff > 0 ? 'var(--lime)' : '#cbd5e1'};">
+              ${diff > 0 ? `Avance de +${diff} pts` : 'Score à égalité parfaite !'}
+            </span>
+            <span>⚔️ <strong>${escapeHtml(trail.p.name)}</strong></span>
+          </div>
+        `;
         html += '</div>';
       }
 
-      html += '</div>';
-      document.getElementById('spec-scoreboard').innerHTML = html;
+      container.innerHTML = html;
     }
 
     function renderGrids(data) {
       const { players, stats, grids, activeGrid } = data;
       const ids = Object.keys(players || {});
+      const wrap = document.getElementById('spec-grids-wrap');
+      if (!wrap) return;
+
       if (!ids.length) {
-        document.getElementById('spec-grids-wrap').innerHTML = '<div class="text-muted text-sm card" style="padding:20px;grid-column:1/-1;">Aucun joueur. Créez des joueurs depuis l\'accueil → Admin.</div>';
+        wrap.className = 'spec-grids-wrap mode-1';
+        wrap.innerHTML = '<div class="text-muted text-sm card" style="padding:24px;text-align:center;">Aucun joueur dans la partie. Invitez des joueurs ou rejoignez avec un compte.</div>';
         return;
       }
 
@@ -373,20 +733,18 @@
       const N = Math.round(Math.sqrt(challenges.length)) || 5;
       const totalTiles = challenges.length || 25;
 
-      let visibleIds;
-      if (viewMode === 'auto') {
-        visibleIds = ids.length <= 2 ? ids : ids.slice(0, 4);
-      } else if (viewMode === 'all') {
+      let visibleIds = [];
+      if (viewMode === 'all' || viewMode === 'auto') {
         visibleIds = ids;
-      } else {
+      } else if (viewMode.startsWith('single-')) {
         const idx = parseInt(viewMode.split('-')[1]);
         visibleIds = ids[idx] ? [ids[idx]] : [ids[0]];
+      } else {
+        visibleIds = ids;
       }
 
-      const wrap = document.getElementById('spec-grids-wrap');
-      // Set columns based on count
       const n = Math.min(visibleIds.length, 4);
-      wrap.className = `spec-grids-wrap mode-${n}`;
+      wrap.className = `spec-grids-wrap mode-${n}${isCompact ? ' compact-mode' : ''}`;
 
       wrap.innerHTML = visibleIds.map(id => {
         const p = players[id], s = stats?.[id];
@@ -407,33 +765,51 @@
         const tiles = challenges.map((ch, idx) => {
           const isChecked = !!checked[idx];
           const isLine = lineIndices.has(idx);
-          return `<div class="tile read-only ${isChecked?'checked':''}${isChecked?' c-'+p.color:''} ${isLine?'in-line':''}">
-            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px;">
-              <span class="tile-icon">${renderAvatar(ch.icon||'🎯')}</span>
-              <span class="pts pts-${ch.points}">${ch.points}pt${ch.points>1?'s':''}</span>
+          const rawTitle = ch.title || `Défi #${idx + 1}`;
+          const rawDesc = ch.description || '';
+          const tooltip = `${rawTitle} (+${ch.points} pts)${rawDesc ? '\n' + rawDesc : ''}${ch.constraint ? '\nContrainte: ' + ch.constraint : ''}`;
+
+          return `
+            <div class="tile read-only ${isChecked ? 'checked' : ''}${isChecked ? ' c-' + p.color : ''} ${isLine ? 'in-line' : ''}"
+                 title="${escapeHtml(tooltip)}">
+              <div class="tile-top-row">
+                <span class="tile-icon">${renderAvatar(ch.icon || '🎯')}</span>
+                <span class="pts pts-${ch.points}">+${ch.points}pt${ch.points > 1 ? 's' : ''}</span>
+              </div>
+              <div class="tile-title">${escapeHtml(rawTitle)}</div>
+              <div class="tile-desc">${escapeHtml(rawDesc)}</div>
             </div>
-            <div class="tile-title">${ch.title}</div>
-            <div class="tile-desc">${ch.description||''}</div>
-          </div>`;
+          `;
         }).join('');
 
         return `
-          <div class="player-panel">
-            <div class="spec-player-header" style="border-color:${c}33;background:${c}08;">
-              <div style="display:flex;align-items:center;gap:10px;">
-                <div style="font-size:22px;width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;border:2px solid ${c};background:${c}18;overflow:hidden;">${renderAvatar(p.avatar)}</div>
-                <div>
-                  <div style="font-weight:800;font-size:0.95rem;display:flex;align-items:center;gap:6px;">${p.name} ${isLeader ? '<span class="lead-tag">👑 EN TÊTE</span>' : ''}</div>
-                  <div class="text-xs text-muted">${p.club} · ${s?.tilesCompleted||0}/${s?.totalTiles || totalTiles} défis · ${s?.completedLines?.length||0} ligne(s)</div>
+          <div class="player-panel" style="border-color:${c}44;">
+            <div class="spec-player-header" style="border-left-color:${c};background:linear-gradient(90deg, ${c}14, #0f1422);">
+              <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+                <div style="font-size:22px;width:38px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;border:2px solid ${c};background:${c}18;overflow:hidden;flex-shrink:0;">
+                  ${renderAvatar(p.avatar)}
+                </div>
+                <div style="min-width:0;">
+                  <div style="font-weight:800;font-size:0.95rem;display:flex;align-items:center;gap:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                    <span>${escapeHtml(p.name)}</span>
+                    ${isLeader ? '<span class="lead-tag">👑 EN TÊTE</span>' : ''}
+                  </div>
+                  <div class="text-xs text-muted" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                    ${escapeHtml(p.club || 'Club')} · ${s?.tilesCompleted||0}/${s?.totalTiles || totalTiles} défis · ${s?.completedLines?.length||0} ligne(s)
+                  </div>
                 </div>
               </div>
-              <div style="text-align:right;">
-                <div style="font-size:1.8rem;font-weight:900;line-height:1;color:${c};">${s?.totalPoints||0}</div>
-                <div class="text-xs text-muted">pts</div>
+              <div style="text-align:right;flex-shrink:0;">
+                <div style="font-family:var(--font-display);font-size:1.8rem;font-weight:900;line-height:1;color:${c};">
+                  ${s?.totalPoints||0}
+                </div>
+                <div class="text-xs text-muted" style="font-weight:700;">PTS</div>
               </div>
             </div>
             <div class="bingo-wrap">
-              <div class="bingo-grid" style="grid-template-columns: repeat(${N}, minmax(0, 1fr));">${tiles}</div>
+              <div class="bingo-grid" style="grid-template-columns: repeat(${N}, minmax(0, 1fr));">
+                ${tiles}
+              </div>
             </div>
           </div>
         `;
@@ -453,7 +829,7 @@
         return `<div class="feed-item">
           <div class="feed-item-left">
             <span>${renderAvatar(item.challengeIcon||'🎯')}</span>
-            <div><strong style="color:${pColor};">${item.playerName}</strong> ${isCheck?'a validé':'a annulé'} <strong>${item.challengeTitle||'?'}</strong>${isCheck?` <span class="pts-inline">+${item.points}pts</span>`:''}</div>
+            <div><strong style="color:${pColor};">${escapeHtml(item.playerName)}</strong> ${isCheck?'a validé':'a annulé'} <strong>${escapeHtml(item.challengeTitle||'?')}</strong>${isCheck?` <span class="pts-inline">+${item.points}pts</span>`:''}</div>
           </div>
           <div class="feed-time">${time}</div>
         </div>`;
@@ -471,8 +847,8 @@
         <div class="toast-big-icon">${isGrandChelem?'🏆':isLine?'⭐':renderAvatar(challenge?.icon||'🎯')}</div>
         <div>
           <div class="toast-label">${isGrandChelem?'👑 GRAND CHELEM !':isLine?'⭐ BINGO ! LIGNE':'DÉFI VALIDÉ'}</div>
-          <div class="toast-title">${challenge?.title||'?'}</div>
-          <div class="toast-sub">${playerName} · +${challenge?.points||0} pts</div>
+          <div class="toast-title">${escapeHtml(challenge?.title||'?')}</div>
+          <div class="toast-sub">${escapeHtml(playerName)} · +${challenge?.points||0} pts</div>
         </div>
       `;
       container.appendChild(toast);

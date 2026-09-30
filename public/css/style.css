@@ -525,6 +525,84 @@ body {
   transition: width 0.4s ease;
 }
 
+.player-chip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #111522;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  padding: 10px 14px;
+  position: relative;
+  flex: 1;
+  min-width: 220px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.player-chip.leader {
+  background: linear-gradient(135deg, rgba(187, 242, 70, 0.08), #111522);
+  border-color: rgba(187, 242, 70, 0.35) !important;
+  box-shadow: 0 0 15px rgba(187, 242, 70, 0.08);
+}
+
+.player-chip .leader-crown {
+  position: absolute;
+  top: -8px;
+  left: -6px;
+  font-size: 15px;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));
+}
+
+.player-chip-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  border: 2px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.player-chip-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.player-chip-name {
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.player-chip-club {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.player-chip-meta {
+  font-size: 0.72rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.player-chip-score {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 900;
+  line-height: 1;
+  text-align: right;
+  letter-spacing: -0.02em;
+}
+
 /* ====================================================
    PLAYER PANEL (MULTI-PLAYER / SPECTATOR)
    ==================================================== */
@@ -738,6 +816,11 @@ body {
   border-radius: var(--radius-sm);
   text-transform: uppercase;
   letter-spacing: 0.02em;
+  white-space: nowrap !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .pts-1 { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.35); }
