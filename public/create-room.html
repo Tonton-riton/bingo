@@ -8,7 +8,13 @@
   <script src="/socket.io/socket.io.js"></script>
   <script src="/js/avatar.js"></script>
   <script src="/js/social.js"></script>
+  <script src="/js/custom-grid-builder.js"></script>
   <style>
+    @media (max-width: 900px) {
+      .cgb-editor-layout {
+        grid-template-columns: 1fr !important;
+      }
+    }
     .create-page-grid {
       display: grid;
       grid-template-columns: 1.25fr 0.75fr;
@@ -140,13 +146,18 @@
 
         <!-- COLONNE GAUCHE : CHOIX DE LA GRILLE -->
         <div>
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
             <div style="font-family:var(--font-display);font-size:1.6rem;color:#ffffff;letter-spacing:0.04em;">
               1. CHOISISSEZ VOTRE GRILLE
             </div>
-            <button type="button" class="btn btn-sm btn-lime" onclick="openAiGridModal()" style="font-weight:900;">
-              ✨ Créer avec l'IA
-            </button>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button type="button" class="btn btn-sm btn-secondary-dark" onclick="openCustomGridModal()" style="font-weight:900;border:1px solid #28374d;color:#ffffff;" title="Créer manuellement vos 25 défis personnalisés">
+                ✏️ Créer ma Grille (Manuel)
+              </button>
+              <button type="button" class="btn btn-sm btn-lime" onclick="openAiGridModal()" style="font-weight:900;">
+                ✨ Générer avec l'IA
+              </button>
+            </div>
           </div>
 
           <!-- LISTE DES CARTES DE GRILLES -->
@@ -310,6 +321,29 @@
     </div>
   </div>
 
+  <!-- ==========================================
+       MODAL : CRÉATEUR DE BINGO SUR-MESURE (MANUEL)
+       ========================================== -->
+  <div class="modal-overlay" id="modal-custom-grid-builder">
+    <div class="modal-box" style="background:#0b1019;border:1px solid #23344d;border-radius:18px;max-width:980px;width:96%;box-sizing:border-box;max-height:92vh;overflow-y:auto;padding:24px;">
+      <div class="modal-header" style="border-bottom:1px solid #1a2534;padding-bottom:14px;margin-bottom:18px;">
+        <div>
+          <div class="modal-title" style="color:#ffffff;font-weight:900;display:flex;align-items:center;gap:8px;">
+            <span>✏️</span> CRÉER MON BINGO SUR-MESURE
+          </div>
+          <div style="font-size:0.78rem;color:#94a3b8;margin-top:2px;">
+            Personnalisez chaque case, les points et emojis ou collez votre liste en 1 clic
+          </div>
+        </div>
+        <button class="modal-close" onclick="closeCustomGridModal()">✕</button>
+      </div>
+
+      <div id="custom-builder-in-create-room">
+        <!-- Rendu dynamique par CustomGridBuilder -->
+      </div>
+    </div>
+  </div>
+
   <div id="toast-container"></div>
 
   <!-- SCRIPT DE GESTION DE LA PAGE DE CRÉATION -->
@@ -329,14 +363,63 @@
           return;
         }
 
-        // Par défaut, sélectionner la 1ère ou celle marquée live
-        selectedGridId = allGrids.find(g => g.id.includes('live'))?.id || allGrids[0].id;
+        // Vérifier si un gridId est passé en paramètre URL (depuis l'atelier de création)
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlGridId = urlParams.get('gridId');
+        if (urlGridId && allGrids.find(g => g.id === urlGridId)) {
+          selectedGridId = urlGridId;
+        } else {
+          // Par défaut, sélectionner la 1ère ou celle marquée live
+          selectedGridId = allGrids.find(g => g.id.includes('live'))?.id || allGrids[0].id;
+        }
 
         renderCatalog();
         updatePreview();
       } catch (err) {
         console.error('Erreur de chargement des grilles:', err);
       }
+    }
+
+    function openCustomGridModal() {
+      const modal = document.getElementById('modal-custom-grid-builder');
+      if (modal) modal.classList.add('open');
+      CustomGridBuilder.init({
+        containerId: 'custom-builder-in-create-room',
+        defaultSize: 5,
+        defaultName: 'Mon Bingo Carrière',
+        defaultDesc: 'Grille sur-mesure pour notre match',
+        onSuccess: (newGrid) => {
+          allGrids.unshift(newGrid);
+          selectedGridId = newGrid.id;
+          renderCatalog();
+          updatePreview();
+          closeCustomGridModal();
+          showSuccessToast('Bingo créé et sélectionné !', `Grille "${newGrid.name}" prête.`);
+        }
+      });
+    }
+
+    function closeCustomGridModal() {
+      const modal = document.getElementById('modal-custom-grid-builder');
+      if (modal) modal.classList.remove('open');
+    }
+
+    function showSuccessToast(title, sub) {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.style.borderColor = 'var(--lime)';
+      toast.innerHTML = `
+        <div style="font-size:1.4rem;">🎉</div>
+        <div>
+          <div style="font-weight:900;color:#ffffff;font-size:0.85rem;">${title}</div>
+          <div style="font-size:0.75rem;color:#cbd5e1;margin-top:1px;">${sub}</div>
+        </div>
+      `;
+      container.appendChild(toast);
+      requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.add('in')));
+      setTimeout(() => { toast.classList.remove('in'); toast.classList.add('out'); setTimeout(() => toast.remove(), 350); }, 3500);
     }
 
     function renderCatalog() {

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BINGO FOOT — Atelier de Création de Grille</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/avatar.js"></script>
+  <script src="/js/social.js"></script>
+  <script src="/js/custom-grid-builder.js"></script>
+  <style>
+    @media (max-width: 900px) {
+      .cgb-editor-layout {
+        grid-template-columns: 1fr !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==========================================
+       HEADER
+       ========================================== -->
+  <header class="app-header">
+    <div class="header-left">
+      <a href="/" class="logo-link" title="Retour à l'accueil">
+        <div class="logo-bf">BF</div>
+        <div class="logo-title-text" style="font-size:1.5rem;">BINGO FOOT</div>
+      </a>
+      <span style="font-size:0.75rem;font-weight:900;color:var(--lime);background:rgba(187,242,70,0.12);border:1px solid rgba(187,242,70,0.3);padding:3px 9px;border-radius:4px;letter-spacing:0.04em;">
+        ✏️ ATELIER CRÉATION
+      </span>
+    </div>
+
+    <div class="header-nav">
+      <a href="/create-room.html" class="btn btn-sm btn-secondary-dark">🎮 Créer une Salle</a>
+      <a href="/leaderboard.html" class="btn btn-sm btn-secondary-dark">🏆 Classement</a>
+      <div id="auth-nav-slot"></div>
+    </div>
+  </header>
+
+  <main class="container" style="max-width:1240px;padding-top:36px;padding-bottom:80px;">
+
+    <!-- TITRE HERO DE LA PAGE -->
+    <div style="margin-bottom:32px;">
+      <div class="section-label">Éditeur de Bingo Sur-Mesure</div>
+      <h1 style="font-family:var(--font-display);font-size:3.8rem;color:#ffffff;line-height:0.95;letter-spacing:0.02em;">
+        CRÉEZ VOTRE PROPRE BINGO
+      </h1>
+      <p style="font-size:1rem;color:#94a3b8;max-width:760px;line-height:1.55;margin-top:10px;">
+        Personnalisez chaque case, les points et les emojis de votre grille, ou collez directement une liste de défis en un clic. Votre grille est enregistrée de façon permanente et disponible immédiatement pour lancer des parties entre amis.
+      </p>
+    </div>
+
+    <!-- ROOT CONTAINER DU CRÉATEUR -->
+    <div id="custom-grid-builder-root">
+      <div style="padding:40px;text-align:center;color:#94a3b8;font-weight:700;">
+        Chargement de l'atelier de création…
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODAL DE SUCCÈS APRÈS SAUVEGARDE -->
+  <div class="modal-overlay" id="modal-grid-created-success">
+    <div class="modal-box" style="background:#0d121c;border:2px solid var(--lime);border-radius:18px;max-width:540px;text-align:center;padding:32px;">
+      <div style="font-size:3.5rem;margin-bottom:12px;animation:floatAnim 2s ease-in-out infinite;">🎉</div>
+      <h2 style="font-family:var(--font-display);font-size:2rem;color:#ffffff;margin-bottom:8px;">
+        GRILLE ENREGISTRÉE AVEC SUCCÈS !
+      </h2>
+      <p style="font-size:0.9rem;color:#cbd5e1;line-height:1.5;margin-bottom:24px;" id="success-grid-info">
+        Votre bingo personnalisé est maintenant disponible dans votre catalogue permanent.
+      </p>
+
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <a id="btn-launch-room-with-grid" href="/create-room.html" class="btn btn-lime btn-full" style="padding:15px;font-size:1rem;font-weight:900;letter-spacing:0.04em;text-decoration:none;">
+          🚀 LANCER UNE SALLE AVEC CE BINGO ➔
+        </a>
+        <button type="button" class="btn btn-secondary-slate btn-full" onclick="closeModal('modal-grid-created-success')">
+          ✏️ Continuer à modifier ou créer une autre grille
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      CustomGridBuilder.init({
+        containerId: 'custom-grid-builder-root',
+        defaultSize: 5,
+        defaultName: 'Mon Bingo Carrière',
+        defaultDesc: 'Grille sur-mesure créée pour notre session de jeu',
+        onSuccess: (grid) => {
+          document.getElementById('success-grid-info').innerHTML = `
+            La grille <strong>${grid.name}</strong> (${grid.size}x${grid.size} — ${grid.challenges.length} défis) a été enregistrée en base de données.
+          `;
+          document.getElementById('btn-launch-room-with-grid').href = `/create-room.html?gridId=${grid.id}`;
+          openModal('modal-grid-created-success');
+        }
+      });
+    });
+
+    function openModal(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.add('open');
+    }
+    function closeModal(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('open');
+    }
+  </script>
+
+</body>
+</html>
