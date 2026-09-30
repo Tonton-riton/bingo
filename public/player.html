@@ -590,22 +590,35 @@
     // Rendu pour une salle privée
     function renderRoomUI(rData) {
       if (!rData) return;
-      if (!playerId || !rData.players[playerId]) {
+
+      // Résoudre playerId depuis plusieurs sources
+      if (!playerId || !rData.players?.[playerId]) {
         const cu = window.SocialHub?.getCurrentUser();
-        if (cu && rData.players[cu.id]) {
+        if (cu && rData.players?.[cu.id]) {
           playerId = cu.id;
         } else if (rData.playerIds && rData.playerIds.length > 0) {
           playerId = rData.playerIds[0];
+        } else {
+          const pIds = Object.keys(rData.players || {});
+          if (pIds.length > 0) playerId = pIds[0];
         }
       }
 
-      const player = rData.players[playerId] || (state?.players?.[playerId]);
-      if (!player) return;
+      // Récupérer challenges depuis toutes les sources possibles
+      const challenges = rData.challenges
+        || rData.grid?.challenges
+        || [];
+      const totalTiles = challenges.length || 25;
+
+      // Fallback player si non trouvé (afficher la grille quand même)
+      const player = rData.players?.[playerId]
+        || state?.players?.[playerId]
+        || { name: 'Joueur', club: '', avatar: '⚽', color: 'lime' };
 
       const colorHex = COLOR_MAP[player.color] || '#bbf246';
-      const stats = rData.stats?.[playerId] || { totalPoints: 0, tilesCompleted: 0, completedLines: [], basePoints: 0, lineBonus: 0 };
-      const challenges = rData.challenges || rData.grid?.challenges || [];
-      const totalTiles = challenges.length || 25;
+      const stats = rData.stats?.[playerId] || {
+        totalPoints: 0, tilesCompleted: 0, completedLines: [], basePoints: 0, lineBonus: 0
+      };
 
       // Header
       document.getElementById('hdr-avatar').innerHTML = renderAvatar(player.avatar);
