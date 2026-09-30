@@ -7,23 +7,23 @@
 
 :root {
   /* Core Palette */
-  --bg:           #080b08;
-  --bg-2:         #0c110c;
-  --bg-3:         #101610;
-  --bg-card:      #0d1210;
-  --bg-card-alt:  #111810;
-  --bg-input:     #08100a;
+  --bg:           #07090b;
+  --bg-2:         #0d1117;
+  --bg-3:         #121820;
+  --bg-card:      #0f1520;
+  --bg-card-alt:  #141c2a;
+  --bg-input:     #090d16;
 
   /* Borders */
-  --border:        #1a261a;
+  --border:        #1e2d3d;
   --border-active: #b6f000;
-  --border-light:  #243024;
+  --border-light:  #253447;
 
   /* Text */
   --text:     #ffffff;
-  --text-dim: #c8d4c8;
-  --muted:    #7a9080;
-  --muted2:   #526058;
+  --text-dim: #cbd5e1;
+  --muted:    #94a3b8;
+  --muted2:   #64748b;
 
   /* Accent: Electric Lime */
   --lime:       #b6f000;
@@ -81,10 +81,10 @@ body {
   font-family: var(--font-body);
   background-color: var(--bg);
   background-image:
-    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(182,240,0,0.06) 0%, transparent 65%),
-    linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
-  background-size: 100% 100%, 40px 40px, 40px 40px;
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(187,242,70,0.06) 0%, transparent 60%),
+    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+  background-size: 100% 100%, 36px 36px, 36px 36px;
   color: var(--text);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
@@ -628,8 +628,8 @@ body {
 .bingo-grid.grid-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 
 .tile {
-  background: #0b130b;
-  border: 1px solid var(--border-light);
+  background: #0e1424;
+  border: 1px solid #1e293b;
   border-radius: var(--radius-md);
   padding: 12px 10px 10px;
   min-height: 125px;
@@ -644,7 +644,7 @@ body {
 }
 
 .tile:hover {
-  background: #111d11;
+  background: #141d33;
   border-color: var(--lime);
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(0,0,0,0.6), 0 0 16px var(--lime-soft);
