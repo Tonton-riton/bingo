@@ -189,27 +189,31 @@ function saveState() {
 // ─── Bootstrap default grid from challenges.json ──────────────────────────────
 
 function bootstrapDefaultGrid() {
-  if (Object.keys(gameState.grids).length === 0 && rawChallenges.length === 25) {
-    const gridId = 'grid_default_s1';
-    gameState.grids[gridId] = {
-      id: gridId,
-      name: 'Bingo Carrière Saison 1',
-      size: 5,
-      description: 'La grille officielle de la saison 1 (25 défis carrière).',
-      challenges: rawChallenges.map((c, i) => ({
-        id:          c.id !== undefined ? c.id : i,
-        icon:        c.icon        || '🎯',
-        title:       c.title       || `Défi ${i + 1}`,
-        description: c.description || '',
-        points:      typeof c.points === 'number' ? c.points : 1,
-        constraint:  c.constraint  || '',
-        category:    c.category    || 'Général'
-      }))
-    };
-    gameState.activeGridId = gridId;
-    saveState();
-    console.log('[BINGO] Default grid "Bingo Carrière Saison 1" created.');
+  const gridId = 'grid_default_s1';
+  if (!gameState.grids[gridId] || !Array.isArray(gameState.grids[gridId].challenges) || gameState.grids[gridId].challenges.length === 0) {
+    if (rawChallenges && rawChallenges.length > 0) {
+      gameState.grids[gridId] = {
+        id: gridId,
+        name: 'Bingo Carrière Saison 1',
+        size: 5,
+        description: 'La grille officielle de la saison 1 (25 défis carrière).',
+        challenges: rawChallenges.map((c, i) => ({
+          id:          c.id !== undefined ? c.id : i,
+          icon:        c.icon        || '🎯',
+          title:       c.title       || `Défi ${i + 1}`,
+          description: c.description || '',
+          points:      typeof c.points === 'number' ? c.points : 1,
+          constraint:  c.constraint  || '',
+          category:    c.category    || 'Général'
+        }))
+      };
+    }
   }
+  if (!gameState.activeGridId || !gameState.grids[gameState.activeGridId]) {
+    gameState.activeGridId = Object.keys(gameState.grids)[0] || gridId;
+  }
+  saveState();
+  console.log('[BINGO] Default grid verified (active: ' + gameState.activeGridId + ').');
 }
 
 bootstrapDefaultGrid();
@@ -322,6 +326,42 @@ function makeRoomCode() {
   }
   if (gameState.rooms && gameState.rooms[code]) return makeRoomCode();
   return code;
+}
+
+/** Get existing room or auto-create one so users never get an empty room / 404 */
+function getOrCreateRoom(roomCode, hostId = null) {
+  if (!roomCode) return null;
+  const cleanCode = String(roomCode).trim().toUpperCase().replace(/[^A-Z0-9_-]/g, '').slice(0, 16);
+  if (!cleanCode) return null;
+
+  if (!gameState.rooms) gameState.rooms = {};
+  if (!gameState.rooms[cleanCode]) {
+    const defaultGridId = gameState.activeGridId || Object.keys(gameState.grids)[0] || 'grid_default_s1';
+    const grid = gameState.grids[defaultGridId] || Object.values(gameState.grids)[0];
+    const totalTiles = grid?.challenges?.length || 25;
+    const pIds = hostId && gameState.players[hostId] ? [hostId] : [];
+    const checked = {};
+    if (hostId) checked[hostId] = new Array(totalTiles).fill(false);
+
+    gameState.rooms[cleanCode] = {
+      code: cleanCode,
+      name: `Partie #${cleanCode}`,
+      gridId: defaultGridId,
+      hostId: hostId || null,
+      isPrivate: true,
+      status: 'waiting',
+      winCondition: 'first_bingo',
+      playerIds: pIds,
+      checked,
+      winnerId: null,
+      winningReason: null,
+      createdAt: new Date().toISOString(),
+      history: []
+    };
+    saveState();
+    console.log(`[BINGO] Auto-created room #${cleanCode} with grid ${defaultGridId}`);
+  }
+  return gameState.rooms[cleanCode];
 }
 
 /** Compute global leaderboard ranked by wins and achievements */
@@ -469,6 +509,8 @@ function getComputedRoomState(roomCode) {
     winCondition: room.winCondition || 'first_bingo',
     winnerId: room.winnerId,
     winningReason: room.winningReason,
+    gridName: grid?.name || 'Grille Bingo',
+    challenges,
     grid: {
       id: grid?.id,
       name: grid?.name,
@@ -1109,6 +1151,7 @@ app.post('/api/rooms', (req, res) => {
 
 app.get('/api/rooms/:code', (req, res) => {
   const code = String(req.params.code || '').trim().toUpperCase();
+  getOrCreateRoom(code);
   const roomState = getComputedRoomState(code);
   if (!roomState) {
     return res.status(404).json({ success: false, message: `Partie "${code}" introuvable.` });
@@ -1120,22 +1163,35 @@ app.post('/api/rooms/join', (req, res) => {
   const { code, playerId } = req.body;
   if (!code) return res.status(400).json({ success: false, message: 'Code de partie requis.' });
   const cleanCode = String(code).trim().toUpperCase();
-  const room = gameState.rooms?.[cleanCode];
-  if (!room) {
-    return res.status(404).json({ success: false, message: `Aucune partie trouvée avec le code "${cleanCode}". Vérifiez le code !` });
+  const room = getOrCreateRoom(cleanCode);
+
+  let activePlayerId = playerId;
+  if (!activePlayerId || !gameState.players[activePlayerId]) {
+    // Auto-create guest player if player doesn't exist
+    const newId = `player_${makeId()}`;
+    const pName = 'Joueur ' + Math.floor(100 + Math.random() * 900);
+    gameState.players[newId] = {
+      id: newId,
+      name: pName,
+      club: 'FC Direct',
+      avatar: '⚽',
+      color: 'lime',
+      pin: '',
+      friends: [],
+      grids: {},
+      createdAt: new Date().toISOString()
+    };
+    activePlayerId = newId;
+    saveState();
   }
 
-  if (!playerId || !gameState.players[playerId]) {
-    return res.status(401).json({ success: false, message: 'Veuillez vous connecter avec votre compte pour rejoindre.', needAuth: true });
-  }
-
-  const player = gameState.players[playerId];
-  if (!room.playerIds.includes(playerId)) {
-    room.playerIds.push(playerId);
-    const grid = gameState.grids[room.gridId];
+  const player = gameState.players[activePlayerId];
+  if (!room.playerIds.includes(activePlayerId)) {
+    room.playerIds.push(activePlayerId);
+    const grid = gameState.grids[room.gridId] || Object.values(gameState.grids)[0];
     const totalTiles = grid?.challenges?.length || 25;
     if (!room.checked) room.checked = {};
-    room.checked[playerId] = new Array(totalTiles).fill(false);
+    room.checked[activePlayerId] = new Array(totalTiles).fill(false);
 
     player.stats = player.stats || { wins: 0, grandChelems: 0, bingos: 0, gamesPlayed: 0, careerPoints: 0 };
     player.stats.gamesPlayed = (player.stats.gamesPlayed || 0) + 1;
@@ -1144,7 +1200,7 @@ app.post('/api/rooms/join', (req, res) => {
     const roomState = getComputedRoomState(cleanCode);
     io.to('room_' + cleanCode).emit('roomStateUpdate', roomState);
     io.to('room_' + cleanCode).emit('roomPlayerJoined', {
-      playerId,
+      playerId: activePlayerId,
       playerName: player.name,
       avatar: player.avatar,
       color: player.color
@@ -1154,8 +1210,10 @@ app.post('/api/rooms/join', (req, res) => {
   res.json({
     success: true,
     code: cleanCode,
+    playerId: activePlayerId,
+    player,
     room: getComputedRoomState(cleanCode),
-    playerUrl: `/player.html?room=${cleanCode}&p=${playerId}`,
+    playerUrl: `/player.html?room=${cleanCode}&p=${activePlayerId}`,
     spectatorUrl: `/spectator.html?room=${cleanCode}`,
     obsUrl: `/obs.html?room=${cleanCode}`
   });
@@ -1323,11 +1381,7 @@ io.on('connection', (socket) => {
   socket.on('joinRoom', ({ roomCode, playerId, isSpectator }) => {
     if (!roomCode) return;
     const cleanCode = String(roomCode).trim().toUpperCase();
-    const room = gameState.rooms?.[cleanCode];
-    if (!room) {
-      socket.emit('roomError', { message: `Partie "${cleanCode}" introuvable.` });
-      return;
-    }
+    const room = getOrCreateRoom(cleanCode, playerId);
     socket.join('room_' + cleanCode);
     socket.roomCode = cleanCode;
     socket.playerId = playerId;

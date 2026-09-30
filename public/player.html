@@ -3,201 +3,246 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BINGO CARRIÈRE | Grille Joueur</title>
+  <title>BINGO FOOT — Grille de Match en Direct</title>
   <link rel="stylesheet" href="/css/style.css">
   <script src="/socket.io/socket.io.js"></script>
   <script src="/js/audio.js"></script>
   <script src="/js/confetti.js"></script>
   <script src="/js/avatar.js"></script>
   <script src="/js/social.js"></script>
+  <style>
+    .match-dashboard-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+    .match-bottom-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+    @media (max-width: 900px) {
+      .match-dashboard-grid, .match-bottom-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
 <body>
-  <!-- HEADER -->
+
+  <!-- ==========================================
+       HEADER (CLEAN & INTUITIF)
+       ========================================== -->
   <header class="app-header">
     <div class="header-left">
-      <a href="/" class="logo-link">
+      <a href="/" class="logo-link" title="Retour à l'accueil">
         <div class="logo-bf">BF</div>
         <div class="logo-title-text" style="font-size:1.5rem;">BINGO FOOT</div>
       </a>
-      <div style="display:flex;align-items:center;gap:8px;margin-left:14px;padding-left:14px;border-left:1px solid #1e293b;">
-        <div class="logo-icon-wrap" id="hdr-avatar" style="width:28px;height:28px;font-size:14px;border-radius:6px;">⚽</div>
-        <div class="logo-text">
-          <div class="t1" id="hdr-name" style="font-size:0.88rem;">Chargement…</div>
-          <div class="t2" id="hdr-club" style="font-size:0.65rem;"></div>
-        </div>
+      <div id="room-mode-pill" style="display:inline-flex;align-items:center;gap:6px;background:rgba(187,242,70,0.12);border:1px solid var(--lime);border-radius:20px;padding:3px 10px;font-size:0.75rem;font-weight:900;color:var(--lime);letter-spacing:0.04em;">
+        <span class="pulse" style="width:6px;height:6px;"></span>
+        <span id="room-mode-label">EN DIRECT</span>
       </div>
     </div>
+
     <div class="header-nav">
-      <button class="btn btn-icon" id="btn-sound" title="Son">🔊</button>
-      <button class="btn btn-sm" onclick="SocialHub.openJoinRoomModal()" style="border-color:var(--lime);color:var(--lime);font-weight:800;" title="Rejoindre avec un code">🔑 Code</button>
-      <button class="btn btn-sm" onclick="SocialHub.openCreateRoomModal()" style="border-color:#2a3645;color:#e2e8f0;font-weight:700;" title="Créer une partie privée">🎮 Créer Salle</button>
-      <a href="/leaderboard.html" class="btn btn-sm" style="border-color:#2a3645;color:var(--gold);font-weight:800;" title="Classement Général">🏆 Classement</a>
-      <button class="btn btn-sm" onclick="SocialHub.openFriendsModal()" title="Mes Amis" style="border-color:var(--accent);color:var(--accent);font-weight:800;">👥 Mes Amis</button>
-      <button class="btn btn-sm" onclick="openModal('modal-profile')">✏️ Profil</button>
-      <div style="display:flex;gap:4px;background:#10141b;padding:4px;border:1px solid var(--border);border-radius:8px;" id="player-switcher">
-        <!-- filled by JS -->
-      </div>
-      <div id="auth-nav-slot"></div>
-      <a href="/spectator.html" id="btn-hdr-spec" target="_blank" class="btn btn-sm" title="Vue Spectateur">📺</a>
-      <a href="/admin.html" class="btn btn-sm" style="border-color:rgba(255,255,255,0.2);">🔐 Admin</a>
+      <button class="btn btn-icon" id="btn-sound" title="Son actif / muet" style="font-size:1rem;padding:6px 10px;">🔊</button>
+      <button class="btn btn-sm btn-lime" onclick="copyInviteLink()" id="btn-quick-share" style="font-weight:900;" title="Copier le lien pour inviter des amis">
+        🔗 Inviter
+      </button>
+      <a href="/spectator.html" id="btn-hdr-spec" target="_blank" class="btn btn-sm btn-secondary-dark" title="Ouvrir la vue grand écran spectateur">
+        📺 Grand Écran
+      </a>
+      <button class="btn btn-sm btn-secondary-dark" onclick="openModal('modal-profile')" id="btn-hdr-profile" title="Modifier mon profil">
+        <span id="hdr-avatar" style="font-size:1rem;">⚽</span>
+        <span id="hdr-name" style="font-weight:800;color:#fff;">Mon Profil</span>
+      </button>
+      <a href="/" class="btn btn-sm btn-secondary-slate" title="Quitter vers l'accueil" style="padding:6px 10px;">
+        ✕ Quitter
+      </a>
     </div>
   </header>
 
-  <main class="container" style="max-width:1100px;">
+  <main class="container" style="max-width:1240px;padding-top:20px;">
 
-    <!-- PRIVATE ROOM BANNER (Hidden by default, shown if in room mode) -->
-    <div id="room-banner" style="display:none;background:#0d1118;border:2px solid var(--lime);border-radius:12px;padding:14px 18px;margin-bottom:16px;box-shadow:0 0 25px rgba(187,242,70,0.15);">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
-        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-          <div style="background:var(--lime);color:#000;font-weight:900;padding:4px 10px;border-radius:6px;font-size:0.8rem;letter-spacing:0.05em;display:flex;align-items:center;gap:6px;">
-            <span>🔒 SALLE PRIVÉE</span>
-            <span id="room-code-tag" style="background:#000;color:var(--lime);padding:2px 8px;border-radius:4px;font-family:var(--font-display);font-size:1.1rem;letter-spacing:0.1em;">------</span>
-          </div>
-          <div>
-            <div style="font-weight:800;font-size:1rem;color:#ffffff;" id="room-title">Partie Privée</div>
-            <div style="font-size:0.75rem;color:#94a3b8;" id="room-subtitle">Grille exclusive • Synchro live</div>
-          </div>
-          <span id="room-status-badge" class="badge" style="background:rgba(187,242,70,0.15);color:var(--lime);border:1px solid var(--lime);font-size:0.75rem;padding:3px 8px;font-weight:800;">🟢 EN COURS</span>
-        </div>
-
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-          <button class="btn btn-sm" onclick="copySpectatorLink()" id="btn-copy-spec" style="background:#151c27;border-color:var(--lime);color:var(--lime);font-weight:700;">
-            📺 Lien Spectateur
-          </button>
-          <button class="btn btn-sm" onclick="copyObsLink()" id="btn-copy-obs" style="background:#151c27;border-color:#334155;color:#e2e8f0;">
-            🎥 Lien OBS
-          </button>
-          <button class="btn btn-sm" onclick="copyInviteLink()" id="btn-copy-invite" style="background:#151c27;border-color:#334155;color:#e2e8f0;">
-            🔗 Inviter Joueur
-          </button>
-          <a href="/player.html" class="btn btn-sm btn-danger" style="font-weight:700;">
-            🚪 Quitter
-          </a>
-        </div>
-      </div>
-    </div>
-
-    <!-- ROOM WINNER CELEBRATION BANNER -->
-    <div id="room-winner-banner" style="display:none;background:linear-gradient(135deg, rgba(255,170,0,0.2) 0%, rgba(187,242,70,0.15) 100%);border:2px solid var(--gold);border-radius:12px;padding:16px 20px;margin-bottom:16px;box-shadow:0 0 35px rgba(255,170,0,0.3);">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;">
+    <!-- ==========================================
+         ROOM WINNER BANNER (CELEBRATION)
+         ========================================== -->
+    <div id="room-winner-banner" style="display:none;background:linear-gradient(135deg, rgba(245,158,11,0.2) 0%, rgba(187,242,70,0.15) 100%);border:2px solid var(--gold);border-radius:16px;padding:20px 24px;margin-bottom:20px;box-shadow:0 0 40px rgba(245,158,11,0.25);">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
         <div style="display:flex;align-items:center;gap:16px;">
-          <div style="font-size:42px;animation:bounce 1s infinite alternate;">👑</div>
+          <div style="font-size:46px;animation:floatAnim 2s ease-in-out infinite;">👑</div>
           <div>
-            <div style="font-size:0.75rem;font-weight:900;color:var(--gold);text-transform:uppercase;letter-spacing:0.1em;">VICTOIRE HOMOLOGUÉE ! 🏆</div>
-            <div style="font-size:1.25rem;font-weight:900;color:#ffffff;" id="room-winner-name">Le joueur a remporté la partie !</div>
-            <div style="font-size:0.8rem;color:#cbd5e1;" id="room-winner-reason">Premier Bingo complété</div>
+            <div style="font-size:0.75rem;font-weight:900;color:var(--gold);text-transform:uppercase;letter-spacing:0.12em;">VICTOIRE HOMOLOGUÉE ! 🏆</div>
+            <div style="font-size:1.4rem;font-weight:900;color:#ffffff;" id="room-winner-name">Un joueur a remporté le match !</div>
+            <div style="font-size:0.85rem;color:#cbd5e1;margin-top:2px;" id="room-winner-reason">Premier Bingo complété</div>
           </div>
         </div>
-        <div style="display:flex;gap:10px;">
-          <a href="/leaderboard.html" class="btn btn-lime btn-sm" style="font-weight:900;">
-            🏆 Voir le Classement Général
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <a href="/leaderboard.html" class="btn btn-lime btn-sm" style="font-weight:900;padding:10px 18px;">
+            🏆 Voir Classement
           </a>
-          <button class="btn btn-sm btn-secondary-dark" onclick="resetMyGrid()">
-            🔄 Relancer la partie
+          <button class="btn btn-sm btn-secondary-dark" onclick="resetMyGrid()" style="padding:10px 16px;">
+            🔄 Relancer le match
           </button>
         </div>
       </div>
     </div>
 
-    <!-- PLAYER SCORE BANNER -->
-    <div class="scoreboard mb-4" style="background:#0e1424;border:1px solid #1e293b;border-left:4px solid var(--accent);border-radius:12px;">
-      <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;">
-        <div style="display:flex;align-items:center;gap:12px;">
-          <div id="banner-avatar" style="font-size:36px;width:52px;height:52px;border-radius:8px;display:flex;align-items:center;justify-content:center;border:2px solid;background:#141d33;">⚽</div>
-          <div>
-            <div style="font-size:1.3rem;font-weight:900;color:#ffffff;" id="banner-name">Joueur</div>
-            <div class="text-sm" style="color:#cbd5e1;" id="banner-club"></div>
-          </div>
-        </div>
+    <!-- ==========================================
+         DASHBOARD HERO MATCH (INTUITIF & SLEEK)
+         ========================================== -->
+    <div class="match-dashboard-grid">
+      <!-- INFO MATCH / SALLE -->
+      <div style="background:#0c1017;border:1px solid #1a2430;border-radius:16px;padding:24px;display:flex;flex-direction:column;justify-content:space-between;">
         <div>
-          <div style="font-size:2.5rem;font-weight:900;line-height:1;font-variant-numeric:tabular-nums;" id="banner-score">0</div>
-          <div class="text-xs text-muted">points</div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;">
+            <span id="room-badge-tag" style="background:var(--lime);color:#000;font-weight:900;font-size:0.75rem;padding:3px 10px;border-radius:6px;letter-spacing:0.06em;text-transform:uppercase;">MATCH EN DIRECT</span>
+            <span id="room-code-tag" style="display:none;background:#141c28;border:1px solid #28374d;color:#ffffff;font-family:var(--font-display);font-size:1.05rem;padding:2px 8px;border-radius:6px;letter-spacing:0.1em;">------</span>
+            <span id="room-status-badge" style="font-size:0.75rem;color:var(--lime);font-weight:800;">🟢 EN COURS (90')</span>
+          </div>
+          <h1 id="grid-title" style="font-family:var(--font-display);font-size:2.4rem;color:#ffffff;line-height:1;margin-bottom:8px;letter-spacing:0.02em;">
+            Bingo Football en Direct
+          </h1>
+          <p id="room-subtitle" style="font-size:0.88rem;color:#94a3b8;line-height:1.5;margin-bottom:20px;">
+            Cochez chaque action validée sur le terrain. Complétez une ligne horizontale, verticale ou diagonale pour faire <strong>BINGO</strong> !
+          </p>
         </div>
-        <div style="display:flex;gap:16px;flex-wrap:wrap;margin-left:10px;">
-          <div>
-            <div style="font-size:1.15rem;font-weight:900;color:#ffffff;" id="stat-tiles">0/25</div>
-            <div class="text-xs text-muted">Défis validés</div>
+
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;border-top:1px solid #18222d;padding-top:16px;">
+          <button onclick="copyInviteLink()" class="btn btn-sm btn-lime" id="btn-copy-link-main" style="font-weight:900;">
+            📋 Copier lien d'invitation
+          </button>
+          <a href="/spectator.html" id="btn-link-spec" target="_blank" class="btn btn-sm btn-secondary-dark">
+            📺 Vue Spectateur
+          </a>
+          <button onclick="resetMyGrid()" class="btn btn-sm btn-danger" style="margin-left:auto;">
+            🔄 Réinitialiser ma grille
+          </button>
+        </div>
+      </div>
+
+      <!-- SCOREBOARD WIDGET DYNAMIQUE -->
+      <div style="background:#0c1017;border:1px solid #1a2430;border-radius:16px;padding:24px;display:flex;flex-direction:column;justify-content:space-between;">
+        <div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div id="banner-avatar" style="font-size:26px;width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;border:2px solid var(--lime);background:#141d2c;">⚽</div>
+              <div>
+                <div style="font-size:1.05rem;font-weight:900;color:#ffffff;" id="banner-name">Joueur</div>
+                <div style="font-size:0.75rem;color:#94a3b8;" id="banner-club">Club Carrière</div>
+              </div>
+            </div>
+            <div style="text-align:right;">
+              <div style="display:flex;align-items:baseline;justify-content:flex-end;gap:6px;">
+                <span id="banner-score" style="font-family:var(--font-display);font-size:3.6rem;color:var(--lime);line-height:1;">0</span>
+                <span style="font-size:1.05rem;font-weight:900;color:#ffffff;">PTS</span>
+              </div>
+            </div>
           </div>
-          <div>
-            <div style="font-size:1.15rem;font-weight:900;color:var(--gold);" id="stat-lines">0</div>
-            <div class="text-xs text-muted">Lignes (+<span id="stat-line-bonus">0</span> pts)</div>
-          </div>
-          <div>
-            <div style="font-size:1.15rem;font-weight:900;color:#ffffff;" id="stat-base">0</div>
-            <div class="text-xs text-muted">Pts de base</div>
+
+          <!-- JAUGE DE PROGRESSION -->
+          <div style="margin-top:14px;background:#111622;border:1px solid #1a2434;border-radius:10px;padding:12px 14px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.78rem;margin-bottom:6px;">
+              <span style="color:#94a3b8;font-weight:700;">Défis complétés</span>
+              <span style="color:#ffffff;font-weight:900;"><strong id="stat-tiles" style="color:var(--lime);">0/25</strong> (<span id="stat-pct">0%</span>)</span>
+            </div>
+            <div style="height:8px;background:#182230;border-radius:4px;overflow:hidden;">
+              <div id="stat-progress-fill" style="width:0%;height:100%;background:var(--lime);box-shadow:0 0 12px var(--lime);transition:width 0.3s ease;"></div>
+            </div>
           </div>
         </div>
-        <div style="margin-left:auto;display:flex;align-items:center;gap:8px;">
-          <button class="btn btn-danger btn-sm" onclick="resetMyGrid()">🔄 Réinitialiser</button>
+
+        <div style="display:flex;align-items:center;gap:12px;margin-top:16px;flex-wrap:wrap;border-top:1px solid #18222d;padding-top:12px;">
+          <span id="stat-lines-badge" style="font-size:0.78rem;font-weight:900;color:var(--gold);background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.3);padding:3px 9px;border-radius:6px;">
+            ⭐ 0 Ligne (+0 pts)
+          </span>
+          <span style="font-size:0.78rem;color:#94a3b8;font-weight:700;">
+            Pts de base : <strong id="stat-base" style="color:#ffffff;">0</strong>
+          </span>
+          <span id="grand-chelem-badge" style="display:none;font-size:0.78rem;font-weight:900;color:#000;background:var(--lime);padding:3px 9px;border-radius:6px;">
+            👑 GRAND CHELEM
+          </span>
         </div>
       </div>
     </div>
 
-    <!-- FRIENDS DUEL BAR -->
-    <div id="friends-duel-bar" style="display:none;background:#0e1424;border:1px solid #1e293b;border-left:4px solid var(--accent);border-radius:8px;padding:10px 14px;margin-bottom:14px;">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-        <div style="font-size:0.75rem;font-weight:900;color:var(--accent);text-transform:uppercase;letter-spacing:0.06em;">⭐ MES AMIS EN DIRECT :</div>
-        <div id="friends-duel-pills" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
+    <!-- ==========================================
+         GRILLE DE BINGO (HAUTE VISIBILITÉ & SLEEK)
+         ========================================== -->
+    <div style="background:#0c1017;border:1px solid #1a2430;border-radius:18px;padding:22px;margin-bottom:28px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+        <div>
+          <div style="font-family:var(--font-display);font-size:1.6rem;color:#ffffff;letter-spacing:0.04em;">
+            GRILLE DE MATCH OFFICIELLE
+          </div>
+          <div style="font-size:0.78rem;color:#64748b;margin-top:2px;">
+            💡 Cliquez sur une case pour la valider dès que l'action survient en direct.
+          </div>
+        </div>
+        <span class="live-dot"><span class="pulse"></span> SYNCHRO EN TEMPS RÉEL</span>
+      </div>
+
+      <div class="bingo-grid" id="bingo-grid">
+        <!-- Rendu instantané et garanti -->
       </div>
     </div>
 
-    <!-- RIVAL BANNER (compact) -->
-    <div id="rival-bar" style="display:none;background:#0e1424;border:1px solid #1e293b;border-left:4px solid var(--gold);border-radius:8px;padding:8px 14px;margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
-      <div class="text-xs fw-800" style="color:var(--gold);">AUTRES JOUEURS :</div>
-      <div id="rival-pills" style="display:flex;gap:8px;flex-wrap:wrap;"></div>
-    </div>
+    <!-- ==========================================
+         ADVERSAIRES & ACTIVITÉ EN DIRECT
+         ========================================== -->
+    <div class="match-bottom-grid">
+      <!-- ADVERSAIRES EN DIRECT -->
+      <div style="background:#0c1017;border:1px solid #1a2430;border-radius:16px;padding:20px;">
+        <div style="font-family:var(--font-display);font-size:1.3rem;color:#ffffff;letter-spacing:0.04em;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;">
+          <span>⚔️ ADVERSAIRES EN DIRECT</span>
+          <span style="font-size:0.75rem;color:var(--lime);font-family:var(--font-body);font-weight:800;" id="rivals-count">1 joueur</span>
+        </div>
+        <div id="rival-pills" style="display:flex;flex-direction:column;gap:8px;">
+          <!-- Injecté par JS -->
+        </div>
+      </div>
 
-    <!-- ACTIVE LINES -->
-    <div id="lines-bar" class="lines-bar hidden" style="margin-bottom:12px;border-radius:8px;">
-      <span class="text-xs fw-700" style="color:var(--gold);">LIGNES ACTIVES :</span>
-      <div id="lines-tags"></div>
-    </div>
-
-    <!-- GRID TITLE -->
-    <div class="flex-between mb-3">
-      <div class="section-title">🎮 <span id="grid-title">Grille Bingo</span></div>
-      <div class="live-dot"><span class="pulse"></span>Sync Temps Réel</div>
-    </div>
-
-    <!-- BINGO GRID -->
-    <div style="background:#090d16;border:1px solid #1e293b;border-radius:12px;padding:14px;" class="mb-4">
-      <div class="bingo-grid" id="bingo-grid"></div>
-    </div>
-
-    <!-- HISTORY FEED -->
-    <div class="feed">
-      <div class="feed-title">🔴 Historique des actions</div>
-      <div id="feed-list"><div class="text-muted text-sm" style="text-align:center;padding:12px;">En attente du premier défi…</div></div>
+      <!-- HISTORIQUE DES ACTIONS -->
+      <div style="background:#0c1017;border:1px solid #1a2430;border-radius:16px;padding:20px;">
+        <div style="font-family:var(--font-display);font-size:1.3rem;color:#ffffff;letter-spacing:0.04em;margin-bottom:12px;display:flex;align-items:center;gap:6px;">
+          <span>🔴 ACTIONS EN DIRECT</span>
+        </div>
+        <div id="feed-list" style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;">
+          <div style="text-align:center;padding:20px;color:#64748b;font-size:0.82rem;">En attente de la première action cochée…</div>
+        </div>
+      </div>
     </div>
 
   </main>
 
-  <!-- TOAST CONTAINER -->
   <div id="toast-container"></div>
 
-  <!-- PROFILE MODAL -->
+  <!-- ==========================================
+       MODAL PROFIL
+       ========================================== -->
   <div class="modal-overlay" id="modal-profile">
-    <div class="modal-box">
-      <div class="modal-header">
-        <div class="modal-title">✏️ Mon Profil</div>
+    <div class="modal-box" style="background:#0d121c;border:1px solid #233246;border-radius:16px;max-width:480px;">
+      <div class="modal-header" style="border-bottom:1px solid #1b2636;padding-bottom:12px;">
+        <div class="modal-title" style="color:#ffffff;font-weight:900;">✏️ Mon Profil Joueur</div>
         <button class="modal-close" onclick="closeModal('modal-profile')">✕</button>
       </div>
-      <form onsubmit="submitProfile(event)">
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Pseudo</label>
-            <input type="text" class="form-input" id="prof-name" required maxlength="25">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Club</label>
-            <input type="text" class="form-input" id="prof-club" required maxlength="30">
-          </div>
+      <form onsubmit="submitProfile(event)" style="margin-top:16px;">
+        <div class="form-group">
+          <label class="form-label">Pseudo Joueur *</label>
+          <input type="text" class="form-input" id="prof-name" required maxlength="25">
         </div>
         <div class="form-group">
-          <label class="form-label">Emoji / Avatar (ou lien image)</label>
+          <label class="form-label">Club / Équipe Favorite</label>
+          <input type="text" class="form-input" id="prof-club" maxlength="30">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Avatar (Emoji ou lien image)</label>
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
-            <div id="prof-avatar-preview" style="width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:24px;background:rgba(255,255,255,0.06);border:2px solid var(--accent);overflow:hidden;flex-shrink:0;">⚽</div>
-            <input type="text" class="form-input" id="prof-avatar" value="⚽" placeholder="Cliquez un emoji ou tapez/collez un emoji/lien" style="flex:1;">
+            <div id="prof-avatar-preview" style="width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;background:#141d2c;border:2px solid var(--lime);flex-shrink:0;">⚽</div>
+            <input type="text" class="form-input" id="prof-avatar" value="⚽" style="flex:1;">
           </div>
           <div class="emoji-row" id="prof-emoji-picker">
             <span class="emoji-opt" data-v="⚽">⚽</span>
@@ -210,168 +255,184 @@
             <span class="emoji-opt" data-v="🎯">🎯</span>
             <span class="emoji-opt" data-v="🏆">🏆</span>
             <span class="emoji-opt" data-v="⚔️">⚔️</span>
-            <span class="emoji-opt" data-v="💎">💎</span>
-            <span class="emoji-opt" data-v="🌟">🌟</span>
-            <span class="emoji-opt" data-v="🦅">🦅</span>
-            <span class="emoji-opt" data-v="🐉">🐉</span>
-            <span class="emoji-opt" data-v="🦊">🦊</span>
-            <span class="emoji-opt" data-v="🛡️">🛡️</span>
             <span class="emoji-opt" data-v="🧤">🧤</span>
-            <span class="emoji-opt" data-v="🥊">🥊</span>
             <span class="emoji-opt" data-v="🎮">🎮</span>
-            <span class="emoji-opt" data-v="🥇">🥇</span>
           </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Nouveau PIN (laisser vide pour ne pas changer)</label>
-          <input type="password" class="form-input" id="prof-pin" maxlength="6" placeholder="Nouveau PIN…">
-        </div>
-        <div class="form-actions">
-          <button type="button" class="btn btn-full" onclick="closeModal('modal-profile')">Annuler</button>
-          <button type="submit" class="btn btn-primary btn-full">💾 Enregistrer</button>
+        <div class="form-actions" style="margin-top:20px;">
+          <button type="button" class="btn btn-secondary-slate btn-full" onclick="closeModal('modal-profile')">Annuler</button>
+          <button type="submit" class="btn btn-lime btn-full" style="font-weight:900;">💾 Enregistrer</button>
         </div>
       </form>
     </div>
   </div>
 
+  <!-- SCRIPT DE JEU PRINCIPAL -->
   <script>
+    // Challenges par défaut garantis (pour affichage instantané sans latence)
+    const DEFAULT_CHALLENGES = [
+      { id: 0, icon: '🧤', title: 'Arrêt Décisif', points: 1, description: 'Le gardien sauve un tir cadré dangereux' },
+      { id: 1, icon: '🚩', title: 'Hors-jeu Sifflé', points: 1, description: 'Un attaquant pris au piège du hors-jeu' },
+      { id: 2, icon: '💥', title: 'Poteau ou Barre', points: 2, description: 'Frappe sur les montants du but' },
+      { id: 3, icon: '🎯', title: 'But en Lucarne', points: 3, description: 'Tir imparable dans le coin supérieur' },
+      { id: 4, icon: '📺', title: 'Intervention VAR', points: 2, description: 'L’arbitre consulte l’écran sur le bord du terrain' },
+      { id: 5, icon: '🟥', title: 'Carton Rouge', points: 3, description: 'Expulsion directe ou 2e carton jaune' },
+      { id: 6, icon: '⚡', title: 'Contre-Attaque Éclair', points: 1, description: 'But ou occasion en moins de 3 passes' },
+      { id: 7, icon: '👟', title: 'Passe Décisive', points: 1, description: 'Caviar qui mène directement au but' },
+      { id: 8, icon: '⚽', title: 'Penalty Concédé', points: 2, description: 'Faute ou main sanctionnée dans la surface' },
+      { id: 9, icon: '🛡️', title: 'Tacle Glissé Propre', points: 1, description: 'Interception défensive sur le ballon' },
+      { id: 10, icon: '🦁', title: 'Capitaine Buteur', points: 2, description: 'Le joueur au brassard marque un but' },
+      { id: 11, icon: '🔁', title: 'Coaching Gagnant', points: 2, description: 'Un remplaçant entre et marque ou passe' },
+      { id: 12, icon: '🔥', title: 'Double But en 5 Min', points: 3, description: 'Deux buts consécutifs très rapprochés' },
+      { id: 13, icon: '🚀', title: 'Frappe Hors Surface', points: 2, description: 'Tir des 20-25 mètres cadré ou but' },
+      { id: 14, icon: '🟨', title: 'Carton Jaune Précoce', points: 1, description: 'Avertissement avant la 30e minute' },
+      { id: 15, icon: '🤕', title: 'Arrêt de Jeu Blessure', points: 1, description: 'Soigneurs sur le terrain plus d’une minute' },
+      { id: 16, icon: '📐', title: 'But sur Coup de Pied Arrêté', points: 2, description: 'Corner ou coup franc direct transformé' },
+      { id: 17, icon: '😤', title: 'Altercation Joueurs', points: 1, description: 'Tension ou bousculade entre adversaires' },
+      { id: 18, icon: '⏱️', title: '5+ Minutes Arrêts de Jeu', points: 1, description: 'Temps additionnel généreux affiché' },
+      { id: 19, icon: '🌟', title: 'Dribble Humiliant', points: 1, description: 'Petit pont, roulette ou grand pont' },
+      { id: 20, icon: '🥶', title: 'Occasion Immanquable Ratée', points: 2, description: 'Face à face ou but vide manqué' },
+      { id: 21, icon: '🧱', title: 'Mur Infranchissable', points: 2, description: 'Clean sheet maintenu à la 75e minute' },
+      { id: 22, icon: '🔄', title: 'Remontada / Égalisation', points: 3, description: 'Équipe menée qui recolle au score' },
+      { id: 23, icon: '🎩', title: 'Doublé d’un Attaquant', points: 2, description: 'Un joueur inscrit 2 buts dans le match' },
+      { id: 24, icon: '🏆', title: 'Victoire dans le Temps Add.', points: 3, description: 'But décisif après la 90e minute' }
+    ];
+
     const socket = io();
     const params = new URLSearchParams(window.location.search);
     const roomCode = params.get('room') ? params.get('room').toUpperCase().trim() : null;
-    let playerId = params.get('p');
+    let playerId = params.get('p') || null;
     let state = null;
     let roomState = null;
+    let currentChallenges = DEFAULT_CHALLENGES;
+    let currentChecked = new Array(25).fill(false);
     const isRoomMode = !!roomCode;
 
     const COLOR_MAP = {
-      blue:'#4f8ef7',red:'#ef4444',purple:'#8b5cf6',green:'#10b981',
-      gold:'#ffaa00',pink:'#ec4899',cyan:'#06b6d4',orange:'#ff5500',lime:'#bbf246'
+      lime:'#bbf246', blue:'#3b82f6', red:'#ef4444', purple:'#8b5cf6',
+      green:'#10b981', gold:'#f59e0b', orange:'#ff5500', pink:'#ec4899', cyan:'#06b6d4'
     };
 
-    // Copy link helpers for room
-    function copySpectatorLink() {
-      if (!roomCode) return;
-      const url = `${window.location.origin}/spectator.html?room=${roomCode}`;
-      navigator.clipboard.writeText(url).then(() => {
-        const btn = document.getElementById('btn-copy-spec');
-        if (!btn) return;
-        const old = btn.innerHTML;
-        btn.innerHTML = '✓ Lien Copié !';
-        setTimeout(() => btn.innerHTML = old, 2000);
-      });
+    // Obtenir ou initialiser le joueur local
+    function getOrInitPlayer() {
+      const cu = window.SocialHub?.getCurrentUser();
+      if (cu) return cu;
+
+      // Chercher dans localStorage
+      const cached = localStorage.getItem('bingo_current_user');
+      if (cached) {
+        try { return JSON.parse(cached); } catch(e){}
+      }
+
+      // Créer un invité
+      const guestId = 'player_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+      const guestNum = Math.floor(100 + Math.random() * 900);
+      const guest = {
+        id: guestId,
+        name: 'Joueur #' + guestNum,
+        club: 'FC Direct',
+        avatar: '⚽',
+        color: 'lime'
+      };
+      if (window.SocialHub) SocialHub.setCurrentUser(guest);
+      return guest;
     }
-    function copyObsLink() {
-      if (!roomCode) return;
-      const url = `${window.location.origin}/obs.html?room=${roomCode}&mode=hud`;
-      navigator.clipboard.writeText(url).then(() => {
-        const btn = document.getElementById('btn-copy-obs');
-        if (!btn) return;
-        const old = btn.innerHTML;
-        btn.innerHTML = '✓ Lien OBS Copié !';
-        setTimeout(() => btn.innerHTML = old, 2000);
-      });
+
+    const localPlayer = getOrInitPlayer();
+    if (!playerId) {
+      playerId = localPlayer.id;
+      const url = new URL(window.location.href);
+      url.searchParams.set('p', playerId);
+      window.history.replaceState({}, '', url.toString());
     }
+
+    // Copier le lien d'invitation avec feedback
     function copyInviteLink() {
-      if (!roomCode) return;
-      const url = `${window.location.origin}/player.html?room=${roomCode}`;
+      const origin = window.location.origin;
+      const url = isRoomMode ? `${origin}/player.html?room=${roomCode}` : window.location.href;
       navigator.clipboard.writeText(url).then(() => {
-        const btn = document.getElementById('btn-copy-invite');
-        if (!btn) return;
-        const old = btn.innerHTML;
-        btn.innerHTML = '✓ Lien Copié !';
-        setTimeout(() => btn.innerHTML = old, 2000);
+        showSuccessToast('✓ Lien copié !', 'Partagez ce lien à vos amis pour jouer ensemble.');
+      }).catch(() => {
+        prompt('Copiez ce lien pour inviter vos amis :', url);
       });
     }
 
-    // Initialize room mode if roomCode present
+    function showSuccessToast(title, sub) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.style.borderColor = 'var(--lime)';
+      toast.innerHTML = `
+        <div style="font-size:24px;">✅</div>
+        <div>
+          <div style="font-weight:900;color:var(--lime);font-size:0.9rem;">${title}</div>
+          <div style="font-size:0.75rem;color:#cbd5e1;">${sub}</div>
+        </div>
+      `;
+      container.appendChild(toast);
+      requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.add('in')));
+      setTimeout(() => { toast.classList.remove('in'); toast.classList.add('out'); setTimeout(() => toast.remove(), 350); }, 3000);
+    }
+
+    // Rendu immédiat des 25 tuiles par défaut pour zéro attente !
+    renderGrid(currentChallenges, currentChecked, [], 'lime', playerId);
+
+    // Initialisation du mode Salle
     async function initRoom() {
       if (!isRoomMode) return;
-      const rBanner = document.getElementById('room-banner');
-      if (rBanner) rBanner.style.display = 'block';
+
+      // MAJ visuelle du header
+      document.getElementById('room-mode-label').textContent = 'SALLE #' + roomCode;
+      document.getElementById('room-badge-tag').textContent = 'SALLE PRIVÉE';
       const cTag = document.getElementById('room-code-tag');
-      if (cTag) cTag.textContent = '#' + roomCode;
-      const hdrSpec = document.getElementById('btn-hdr-spec');
-      if (hdrSpec) hdrSpec.href = `/spectator.html?room=${roomCode}`;
+      cTag.style.display = 'inline-block';
+      cTag.textContent = '#' + roomCode;
+      document.getElementById('grid-title').textContent = `Partie Privée #${roomCode}`;
+      document.getElementById('btn-hdr-spec').href = `/spectator.html?room=${roomCode}`;
+      document.getElementById('btn-link-spec').href = `/spectator.html?room=${roomCode}`;
 
-      const cu = window.SocialHub?.getCurrentUser();
-      if (!playerId && cu) {
-        playerId = cu.id;
-        window.history.replaceState({}, '', `/player.html?room=${roomCode}&p=${playerId}`);
-      }
-
-      if (playerId) {
-        try {
-          await fetch('/api/rooms/join', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ code: roomCode, playerId })
-          });
-        } catch (e) {
-          console.error('Error joining room via API', e);
-        }
-      }
-
+      // Rejoindre via Socket
       socket.emit('joinRoom', { roomCode, playerId });
 
+      // Récupérer les données via API (avec auto-création si inexistante)
       try {
         const res = await fetch(`/api/rooms/${roomCode}`);
         const data = await res.json();
         if (data.success && data.room) {
           roomState = data.room;
-          renderRoomUI(data.room);
-        } else {
-          // Salle introuvable — afficher un message d'erreur clair
-          const rBanner = document.getElementById('room-banner');
-          if (rBanner) {
-            rBanner.style.background = '#1a0a0a';
-            rBanner.style.borderColor = '#ef4444';
-            rBanner.style.boxShadow = '0 0 20px rgba(239,68,68,0.2)';
-            rBanner.innerHTML = `
-              <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
-                <div style="display:flex;align-items:center;gap:12px;">
-                  <div style="font-size:2rem;">❌</div>
-                  <div>
-                    <div style="font-weight:900;font-size:1rem;color:#fff;">Salle <span style="color:#ef4444;">#${roomCode}</span> introuvable</div>
-                    <div style="font-size:0.8rem;color:#94a3b8;margin-top:3px;">Cette salle n'existe pas ou a expiré. Crée-en une nouvelle ou joue en mode libre.</div>
-                  </div>
-                </div>
-                <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                  <button class="btn btn-lime btn-sm" onclick="SocialHub.openCreateRoomModal()" style="font-weight:900;">🎮 Créer une salle</button>
-                  <a href="/player.html" class="btn btn-secondary-dark btn-sm">🎯 Mode libre</a>
-                </div>
-              </div>`;
-          }
-          // Charger quand même la grille globale en mode libre
-          socket.emit('getState');
+          applyRoomState(data.room);
         }
       } catch (err) {
-        console.error('Failed to load room:', err);
+        console.warn('API room fetch fallback:', err);
       }
     }
 
-    // Room Socket Handlers
-    socket.on('roomStateUpdate', (rState) => {
-      if (!isRoomMode || rState.code !== roomCode) return;
-      const prev = roomState;
-      roomState = rState;
-
-      // Sound & celebration if victory
-      if (rState.status === 'finished' && (!prev || prev.status !== 'finished')) {
-        window.soundFx?.playGrandChelem();
-        window.launchConfetti?.({ count: 280 });
-      }
-
-      renderRoomUI(rState);
-      if (window.SocialHub) SocialHub.renderAuthNav();
+    // Socket Handlers
+    socket.on('connect', () => {
+      if (isRoomMode) socket.emit('joinRoom', { roomCode, playerId });
     });
 
-    socket.on('roomTileToggled', (ev) => {
-      if (!isRoomMode) return;
-      if (ev.checked) showToast(ev.playerName, ev.challenge, ev.newLineAchieved, ev.newGrandChelem);
-      if (ev.winnerDeclared) {
-        window.soundFx?.playGrandChelem();
-        window.launchConfetti?.({ count: 300 });
+    socket.on('stateUpdate', (data) => {
+      state = data;
+      if (!isRoomMode) {
+        const activeGrid = data.grids?.find(g => g.id === data.activeGrid);
+        if (activeGrid && Array.isArray(activeGrid.challenges) && activeGrid.challenges.length > 0) {
+          currentChallenges = activeGrid.challenges;
+        }
+        const p = data.players?.[playerId] || localPlayer;
+        const checkedArr = p.grids?.[data.activeGrid] || currentChecked;
+        const stats = data.stats?.[playerId] || { totalPoints: 0, tilesCompleted: 0, completedLines: [], basePoints: 0, lineBonus: 0 };
+        updateScoreboard(p, stats, currentChallenges.length);
+        renderGrid(currentChallenges, checkedArr, stats.completedLines || [], p.color || 'lime', playerId);
+        renderRivalsList(data.players || {}, data.stats || {}, playerId);
+        renderFeed(data.history || []);
       }
+    });
+
+    socket.on('roomStateUpdate', (rData) => {
+      if (!isRoomMode || rData.code !== roomCode) return;
+      roomState = rData;
+      applyRoomState(rData);
     });
 
     socket.on('roomWinner', (ev) => {
@@ -381,159 +442,102 @@
       const wBanner = document.getElementById('room-winner-banner');
       if (wBanner) {
         wBanner.style.display = 'block';
-        document.getElementById('room-winner-name').textContent = `${ev.winner?.name || 'Un joueur'} a remporté la partie !`;
-        document.getElementById('room-winner-reason').textContent = ev.reason || 'Victoire !';
+        document.getElementById('room-winner-name').textContent = `${ev.winner?.name || 'Un joueur'} a remporté le match !`;
+        document.getElementById('room-winner-reason').textContent = ev.reason || 'Victoire validée !';
       }
     });
 
-    // Global state update (for non-room mode or background state)
-    socket.on('stateUpdate', (data) => {
-      const prevState = state;
-      state = data;
-      if (!isRoomMode) {
-        if (!playerId || !data.players[playerId]) {
-          const cu = window.SocialHub?.getCurrentUser();
-          if (cu && data.players[cu.id]) {
-            playerId = cu.id;
-          } else {
-            const ids = Object.keys(data.players);
-            if (!ids.length) return;
-            playerId = ids[0];
-          }
-          window.history.replaceState({}, '', `/player.html?p=${playerId}`);
-        }
-
-        // Sound + confetti on line/grand chelem achievement
-        if (prevState) {
-          const ps = prevState.stats?.[playerId];
-          const ns = data.stats?.[playerId];
-          if (ps && ns) {
-            if (ns.isGrandChelem && !ps.isGrandChelem) {
-              window.soundFx?.playGrandChelem();
-              window.launchConfetti?.({ count: 250 });
-            } else if (ns.completedLines?.length > ps.completedLines?.length) {
-              window.soundFx?.playBingo();
-              window.launchConfetti?.({ count: 120 });
-            }
-          }
-        }
-
-        renderUI(data);
+    socket.on('roomTileToggled', (ev) => {
+      if (isRoomMode && ev.checked) {
+        showToast(ev.playerName, ev.challenge, ev.newLineAchieved, ev.newGrandChelem);
       }
-      if (window.SocialHub) SocialHub.renderAuthNav();
     });
 
     socket.on('tileToggled', (ev) => {
-      if (!isRoomMode && ev.checked) showToast(ev.playerName, ev.challenge, ev.newLineAchieved, ev.newGrandChelem);
+      if (!isRoomMode && ev.checked) {
+        showToast(ev.playerName, ev.challenge, ev.newLineAchieved, ev.newGrandChelem);
+      }
     });
 
-    function renderUI(data) {
-      const player = data.players[playerId];
-      const stats = data.stats?.[playerId];
-      if (!player) return;
+    function applyRoomState(rData) {
+      if (!rData) return;
 
-      const colorHex = COLOR_MAP[player.color] || '#ff5500';
+      // Récupérer les 25 défis
+      const challenges = (rData.challenges && rData.challenges.length > 0)
+        ? rData.challenges
+        : (rData.grid?.challenges && rData.grid.challenges.length > 0)
+        ? rData.grid.challenges
+        : DEFAULT_CHALLENGES;
+      currentChallenges = challenges;
 
-      // Header
-      document.getElementById('hdr-avatar').innerHTML = renderAvatar(player.avatar);
-      document.getElementById('hdr-avatar').style.border = `2px solid ${colorHex}`;
-      document.getElementById('hdr-name').textContent = player.name;
-      document.getElementById('hdr-club').textContent = player.club;
+      // Titres
+      if (rData.name) document.getElementById('grid-title').textContent = rData.name;
+      if (rData.gridName) document.getElementById('room-subtitle').textContent = `Grille : ${rData.gridName} · Condition : ${rData.winCondition === 'grand_chelem' ? '👑 Grand Chelem (100%)' : '🎯 Premier Bingo'}`;
 
-      // Banner
-      const bannerAvatar = document.getElementById('banner-avatar');
-      bannerAvatar.innerHTML = renderAvatar(player.avatar);
-      bannerAvatar.style.borderColor = colorHex;
-      bannerAvatar.style.background = '#151722';
-      const activeGrid = data.grids?.find(g => g.id === data.activeGrid);
-      const challenges = activeGrid?.challenges || data.challenges || [];
-      const totalTiles = stats?.totalTiles || challenges.length || 25;
-
-      document.getElementById('banner-name').textContent = player.name;
-      document.getElementById('banner-club').textContent = player.club;
-      document.getElementById('banner-score').textContent = stats?.totalPoints || 0;
-      document.getElementById('banner-score').style.color = colorHex;
-      document.getElementById('stat-tiles').textContent = `${stats?.tilesCompleted||0}/${totalTiles}`;
-      document.getElementById('stat-lines').textContent = stats?.completedLines?.length || 0;
-      document.getElementById('stat-line-bonus').textContent = stats?.lineBonus || 0;
-      document.getElementById('stat-base').textContent = stats?.basePoints || 0;
-
-      // Grid title
-      document.getElementById('grid-title').textContent = activeGrid?.name || 'Grille Bingo';
-
-      // Friends Duel Bar
-      const cu = window.SocialHub?.getCurrentUser();
-      const myFriends = player.friends || cu?.friends || [];
-      const fBar = document.getElementById('friends-duel-bar');
-      const fPills = document.getElementById('friends-duel-pills');
-      if (fBar && fPills) {
-        if (myFriends.length > 0) {
-          fBar.style.display = 'block';
-          fPills.innerHTML = myFriends.map(fid => {
-            const fp = data.players[fid];
-            if (!fp) return '';
-            const fs = data.stats?.[fid];
-            const fc = COLOR_MAP[fp.color] || '#ff5500';
-            const fTotal = fs?.totalTiles || challenges.length || 25;
-            return `<button onclick="switchPlayer('${fid}')" class="btn btn-sm" style="background:#161924;border:1px solid ${fc};color:#fff;display:flex;align-items:center;gap:6px;padding:4px 10px;">
-              <span>${renderAvatar(fp.avatar)}</span>
-              <span style="font-weight:800;">${fp.name}</span>
-              <span style="color:${fc};font-weight:900;">${fs?.totalPoints||0} pts</span>
-              <span style="font-size:0.7rem;color:#9ca3af;">(${fs?.tilesCompleted||0}/${fTotal})</span>
-            </button>`;
-          }).filter(Boolean).join('');
-        } else {
-          fBar.style.display = 'none';
+      // Statut du match
+      const statusBadge = document.getElementById('room-status-badge');
+      if (rData.status === 'finished') {
+        statusBadge.textContent = '🏁 PARTIE TERMINÉE';
+        statusBadge.style.color = 'var(--gold)';
+        const wBanner = document.getElementById('room-winner-banner');
+        if (wBanner && rData.winnerId) {
+          wBanner.style.display = 'block';
+          const winner = rData.players?.[rData.winnerId];
+          document.getElementById('room-winner-name').textContent = `${winner?.name || 'Un joueur'} a remporté la partie !`;
+          document.getElementById('room-winner-reason').textContent = rData.winningReason || 'Condition de victoire atteinte';
         }
-      }
-
-      // Rival bar
-      const rivals = Object.keys(data.players).filter(id => id !== playerId && !myFriends.includes(id));
-      if (rivals.length > 0) {
-        document.getElementById('rival-bar').style.display = 'flex';
-        document.getElementById('rival-pills').innerHTML = rivals.map(rid => {
-          const rp = data.players[rid], rs = data.stats?.[rid];
-          const rc = COLOR_MAP[rp.color] || '#ff5500';
-          const rTotal = rs?.totalTiles || challenges.length || 25;
-          return `<div style="display:flex;align-items:center;gap:6px;background:#141722;border:1px solid ${rc}33;padding:4px 10px;font-size:0.8rem;">
-            <span>${renderAvatar(rp.avatar)}</span>
-            <span style="font-weight:700;">${rp.name}</span>
-            <span style="color:${rc};font-weight:900;">${rs?.totalPoints||0} pts</span>
-            <span class="text-xs text-muted">${rs?.tilesCompleted||0}/${rTotal}</span>
-          </div>`;
-        }).join('');
       } else {
-        document.getElementById('rival-bar').style.display = 'none';
+        statusBadge.textContent = '🟢 EN COURS (90\')';
+        statusBadge.style.color = 'var(--lime)';
       }
 
-      // Lines bar
-      const lines = stats?.completedLines || [];
-      if (lines.length > 0) {
-        document.getElementById('lines-bar').classList.remove('hidden');
-        document.getElementById('lines-tags').innerHTML = lines.map(l => `<span class="line-tag">⭐ ${l.name}</span>`).join('');
-      } else {
-        document.getElementById('lines-bar').classList.add('hidden');
-      }
+      // Joueur & Stats
+      const player = rData.players?.[playerId] || localPlayer;
+      const stats = rData.stats?.[playerId] || { totalPoints: 0, tilesCompleted: 0, completedLines: [], basePoints: 0, lineBonus: 0 };
+      updateScoreboard(player, stats, challenges.length);
 
-      // Player switcher
-      const ids = Object.keys(data.players);
-      document.getElementById('player-switcher').innerHTML = ids.map(id => {
-        const p = data.players[id];
-        const c = COLOR_MAP[p.color] || '#4f8ef7';
-        const active = id === playerId;
-        return `<button onclick="switchPlayer('${id}')" class="btn btn-sm" style="${active ? `background:${c};border-color:${c};color:${c === '#f5a623' ? '#000':'#fff'}` : ''};">${renderAvatar(p.avatar)} ${p.name.split(' ')[0]}</button>`;
-      }).join('');
+      // Grille
+      currentChecked = rData.checked?.[playerId] || currentChecked;
+      renderGrid(challenges, currentChecked, stats.completedLines || [], player.color || 'lime', playerId);
 
-      // Grid
-      const checkedArr = player.grids?.[data.activeGrid] || Array(totalTiles).fill(false);
-      renderGrid(challenges, checkedArr, lines, player.color, playerId);
+      // Adversaires
+      renderRivalsList(rData.players || {}, rData.stats || {}, playerId);
 
       // Feed
-      renderFeed(data.history || []);
+      renderFeed(rData.history || []);
+    }
+
+    function updateScoreboard(player, stats, totalCount) {
+      document.getElementById('hdr-name').textContent = player.name || 'Mon Profil';
+      document.getElementById('hdr-avatar').innerHTML = renderAvatar(player.avatar || '⚽');
+      document.getElementById('banner-name').textContent = player.name || 'Joueur';
+      document.getElementById('banner-club').textContent = player.club || 'FC Direct';
+      document.getElementById('banner-avatar').innerHTML = renderAvatar(player.avatar || '⚽');
+
+      const pts = stats.totalPoints || 0;
+      document.getElementById('banner-score').textContent = pts;
+
+      const completed = stats.tilesCompleted || 0;
+      const total = totalCount || 25;
+      document.getElementById('stat-tiles').textContent = `${completed}/${total}`;
+
+      const pct = Math.min(100, Math.round((completed / total) * 100));
+      document.getElementById('stat-pct').textContent = `${pct}%`;
+      document.getElementById('stat-progress-fill').style.width = `${pct}%`;
+
+      const lines = stats.completedLines?.length || 0;
+      const lineBonus = stats.lineBonus || (lines * 5);
+      document.getElementById('stat-lines-badge').textContent = `⭐ ${lines} Bingo${lines > 1 ? 's' : ''} (+${lineBonus} pts)`;
+      document.getElementById('stat-base').textContent = stats.basePoints || 0;
+
+      const gcBadge = document.getElementById('grand-chelem-badge');
+      if (gcBadge) gcBadge.style.display = stats.isGrandChelem ? 'inline-block' : 'none';
     }
 
     function renderGrid(challenges, checked, completedLines, color, pid) {
       const grid = document.getElementById('bingo-grid');
+      if (!grid) return;
+
       const N = Math.round(Math.sqrt(challenges.length)) || 5;
       grid.style.gridTemplateColumns = `repeat(${N}, minmax(0, 1fr))`;
 
@@ -549,14 +553,88 @@
         const isChecked = !!checked[idx];
         const isLine = lineIndices.has(idx);
         return `
-          <div class="tile ${isChecked?'checked':''}${isChecked?' c-'+color:''} ${isLine?'in-line':''}" onclick="toggleTile(${idx},${isChecked})">
-            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:5px;">
-              <span class="tile-icon">${renderAvatar(ch.icon||'🎯')}</span>
-              <span class="pts pts-${ch.points}">${ch.points}pt${ch.points>1?'s':''}</span>
+          <div class="tile ${isChecked ? 'checked' : ''} ${isLine ? 'in-line' : ''}" onclick="toggleTile(${idx}, ${isChecked})">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px;">
+              <span class="tile-icon">${renderAvatar(ch.icon || '🎯')}</span>
+              <span class="pts pts-${ch.points || 1}">+${ch.points || 1} pt${(ch.points || 1) > 1 ? 's' : ''}</span>
             </div>
             <div class="tile-title">${ch.title}</div>
-            <div class="tile-desc">${ch.description||''}</div>
-            ${ch.constraint ? `<div class="tile-footer"><span class="tile-constraint" title="${ch.constraint}">${ch.constraint}</span></div>` : ''}
+            <div class="tile-desc">${ch.description || ''}</div>
+            ${ch.constraint ? `<div class="tile-footer"><span class="tile-constraint">${ch.constraint}</span></div>` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function toggleTile(idx, isChecked) {
+      const newChecked = !isChecked;
+
+      // Son haptique
+      if (newChecked) window.soundFx?.playCheck();
+      else window.soundFx?.playUncheck();
+
+      // UI Optimiste
+      currentChecked[idx] = newChecked;
+      renderGrid(currentChallenges, currentChecked, [], 'lime', playerId);
+
+      // Calcul local optimiste du score
+      let pts = 0;
+      let completed = 0;
+      currentChecked.forEach((c, i) => {
+        if (c) {
+          completed++;
+          pts += (currentChallenges[i]?.points || 1);
+        }
+      });
+      document.getElementById('banner-score').textContent = pts;
+      document.getElementById('stat-tiles').textContent = `${completed}/${currentChallenges.length}`;
+      const pct = Math.round((completed / currentChallenges.length) * 100);
+      document.getElementById('stat-pct').textContent = `${pct}%`;
+      document.getElementById('stat-progress-fill').style.width = `${pct}%`;
+
+      if (isRoomMode) {
+        socket.emit('roomToggleTile', { code: roomCode, playerId, tileIndex: idx, checked: newChecked });
+      } else {
+        socket.emit('toggleTile', { playerId, tileIndex: idx, checked: newChecked, gridId: state?.activeGrid });
+      }
+    }
+
+    function renderRivalsList(playersMap, statsMap, myId) {
+      const el = document.getElementById('rival-pills');
+      const countEl = document.getElementById('rivals-count');
+      if (!el) return;
+
+      const pList = Object.values(playersMap || {});
+      if (countEl) countEl.textContent = `${pList.length} joueur${pList.length > 1 ? 's' : ''}`;
+
+      if (!pList.length) {
+        el.innerHTML = '<div style="color:#64748b;font-size:0.8rem;padding:12px;text-align:center;">Aucun autre joueur dans ce match. Partagez votre lien !</div>';
+        return;
+      }
+
+      // Trier par score
+      const sorted = pList.map(p => ({
+        p,
+        s: statsMap[p.id] || { totalPoints: 0, tilesCompleted: 0 }
+      })).sort((a, b) => (b.s.totalPoints || 0) - (a.s.totalPoints || 0));
+
+      el.innerHTML = sorted.map((item, idx) => {
+        const isMe = item.p.id === myId;
+        return `
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#111622;border:1px solid ${isMe ? 'var(--lime)' : '#1f2a3c'};border-radius:8px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+              <span style="font-weight:900;color:${idx === 0 ? 'var(--lime)' : '#64748b'};font-size:0.85rem;">#${idx + 1}</span>
+              <span style="font-size:1.15rem;">${renderAvatar(item.p.avatar || '⚽')}</span>
+              <div>
+                <div style="font-weight:800;font-size:0.85rem;color:#ffffff;">
+                  ${item.p.name} ${isMe ? '<span style="font-size:0.65rem;color:var(--lime);background:rgba(187,242,70,0.15);padding:1px 5px;border-radius:3px;">VOUS</span>' : ''}
+                </div>
+                <div style="font-size:0.7rem;color:#94a3b8;">${item.p.club || 'FC Direct'} · ${item.s.tilesCompleted || 0}/25 validés</div>
+              </div>
+            </div>
+            <div style="font-family:var(--font-display);font-size:1.4rem;color:var(--lime);">
+              ${item.s.totalPoints || 0} <span style="font-size:0.75rem;font-family:var(--font-body);font-weight:800;color:#fff;">PTS</span>
+            </div>
           </div>
         `;
       }).join('');
@@ -564,316 +642,124 @@
 
     function renderFeed(history) {
       const el = document.getElementById('feed-list');
-      if (!history.length) {
-        el.innerHTML = '<div class="text-muted text-sm" style="text-align:center;padding:12px;">En attente du premier défi…</div>';
+      if (!el) return;
+      if (!history || !history.length) {
+        el.innerHTML = '<div style="color:#64748b;font-size:0.8rem;padding:16px;text-align:center;">En attente de la première action cochée…</div>';
         return;
       }
-      el.innerHTML = [...history].reverse().slice(0, 25).map(item => {
+      el.innerHTML = [...history].reverse().slice(0, 15).map(item => {
         const isCheck = item.action === 'check';
-        const time = new Date(item.timestamp).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
-        const color = state?.players?.[item.playerId] ? COLOR_MAP[state.players[item.playerId].color] : '#fff';
-        return `<div class="feed-item">
-          <div class="feed-item-left">
-            <span>${item.challengeIcon||'🎯'}</span>
-            <div>
-              <strong style="color:${color};">${item.playerName}</strong>
-              ${isCheck ? 'a validé' : '<span style="color:var(--muted2);">a annulé</span>'}
-              <strong>${item.challengeTitle||'?'}</strong>
-              ${isCheck ? `<span class="pts-inline">+${item.points} pt${item.points>1?'s':''}</span>` : ''}
+        const time = new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        return `
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-bottom:1px solid #161e2b;font-size:0.78rem;">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span>${item.challengeIcon || '🎯'}</span>
+              <div>
+                <strong style="color:#ffffff;">${item.playerName}</strong>
+                ${isCheck ? '<span style="color:var(--lime);">a validé</span>' : '<span style="color:#ef4444;">a annulé</span>'}
+                <strong style="color:#cbd5e1;">${item.challengeTitle}</strong>
+                ${isCheck ? `<span style="color:var(--lime);font-weight:800;">(+${item.points} pt)</span>` : ''}
+              </div>
             </div>
+            <span style="color:#64748b;font-size:0.7rem;">${time}</span>
           </div>
-          <div class="feed-time">${time}</div>
-        </div>`;
+        `;
       }).join('');
-    }
-
-    // Rendu pour une salle privée
-    function renderRoomUI(rData) {
-      if (!rData) return;
-
-      // Résoudre playerId depuis plusieurs sources
-      if (!playerId || !rData.players?.[playerId]) {
-        const cu = window.SocialHub?.getCurrentUser();
-        if (cu && rData.players?.[cu.id]) {
-          playerId = cu.id;
-        } else if (rData.playerIds && rData.playerIds.length > 0) {
-          playerId = rData.playerIds[0];
-        } else {
-          const pIds = Object.keys(rData.players || {});
-          if (pIds.length > 0) playerId = pIds[0];
-        }
-      }
-
-      // Récupérer challenges depuis toutes les sources possibles
-      const challenges = rData.challenges
-        || rData.grid?.challenges
-        || [];
-      const totalTiles = challenges.length || 25;
-
-      // Fallback player si non trouvé (afficher la grille quand même)
-      const player = rData.players?.[playerId]
-        || state?.players?.[playerId]
-        || { name: 'Joueur', club: '', avatar: '⚽', color: 'lime' };
-
-      const colorHex = COLOR_MAP[player.color] || '#bbf246';
-      const stats = rData.stats?.[playerId] || {
-        totalPoints: 0, tilesCompleted: 0, completedLines: [], basePoints: 0, lineBonus: 0
-      };
-
-      // Header
-      document.getElementById('hdr-avatar').innerHTML = renderAvatar(player.avatar);
-      document.getElementById('hdr-avatar').style.border = `2px solid ${colorHex}`;
-      document.getElementById('hdr-name').textContent = player.name;
-      document.getElementById('hdr-club').textContent = player.club;
-
-      // Banner
-      const bannerAvatar = document.getElementById('banner-avatar');
-      bannerAvatar.innerHTML = renderAvatar(player.avatar);
-      bannerAvatar.style.borderColor = colorHex;
-      bannerAvatar.style.background = '#151722';
-
-      document.getElementById('banner-name').textContent = player.name;
-      document.getElementById('banner-club').textContent = player.club;
-      document.getElementById('banner-score').textContent = stats.totalPoints || 0;
-      document.getElementById('banner-score').style.color = colorHex;
-      document.getElementById('stat-tiles').textContent = `${stats.tilesCompleted || 0}/${totalTiles}`;
-      document.getElementById('stat-lines').textContent = stats.completedLines?.length || 0;
-      document.getElementById('stat-line-bonus').textContent = stats.lineBonus || 0;
-      document.getElementById('stat-base').textContent = stats.basePoints || 0;
-
-      // Grid title and Room info
-      document.getElementById('grid-title').textContent = rData.name || 'Partie Privée';
-      const rTitle = document.getElementById('room-title');
-      if (rTitle) rTitle.textContent = rData.name || 'Partie Privée';
-      const rSub = document.getElementById('room-subtitle');
-      if (rSub) {
-        const winModeText = rData.winCondition === 'grand_chelem' ? '👑 Grand Chelem (100% de la grille)' : '🎯 Premier Bingo (1 ligne = Victoire)';
-        rSub.textContent = `${rData.gridName || 'Grille Bingo'} • Mode : ${winModeText}`;
-      }
-
-      // Room status badge
-      const sBadge = document.getElementById('room-status-badge');
-      if (sBadge) {
-        if (rData.status === 'finished') {
-          sBadge.textContent = '🏁 PARTIE TERMINÉE';
-          sBadge.style.background = 'rgba(255, 170, 0, 0.2)';
-          sBadge.style.borderColor = 'var(--gold)';
-          sBadge.style.color = 'var(--gold)';
-        } else {
-          sBadge.textContent = '🟢 EN COURS';
-          sBadge.style.background = 'rgba(187, 242, 70, 0.15)';
-          sBadge.style.borderColor = 'var(--lime)';
-          sBadge.style.color = 'var(--lime)';
-        }
-      }
-
-      // Winner banner
-      const wBanner = document.getElementById('room-winner-banner');
-      if (wBanner) {
-        if (rData.status === 'finished' && rData.winnerId) {
-          wBanner.style.display = 'block';
-          const winnerPlayer = rData.players[rData.winnerId];
-          document.getElementById('room-winner-name').textContent = `${winnerPlayer?.name || 'Un joueur'} a remporté la victoire !`;
-          document.getElementById('room-winner-reason').textContent = rData.winningReason || 'Condition de victoire atteinte';
-        } else {
-          wBanner.style.display = 'none';
-        }
-      }
-
-      // Other room players
-      const otherIds = (rData.playerIds || []).filter(id => id !== playerId);
-      const rivalBar = document.getElementById('rival-bar');
-      if (otherIds.length > 0) {
-        rivalBar.style.display = 'flex';
-        document.getElementById('rival-pills').innerHTML = otherIds.map(rid => {
-          const rp = rData.players[rid] || state?.players?.[rid];
-          if (!rp) return '';
-          const rs = rData.stats?.[rid];
-          const rc = COLOR_MAP[rp.color] || '#bbf246';
-          return `<div style="display:flex;align-items:center;gap:6px;background:#141722;border:1px solid ${rc}44;padding:4px 10px;border-radius:4px;font-size:0.8rem;">
-            <span>${renderAvatar(rp.avatar)}</span>
-            <span style="font-weight:700;">${rp.name}</span>
-            <span style="color:${rc};font-weight:900;">${rs?.totalPoints||0} pts</span>
-            <span class="text-xs text-muted">(${rs?.tilesCompleted||0}/${totalTiles})</span>
-          </div>`;
-        }).join('');
-      } else {
-        rivalBar.style.display = 'none';
-      }
-
-      // Lines bar
-      const lines = stats.completedLines || [];
-      if (lines.length > 0) {
-        document.getElementById('lines-bar').classList.remove('hidden');
-        document.getElementById('lines-tags').innerHTML = lines.map(l => `<span class="line-tag">⭐ ${l.name}</span>`).join('');
-      } else {
-        document.getElementById('lines-bar').classList.add('hidden');
-      }
-
-      // Player switcher for room participants
-      const rPlayers = (rData.playerIds || []).map(id => rData.players[id] || state?.players?.[id]).filter(Boolean);
-      document.getElementById('player-switcher').innerHTML = rPlayers.map(p => {
-        const c = COLOR_MAP[p.color] || '#bbf246';
-        const active = p.id === playerId;
-        return `<button onclick="switchPlayer('${p.id}')" class="btn btn-sm" style="${active ? `background:${c};border-color:${c};color:${c === '#bbf246' ? '#000' : '#fff'};font-weight:900;` : ''}">${renderAvatar(p.avatar)} ${p.name.split(' ')[0]}</button>`;
-      }).join('');
-
-      // Grid
-      const checkedArr = rData.checked?.[playerId] || Array(totalTiles).fill(false);
-      renderGrid(challenges, checkedArr, lines, player.color, playerId);
-
-      // Feed
-      renderFeed(rData.history || []);
-    }
-
-    function toggleTile(idx, currentChecked) {
-      if (isRoomMode) {
-        if (!roomState || !playerId) {
-          if (!playerId && window.SocialHub) {
-            SocialHub.openJoinRoomModal();
-          }
-          return;
-        }
-        const newChecked = !currentChecked;
-        if (newChecked) window.soundFx?.playCheck();
-        else window.soundFx?.playUncheck();
-
-        // Optimistic UI for room
-        if (!roomState.checked) roomState.checked = {};
-        if (!roomState.checked[playerId]) {
-          const challenges = roomState.challenges || roomState.grid?.challenges || [];
-          roomState.checked[playerId] = Array(challenges.length || 25).fill(false);
-        }
-        roomState.checked[playerId][idx] = newChecked;
-
-        const challenges = roomState.challenges || roomState.grid?.challenges || [];
-        const stats = roomState.stats?.[playerId] || {};
-        const player = roomState.players[playerId] || (state?.players?.[playerId]) || {};
-        renderGrid(challenges, roomState.checked[playerId], stats.completedLines || [], player.color || 'lime', playerId);
-
-        socket.emit('roomToggleTile', { code: roomCode, playerId, tileIndex: idx, checked: newChecked });
-        return;
-      }
-
-      if (!state || !playerId) return;
-      const newChecked = !currentChecked;
-      if (newChecked) window.soundFx?.playCheck();
-      else window.soundFx?.playUncheck();
-
-      // Optimistic UI
-      const player = state.players[playerId];
-      if (!player.grids) player.grids = {};
-      const activeGrid = state.grids?.find(g => g.id === state.activeGrid);
-      const challenges = activeGrid?.challenges || state.challenges || [];
-      const totalTiles = challenges.length || 25;
-      if (!player.grids[state.activeGrid] || player.grids[state.activeGrid].length !== totalTiles) {
-        player.grids[state.activeGrid] = Array(totalTiles).fill(false);
-      }
-      player.grids[state.activeGrid][idx] = newChecked;
-      const stats = state.stats?.[playerId] || {};
-      renderGrid(challenges, player.grids[state.activeGrid], stats.completedLines || [], player.color, playerId);
-
-      socket.emit('toggleTile', { playerId, tileIndex: idx, checked: newChecked, gridId: state.activeGrid });
-    }
-
-    function switchPlayer(id) {
-      playerId = id;
-      if (isRoomMode) {
-        window.history.replaceState({}, '', `/player.html?room=${roomCode}&p=${id}`);
-        if (roomState) renderRoomUI(roomState);
-      } else {
-        window.history.replaceState({}, '', `/player.html?p=${id}`);
-        if (state) renderUI(state);
-      }
     }
 
     function resetMyGrid() {
+      if (!confirm('Réinitialiser toutes vos coches pour ce match ?')) return;
       if (isRoomMode) {
-        if (!confirm('Réinitialiser la grille de cette partie privée ?')) return;
         fetch('/api/rooms/reset', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ code: roomCode })
-        }).then(res => res.json()).then(data => {
-          if (data.success && data.room) {
-            roomState = data.room;
-            renderRoomUI(data.room);
-          }
         });
-        return;
+      } else {
+        socket.emit('resetGrid', { target: `player:${playerId}`, gridId: state?.activeGrid });
       }
-      if (!confirm('Réinitialiser toutes vos coches ?')) return;
-      socket.emit('resetGrid', { target: `player:${playerId}`, gridId: state?.activeGrid });
+      currentChecked = new Array(currentChallenges.length).fill(false);
+      renderGrid(currentChallenges, currentChecked, [], 'lime', playerId);
+      updateScoreboard(localPlayer, { totalPoints: 0, tilesCompleted: 0 }, currentChallenges.length);
     }
 
-    // Profile modal
+    function showToast(playerName, challenge, isLine, isGrandChelem) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      if (isGrandChelem) toast.style.borderColor = 'var(--gold)';
+      toast.innerHTML = `
+        <div style="font-size:26px;">${isGrandChelem ? '👑' : isLine ? '⭐' : (challenge?.icon || '🎯')}</div>
+        <div>
+          <div style="font-size:0.7rem;font-weight:900;color:var(--lime);letter-spacing:0.06em;text-transform:uppercase;">
+            ${isGrandChelem ? 'GRAND CHELEM DÉCROCHÉ !' : isLine ? 'BINGO ! LIGNE COMPLÈTE' : 'ACTION VALIDÉE'}
+          </div>
+          <div style="font-weight:800;color:#fff;font-size:0.9rem;">${challenge?.title || 'Défi'}</div>
+          <div style="font-size:0.75rem;color:#94a3b8;">${playerName} · +${challenge?.points || 1} pts</div>
+        </div>
+      `;
+      container.appendChild(toast);
+      requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.add('in')));
+      setTimeout(() => { toast.classList.remove('in'); toast.classList.add('out'); setTimeout(() => toast.remove(), 350); }, 3500);
+    }
+
+    // Gestion du Profil
     function openModal(id) {
-      const modal = document.getElementById(id);
-      modal.classList.add('open');
-      if (id === 'modal-profile' && state) {
-        const p = state.players[playerId];
-        if (!p) return;
-        document.getElementById('prof-name').value = p.name;
-        document.getElementById('prof-club').value = p.club;
-        document.getElementById('prof-avatar').value = p.avatar;
-        const prev = document.getElementById('prof-avatar-preview');
-        if (prev) prev.innerHTML = renderAvatar(p.avatar);
-        document.getElementById('prof-pin').value = '';
-        document.querySelectorAll('#prof-emoji-picker .emoji-opt').forEach(x => x.classList.toggle('selected', x.dataset.v === p.avatar));
+      const m = document.getElementById(id);
+      if (m) m.classList.add('open');
+      if (id === 'modal-profile') {
+        const u = window.SocialHub?.getCurrentUser() || localPlayer;
+        document.getElementById('prof-name').value = u.name || '';
+        document.getElementById('prof-club').value = u.club || '';
+        document.getElementById('prof-avatar').value = u.avatar || '⚽';
+        document.getElementById('prof-avatar-preview').innerHTML = renderAvatar(u.avatar || '⚽');
       }
     }
-    function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+    function closeModal(id) {
+      const m = document.getElementById(id);
+      if (m) m.classList.remove('open');
+    }
 
     document.querySelectorAll('.modal-overlay').forEach(el => {
-      el.addEventListener('click', e => { if (e.target===el) el.classList.remove('open'); });
+      el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
     });
 
     setupEmojiPicker('prof-emoji-picker', 'prof-avatar', 'prof-avatar-preview');
 
     async function submitProfile(e) {
       e.preventDefault();
-      await fetch('/api/profile', {
-        method: 'POST',
-        headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({
-          playerId,
-          name: document.getElementById('prof-name').value.trim(),
-          club: document.getElementById('prof-club').value.trim(),
-          avatar: document.getElementById('prof-avatar').value,
-          pin: document.getElementById('prof-pin').value
-        })
-      });
+      const name = document.getElementById('prof-name').value.trim();
+      const club = document.getElementById('prof-club').value.trim();
+      const avatar = document.getElementById('prof-avatar').value.trim() || '⚽';
+
+      localPlayer.name = name;
+      localPlayer.club = club;
+      localPlayer.avatar = avatar;
+
+      if (window.SocialHub) SocialHub.setCurrentUser(localPlayer);
+
+      updateScoreboard(localPlayer, { totalPoints: parseInt(document.getElementById('banner-score').textContent) || 0, tilesCompleted: 0 }, currentChallenges.length);
+
+      try {
+        await fetch('/api/profile', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ playerId, name, club, avatar })
+        });
+      } catch (err) {}
+
       closeModal('modal-profile');
+      showSuccessToast('Profil mis à jour !', `${name} (${club})`);
     }
 
-    // Sound toggle
+    // Toggle son
     document.getElementById('btn-sound').addEventListener('click', () => {
       const m = window.soundFx?.toggleMute?.();
       document.getElementById('btn-sound').textContent = m ? '🔇' : '🔊';
     });
 
-    // Toast
-    function showToast(playerName, challenge, isLine, isGrandChelem) {
-      const container = document.getElementById('toast-container');
-      const toast = document.createElement('div');
-      let cls = 'toast toast-check';
-      if (isGrandChelem) cls = 'toast toast-grand';
-      else if (isLine) cls = 'toast toast-bingo';
-      toast.className = cls;
-      toast.innerHTML = `
-        <div class="toast-big-icon">${isGrandChelem?'🏆':isLine?'⭐':(challenge?.icon||'🎯')}</div>
-        <div>
-          <div class="toast-label">${isGrandChelem?'👑 GRAND CHELEM !':isLine?'⭐ BINGO ! LIGNE':'DÉFI VALIDÉ'}</div>
-          <div class="toast-title">${challenge?.title||'?'}</div>
-          <div class="toast-sub">${playerName} · +${challenge?.points||0} pts${isLine?' + bonus ligne':''}</div>
-        </div>
-      `;
-      container.appendChild(toast);
-      requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.add('in')));
-      setTimeout(() => { toast.classList.remove('in'); toast.classList.add('out'); setTimeout(() => toast.remove(), 350); }, 4000);
-    }
-
-    // Lance l'initialisation de salle si applicable
+    // Lancement
     if (isRoomMode) {
       initRoom();
     }
