@@ -200,8 +200,31 @@
 
       <form onsubmit="handleAiGenerate(event)" style="margin-top:18px;">
         <div class="form-group">
-          <label class="form-label">Thème ou Contexte de la Grille *</label>
-          <input type="text" class="form-input" id="ai-theme-input" placeholder="Ex: Choc Ligue des Champions, Soirée PSG vs Real, Match de D2..." required style="font-weight:700;">
+          <label class="form-label">Type de Jeu / Support *</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+            <button type="button" class="btn btn-sm btn-mode-select active" id="btn-mode-fifa" onclick="setAiGameMode('fifa')" style="font-weight:800;border:1px solid var(--lime);background:rgba(187,242,70,0.12);color:#ffffff;text-align:left;padding:10px 12px;border-radius:10px;">
+              🎮 Carrière EA FC / FIFA
+              <div style="font-size:0.68rem;color:#94a3b8;font-weight:400;margin-top:2px;">Plans dev, CA, pépites 5★</div>
+            </button>
+            <button type="button" class="btn btn-sm btn-mode-select" id="btn-mode-fm" onclick="setAiGameMode('fm')" style="font-weight:800;border:1px solid #28374d;background:#141c28;color:#ffffff;text-align:left;padding:10px 12px;border-radius:10px;">
+              📋 Football Manager (FM)
+              <div style="font-size:0.68rem;color:#94a3b8;font-weight:400;margin-top:2px;">xG, causeries, vestiaire, FM'd</div>
+            </button>
+            <button type="button" class="btn btn-sm btn-mode-select" id="btn-mode-live" onclick="setAiGameMode('live')" style="font-weight:800;border:1px solid #28374d;background:#141c28;color:#ffffff;text-align:left;padding:10px 12px;border-radius:10px;">
+              ⚽ Match en Direct 90'
+              <div style="font-size:0.68rem;color:#94a3b8;font-weight:400;margin-top:2px;">Match télé, VAR, cartons</div>
+            </button>
+            <button type="button" class="btn btn-sm btn-mode-select" id="btn-mode-mixed" onclick="setAiGameMode('mixed')" style="font-weight:800;border:1px solid #28374d;background:#141c28;color:#ffffff;text-align:left;padding:10px 12px;border-radius:10px;">
+              🌟 Mix Universel
+              <div style="font-size:0.68rem;color:#94a3b8;font-weight:400;margin-top:2px;">Défis équilibrés & variés</div>
+            </button>
+          </div>
+          <input type="hidden" id="ai-game-mode" value="fifa">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Titre ou Contexte spécifique (Optionnel)</label>
+          <input type="text" class="form-input" id="ai-theme-input" value="Carrière Manager Saison 1" placeholder="Ex: Road to Glory D4 anglaise, Pépites de l'Académie..." style="font-weight:700;">
         </div>
 
         <div class="form-row">
@@ -225,7 +248,7 @@
         </div>
 
         <div id="ai-loading" style="display:none;text-align:center;padding:16px;color:var(--lime);font-weight:800;font-size:0.9rem;">
-          ⚙️ Génération de 25 défis par l'IA en cours…
+          ⚙️ Génération des défis par l'IA en cours…
         </div>
 
         <div class="form-actions" style="margin-top:20px;">
@@ -330,11 +353,35 @@
       document.getElementById('modal-ai-generator').classList.remove('open');
     }
 
+    function setAiGameMode(mode) {
+      document.getElementById('ai-game-mode').value = mode;
+      document.querySelectorAll('.btn-mode-select').forEach(b => {
+        b.style.borderColor = '#28374d';
+        b.style.background = '#141c28';
+      });
+      const activeBtn = document.getElementById(`btn-mode-${mode}`);
+      if (activeBtn) {
+        activeBtn.style.borderColor = 'var(--lime)';
+        activeBtn.style.background = 'rgba(187,242,70,0.12)';
+      }
+      const titleInput = document.getElementById('ai-theme-input');
+      if (mode === 'fifa') {
+        titleInput.placeholder = "Ex: Carrière EA FC Real Madrid, Objectifs CA, Pépites 5★...";
+      } else if (mode === 'fm') {
+        titleInput.placeholder = "Ex: Road to Glory D5 anglaise, Wonderkids Sud-Américains...";
+      } else if (mode === 'live') {
+        titleInput.placeholder = "Ex: Choc Ligue des Champions, Soirée PSG vs Real...";
+      } else {
+        titleInput.placeholder = "Ex: Défis variés et équilibrés...";
+      }
+    }
+
     async function handleAiGenerate(e) {
       e.preventDefault();
       const theme = document.getElementById('ai-theme-input').value.trim();
       const size = parseInt(document.getElementById('ai-size-input').value) || 5;
       const style = document.getElementById('ai-style-input').value;
+      const gameMode = document.getElementById('ai-game-mode').value;
 
       document.getElementById('ai-loading').style.display = 'block';
 
@@ -342,7 +389,7 @@
         const res = await fetch('/api/ai/generate-grid', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ theme, size, difficulty: style })
+          body: JSON.stringify({ theme, size, difficulty: style, gameMode })
         });
         const data = await res.json();
         document.getElementById('ai-loading').style.display = 'none';

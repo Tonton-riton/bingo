@@ -284,18 +284,35 @@ function bootstrapDefaultGrid() {
     challenges: LIVE_MATCH_CHALLENGES
   };
 
-  // 2. Grille Carrière Football Manager
-  const careerGridId = 'grid_default_s1';
-  gameState.grids[careerGridId] = {
-    id: careerGridId,
-    name: '📋 Carrière Football Manager',
+  // 2. Grille Carrière Manager EA FC / FIFA
+  const fifaGridId = 'grid_fifa_career';
+  const fifaChallenges = (aiGenerator.FIFA_CAREER_CHALLENGES && aiGenerator.FIFA_CAREER_CHALLENGES.length === 25)
+    ? aiGenerator.FIFA_CAREER_CHALLENGES.map((c, idx) => ({ id: idx, icon: c.icon, title: c.title, description: c.description, points: c.points, constraint: c.constraint, category: c.category }))
+    : LIVE_MATCH_CHALLENGES;
+  gameState.grids[fifaGridId] = {
+    id: fifaGridId,
+    name: '🎮 Carrière Manager EA FC / FIFA',
     size: 5,
-    description: 'Calibrée pour vos saisons en club : éclosion de pépites, transferts, tactiques et trophées.',
-    badge: 'MODE SAISON',
-    challenges: (rawChallenges && rawChallenges.length > 0) ? rawChallenges : LIVE_MATCH_CHALLENGES
+    description: 'Objectifs CA, pépites 5★, tranchant 100%, plans de développement, simulation et scénarios.',
+    badge: 'EA FC / FIFA',
+    challenges: fifaChallenges
   };
 
-  // 3. Grille Derby Clasico
+  // 3. Grille Carrière Football Manager (FM)
+  const fmGridId = 'grid_fm_career';
+  const fmChallenges = (aiGenerator.FOOTBALL_MANAGER_CHALLENGES && aiGenerator.FOOTBALL_MANAGER_CHALLENGES.length === 25)
+    ? aiGenerator.FOOTBALL_MANAGER_CHALLENGES.map((c, idx) => ({ id: idx, icon: c.icon, title: c.title, description: c.description, points: c.points, constraint: c.constraint, category: c.category }))
+    : (rawChallenges && rawChallenges.length >= 25 ? rawChallenges : LIVE_MATCH_CHALLENGES);
+  gameState.grids[fmGridId] = {
+    id: fmGridId,
+    name: '📋 Carrière Football Manager (FM)',
+    size: 5,
+    description: 'xG, causeries motivantes, pépites sud-américaines, gestion du vestiaire et pièges du FM\'d.',
+    badge: 'FOOTBALL MANAGER',
+    challenges: fmChallenges
+  };
+
+  // 4. Grille Derby Clasico
   const derbyGridId = 'grid_derby';
   gameState.grids[derbyGridId] = {
     id: derbyGridId,
@@ -306,7 +323,7 @@ function bootstrapDefaultGrid() {
     challenges: DERBY_CHALLENGES
   };
 
-  // 4. Grille Sprint Express 3x3
+  // 5. Grille Sprint Express 3x3
   const sprintGridId = 'grid_sprint_3x3';
   gameState.grids[sprintGridId] = {
     id: sprintGridId,
@@ -318,7 +335,7 @@ function bootstrapDefaultGrid() {
   };
 
   if (!gameState.activeGridId || !gameState.grids[gameState.activeGridId]) {
-    gameState.activeGridId = liveGridId;
+    gameState.activeGridId = fifaGridId;
   }
   saveState();
   console.log('[BINGO] Preset grids verified (active: ' + gameState.activeGridId + ', total grids: ' + Object.keys(gameState.grids).length + ').');

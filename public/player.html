@@ -321,8 +321,31 @@
 
       <form onsubmit="handleCreateBingoInRoom(event)" style="margin-top:16px;">
         <div class="form-group">
-          <label class="form-label">Thème du Match ou de la Grille *</label>
-          <input type="text" class="form-input" id="in-room-ai-theme" placeholder="Ex: Choc PSG vs OM, Fautes & Tensions, Gaffes de gardiens..." required style="font-weight:700;">
+          <label class="form-label">Type de Jeu / Support *</label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+            <button type="button" class="btn btn-sm btn-in-room-mode active" id="btn-inroom-mode-fifa" onclick="setInRoomAiGameMode('fifa')" style="font-weight:800;border:1px solid var(--lime);background:rgba(187,242,70,0.12);color:#ffffff;text-align:left;padding:8px 10px;border-radius:8px;">
+              🎮 Carrière EA FC / FIFA
+              <div style="font-size:0.65rem;color:#94a3b8;font-weight:400;margin-top:1px;">Plans dev, CA, pépites 5★</div>
+            </button>
+            <button type="button" class="btn btn-sm btn-in-room-mode" id="btn-inroom-mode-fm" onclick="setInRoomAiGameMode('fm')" style="font-weight:800;border:1px solid #28374d;background:#141c28;color:#ffffff;text-align:left;padding:8px 10px;border-radius:8px;">
+              📋 Football Manager (FM)
+              <div style="font-size:0.65rem;color:#94a3b8;font-weight:400;margin-top:1px;">xG, causeries, FM'd</div>
+            </button>
+            <button type="button" class="btn btn-sm btn-in-room-mode" id="btn-inroom-mode-live" onclick="setInRoomAiGameMode('live')" style="font-weight:800;border:1px solid #28374d;background:#141c28;color:#ffffff;text-align:left;padding:8px 10px;border-radius:8px;">
+              ⚽ Match en Direct 90'
+              <div style="font-size:0.65rem;color:#94a3b8;font-weight:400;margin-top:1px;">Match télé, VAR, cartons</div>
+            </button>
+            <button type="button" class="btn btn-sm btn-in-room-mode" id="btn-inroom-mode-mixed" onclick="setInRoomAiGameMode('mixed')" style="font-weight:800;border:1px solid #28374d;background:#141c28;color:#ffffff;text-align:left;padding:8px 10px;border-radius:8px;">
+              🌟 Mixte & Varié
+              <div style="font-size:0.65rem;color:#94a3b8;font-weight:400;margin-top:1px;">Défis universels équilibrés</div>
+            </button>
+          </div>
+          <input type="hidden" id="in-room-ai-game-mode" value="fifa">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Titre ou Contexte spécifique (Optionnel)</label>
+          <input type="text" class="form-input" id="in-room-ai-theme" value="Carrière Manager" placeholder="Ex: Road to Glory, Pépites de l'Académie, Grosse saison..." style="font-weight:700;">
         </div>
 
         <div class="form-row">
@@ -979,11 +1002,35 @@
       document.getElementById('btn-submit-in-room-ai').disabled = false;
     }
 
+    function setInRoomAiGameMode(mode) {
+      document.getElementById('in-room-ai-game-mode').value = mode;
+      document.querySelectorAll('.btn-in-room-mode').forEach(b => {
+        b.style.borderColor = '#28374d';
+        b.style.background = '#141c28';
+      });
+      const activeBtn = document.getElementById(`btn-inroom-mode-${mode}`);
+      if (activeBtn) {
+        activeBtn.style.borderColor = 'var(--lime)';
+        activeBtn.style.background = 'rgba(187,242,70,0.12)';
+      }
+      const titleInput = document.getElementById('in-room-ai-theme');
+      if (mode === 'fifa') {
+        titleInput.placeholder = "Ex: Carrière EA FC Real Madrid, Objectifs CA, Pépites 5★...";
+      } else if (mode === 'fm') {
+        titleInput.placeholder = "Ex: Road to Glory D5 anglaise, Wonderkids Sud-Américains...";
+      } else if (mode === 'live') {
+        titleInput.placeholder = "Ex: Choc Ligue des Champions, Soirée PSG vs Real...";
+      } else {
+        titleInput.placeholder = "Ex: Défis variés et équilibrés...";
+      }
+    }
+
     async function handleCreateBingoInRoom(e) {
       e.preventDefault();
       const theme = document.getElementById('in-room-ai-theme').value.trim();
       const size = parseInt(document.getElementById('in-room-ai-size').value) || 5;
       const style = document.getElementById('in-room-ai-style').value;
+      const gameMode = document.getElementById('in-room-ai-game-mode').value;
 
       document.getElementById('in-room-ai-loading').style.display = 'block';
       const btn = document.getElementById('btn-submit-in-room-ai');
@@ -997,6 +1044,7 @@
             theme,
             size,
             difficulty: style,
+            gameMode,
             roomCode: isRoomMode ? roomCode : null
           })
         });
