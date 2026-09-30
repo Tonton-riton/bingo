@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bingo Foot — Site web</title>
+  <title>Bingo Foot — Le Bingo Football en Direct</title>
   <link rel="stylesheet" href="/css/style.css">
   <script src="/socket.io/socket.io.js"></script>
   <script src="/js/avatar.js"></script>
@@ -12,7 +12,7 @@
 <body>
 
   <!-- ==========================================
-       HEADER (FIGMA BINGO FOOT NAVIGATION)
+       HEADER
        ========================================== -->
   <header class="app-header">
     <div class="header-left">
@@ -36,30 +36,27 @@
 
       <button class="btn-rejoindre" onclick="SocialHub.openJoinRoomModal()" title="Rejoindre avec un code de partie">
         <span>Rejoindre</span>
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
           <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
           <polyline points="10 17 15 12 10 7"></polyline>
           <line x1="15" y1="12" x2="3" y2="12"></line>
         </svg>
       </button>
 
-      <button class="btn-creer-partie" onclick="SocialHub.openCreateRoomModal()" title="Créer une partie privée ou personnalisée">
+      <button class="btn-creer-partie" onclick="SocialHub.openCreateRoomModal()">
         Créer une partie +
       </button>
     </div>
   </header>
 
-  <main class="container" style="max-width:1240px;padding-top:20px;">
+  <main class="container" style="max-width:1280px;padding-top:0;">
 
     <!-- ==========================================
-         HERO SECTION (FIGMA)
+         HERO SECTION
          ========================================== -->
     <section class="figma-hero">
       <div class="figma-hero-left">
-        <span class="section-dash"></span>
-        <div style="font-size:0.8rem;font-weight:900;color:var(--lime);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">
-          LE BINGO FOOTBALL EN DIRECT
-        </div>
+        <div class="section-label">Le Bingo Football en Direct</div>
         <h1 class="figma-hero-h1">
           CHAQUE ACTION<br>
           PEUT FAIRE <span class="lime">BINGO.</span>
@@ -68,86 +65,86 @@
           Validez vos grilles de 25 cases en live, défiez vos amis et suivez chaque passe décisive, poteau ou carton rouge pendant que vous vibrez sur vos matchs.
         </p>
 
-        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:28px;">
-          <button onclick="SocialHub.openJoinRoomModal()" class="btn btn-lime" style="padding:14px 24px;font-size:0.95rem;font-weight:900;border-radius:8px;cursor:pointer;">
-            🔑 REJOINDRE AVEC CODE ➔
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:32px;">
+          <button onclick="SocialHub.openJoinRoomModal()" class="btn btn-lime" style="padding:14px 26px;font-size:0.9rem;font-weight:900;letter-spacing:0.05em;">
+            REJOINDRE AVEC CODE →
           </button>
-          <button onclick="SocialHub.openCreateRoomModal()" class="btn btn-secondary-dark" style="padding:14px 22px;font-size:0.95rem;font-weight:800;border-radius:8px;cursor:pointer;">
-            🎮 CRÉER SALLE PRIVÉE
+          <button onclick="SocialHub.openCreateRoomModal()" class="btn btn-secondary-dark" style="padding:14px 22px;font-size:0.9rem;font-weight:700;">
+            CRÉER SALLE PRIVÉE
           </button>
-          <a href="/leaderboard.html" class="btn btn-secondary-dark" style="padding:14px 20px;font-size:0.95rem;font-weight:800;border-radius:8px;color:var(--gold);">
+          <a href="/leaderboard.html" class="btn btn-secondary-dark" style="padding:14px 20px;font-size:0.9rem;color:var(--gold);font-weight:700;">
             🏆 CLASSEMENT
           </a>
         </div>
 
-        <div style="display:flex;gap:20px;flex-wrap:wrap;font-size:0.82rem;color:#71717a;font-weight:600;">
+        <div style="display:flex;gap:24px;flex-wrap:wrap;font-size:0.8rem;color:var(--muted2);font-weight:600;">
           <span style="display:flex;align-items:center;gap:6px;"><strong style="color:var(--lime);">✓</strong> Sans inscription obligatoire</span>
           <span style="display:flex;align-items:center;gap:6px;"><strong style="color:var(--lime);">✓</strong> Synchro temps réel</span>
           <span style="display:flex;align-items:center;gap:6px;"><strong style="color:var(--lime);">✓</strong> Multi-joueurs & OBS</span>
         </div>
       </div>
 
-      <!-- MOCKUP PHONE / TABLETTE DU HERO -->
+      <!-- MOCKUP GRILLE DU HERO -->
       <div class="figma-hero-right" style="display:flex;justify-content:center;">
-        <div class="figma-hero-phone" style="width:100%;max-width:440px;">
-          <!-- Header du phone -->
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;border-bottom:1px solid #1a222c;padding-bottom:10px;">
+        <div class="figma-hero-phone" style="width:100%;max-width:420px;">
+          <!-- Header du mock -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:12px;">
             <div style="display:flex;align-items:center;gap:8px;">
-              <span style="font-size:18px;">⚽</span>
-              <span style="font-weight:900;font-size:0.9rem;color:#fff;">GRILLE EN DIRECT</span>
+              <span style="font-size:16px;">⚽</span>
+              <span style="font-weight:900;font-size:0.85rem;color:#fff;letter-spacing:0.04em;">GRILLE EN DIRECT</span>
             </div>
-            <span class="live-dot" style="background:rgba(187,242,70,0.15);color:var(--lime);border-color:var(--lime);"><span class="pulse" style="background:var(--lime);box-shadow:0 0 8px var(--lime);"></span> LIVE 90'</span>
+            <span class="live-dot"><span class="pulse"></span> LIVE 90'</span>
           </div>
 
-          <!-- Mini grille du phone -->
+          <!-- Mini grille 3×2 -->
           <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:8px;">
-            <div class="tile read-only" style="min-height:85px;padding:8px;background:#12171f;">
-              <div style="font-size:1.1rem;margin-bottom:2px;">🧤</div>
-              <div style="font-size:0.75rem;font-weight:800;color:#fff;line-height:1.2;">ARRÊT DU GARDIEN</div>
-              <div style="font-size:0.65rem;color:#71717a;margin-top:auto;">+1 pt</div>
+            <div class="tile read-only" style="min-height:80px;padding:8px;">
+              <div style="font-size:1rem;margin-bottom:3px;">🧤</div>
+              <div style="font-size:0.72rem;font-weight:800;color:#fff;line-height:1.2;">ARRÊT DU GARDIEN</div>
+              <div style="font-size:0.62rem;color:var(--muted);margin-top:auto;">+1 pt</div>
             </div>
 
-            <div class="tile read-only" style="min-height:85px;padding:8px;background:#12171f;">
-              <div style="font-size:1.1rem;margin-bottom:2px;">🚩</div>
-              <div style="font-size:0.75rem;font-weight:800;color:#fff;line-height:1.2;">HORS-JEU SIFFLÉ</div>
-              <div style="font-size:0.65rem;color:#71717a;margin-top:auto;">+1 pt</div>
+            <div class="tile read-only" style="min-height:80px;padding:8px;">
+              <div style="font-size:1rem;margin-bottom:3px;">🚩</div>
+              <div style="font-size:0.72rem;font-weight:800;color:#fff;line-height:1.2;">HORS-JEU SIFFLÉ</div>
+              <div style="font-size:0.62rem;color:var(--muted);margin-top:auto;">+1 pt</div>
             </div>
 
-            <div class="tile read-only" style="min-height:85px;padding:8px;background:#12171f;">
-              <div style="font-size:1.1rem;margin-bottom:2px;">💥</div>
-              <div style="font-size:0.75rem;font-weight:800;color:#fff;line-height:1.2;">POTEAU OU BARRE</div>
-              <div style="font-size:0.65rem;color:#71717a;margin-top:auto;">+2 pts</div>
+            <div class="tile read-only" style="min-height:80px;padding:8px;">
+              <div style="font-size:1rem;margin-bottom:3px;">💥</div>
+              <div style="font-size:0.72rem;font-weight:800;color:#fff;line-height:1.2;">POTEAU OU BARRE</div>
+              <div style="font-size:0.62rem;color:var(--muted);margin-top:auto;">+2 pts</div>
             </div>
 
-            <!-- TUILE VALIDÉE EN NEON LIME ! -->
-            <div class="tile read-only" style="min-height:85px;padding:8px;background:var(--lime);border-color:var(--lime);box-shadow:0 0 20px rgba(187,242,70,0.4);">
+            <!-- TUILE VALIDÉE EN NEON LIME -->
+            <div class="tile read-only" style="min-height:80px;padding:8px;background:var(--lime);border-color:var(--lime);box-shadow:0 0 22px rgba(182,240,0,0.4);">
               <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-                <span style="font-size:1.1rem;">🎯</span>
-                <span style="font-size:0.65rem;font-weight:900;background:#000;color:var(--lime);padding:1px 5px;border-radius:3px;">VALIDÉ</span>
+                <span style="font-size:1rem;">🎯</span>
+                <span style="font-size:0.6rem;font-weight:900;background:#000;color:var(--lime);padding:1px 5px;border-radius:3px;">VALIDÉ</span>
               </div>
-              <div style="font-size:0.75rem;font-weight:900;color:#000;line-height:1.2;margin-top:4px;">BUT EN LUCARNE</div>
-              <div style="font-size:0.65rem;font-weight:900;color:#000;margin-top:auto;">+3 pts ✓</div>
+              <div style="font-size:0.72rem;font-weight:900;color:#000;line-height:1.2;margin-top:4px;">BUT EN LUCARNE</div>
+              <div style="font-size:0.62rem;font-weight:900;color:#000;margin-top:auto;">+3 pts ✓</div>
             </div>
 
-            <div class="tile read-only" style="min-height:85px;padding:8px;background:#12171f;">
-              <div style="font-size:1.1rem;margin-bottom:2px;">📺</div>
-              <div style="font-size:0.75rem;font-weight:800;color:#fff;line-height:1.2;">VAR CONSULTÉE</div>
-              <div style="font-size:0.65rem;color:#71717a;margin-top:auto;">+2 pts</div>
+            <div class="tile read-only" style="min-height:80px;padding:8px;">
+              <div style="font-size:1rem;margin-bottom:3px;">📺</div>
+              <div style="font-size:0.72rem;font-weight:800;color:#fff;line-height:1.2;">VAR CONSULTÉE</div>
+              <div style="font-size:0.62rem;color:var(--muted);margin-top:auto;">+2 pts</div>
             </div>
 
-            <div class="tile read-only" style="min-height:85px;padding:8px;background:#12171f;">
-              <div style="font-size:1.1rem;margin-bottom:2px;">🟥</div>
-              <div style="font-size:0.75rem;font-weight:800;color:#fff;line-height:1.2;">CARTON ROUGE</div>
-              <div style="font-size:0.65rem;color:#71717a;margin-top:auto;">+3 pts</div>
+            <div class="tile read-only" style="min-height:80px;padding:8px;">
+              <div style="font-size:1rem;margin-bottom:3px;">🟥</div>
+              <div style="font-size:0.72rem;font-weight:800;color:#fff;line-height:1.2;">CARTON ROUGE</div>
+              <div style="font-size:0.62rem;color:var(--muted);margin-top:auto;">+3 pts</div>
             </div>
           </div>
 
           <!-- Notification toast flottante -->
           <div class="figma-hero-toast">
-            <span style="font-size:1.3rem;">🔥</span>
+            <span style="font-size:1.2rem;">🔥</span>
             <div>
-              <div style="color:var(--lime);font-size:0.72rem;font-weight:900;text-transform:uppercase;">DÉFI VALIDÉ EN LIVE</div>
-              <div style="font-size:0.8rem;color:#ffffff;">Alexandre M. a coché <strong>But en lucarne</strong> (+3 pts)</div>
+              <div style="color:var(--lime);font-size:0.68rem;font-weight:900;text-transform:uppercase;letter-spacing:0.06em;">DÉFI VALIDÉ EN LIVE</div>
+              <div style="font-size:0.78rem;color:#fff;">Alexandre M. a coché <strong>But en lucarne</strong> (+3 pts)</div>
             </div>
           </div>
         </div>
@@ -157,7 +154,7 @@
     <!-- ==========================================
          SECTION 1 : UN BINGO POUR CHAQUE SOIRÉE
          ========================================== -->
-    <section id="soirees" style="padding-top:40px;">
+    <section id="soirees" style="padding-top:56px;">
       <span class="section-dash"></span>
       <h2 class="section-title-figma">UN BINGO POUR CHAQUE SOIRÉE.</h2>
       <p class="section-subtitle-figma">Des formats pré-configurés à lancer en 10 secondes selon vos envies.</p>
@@ -165,55 +162,55 @@
       <div class="figma-card-trio">
         <!-- CARTE 1 : 1v1 -->
         <div class="figma-soiree-card">
-          <div class="figma-soiree-banner" style="background:radial-gradient(circle at center, #1b2716 0%, #0d1217 80%);">
+          <div class="figma-soiree-banner" style="background:radial-gradient(circle at center, #1a2c16 0%, var(--bg-card) 80%);">
             <div style="text-align:center;">
-              <div style="font-size:42px;">⚔️</div>
-              <div style="font-size:0.72rem;font-weight:900;color:var(--lime);letter-spacing:0.1em;text-transform:uppercase;margin-top:4px;">DUEL FACE-À-FACE</div>
+              <div style="font-size:40px;">⚔️</div>
+              <div style="font-size:0.68rem;font-weight:900;color:var(--lime);letter-spacing:0.12em;text-transform:uppercase;margin-top:6px;">DUEL FACE-À-FACE</div>
             </div>
           </div>
           <div class="figma-soiree-body">
-            <div style="display:flex;gap:6px;margin-bottom:8px;">
-              <span class="figma-mode-badge" style="color:var(--lime);border-color:rgba(187,242,70,0.3);background:rgba(187,242,70,0.1);">1v1 STREAM</span>
+            <div style="display:flex;gap:6px;margin-bottom:10px;">
+              <span class="figma-mode-badge" style="color:var(--lime);border-color:rgba(182,240,0,0.25);background:rgba(182,240,0,0.08);">1v1 STREAM</span>
             </div>
             <div class="figma-soiree-title">DUEL 1V1 EN DIRECT</div>
             <p class="figma-soiree-desc">Affrontez un rival en stream. Le premier à compléter une ligne ou accumuler le plus de points l'emporte avec alertes en temps réel.</p>
-            <a href="/player.html" class="btn btn-secondary-dark" style="margin-top:auto;width:100%;justify-content:center;">Lancer un duel ➔</a>
+            <a href="/player.html" class="btn btn-secondary-dark" style="margin-top:auto;width:100%;justify-content:center;">Lancer un duel →</a>
           </div>
         </div>
 
         <!-- CARTE 2 : FOOTBALL MANAGER -->
         <div class="figma-soiree-card">
-          <div class="figma-soiree-banner" style="background:radial-gradient(circle at center, #1b2535 0%, #0d1217 80%);">
+          <div class="figma-soiree-banner" style="background:radial-gradient(circle at center, #162030 0%, var(--bg-card) 80%);">
             <div style="text-align:center;">
-              <div style="font-size:42px;">📋</div>
-              <div style="font-size:0.72rem;font-weight:900;color:#60a5fa;letter-spacing:0.1em;text-transform:uppercase;margin-top:4px;">MODE CARRIÈRE LONGE DURÉE</div>
+              <div style="font-size:40px;">📋</div>
+              <div style="font-size:0.68rem;font-weight:900;color:#60a5fa;letter-spacing:0.12em;text-transform:uppercase;margin-top:6px;">MODE CARRIÈRE LONGUE DURÉE</div>
             </div>
           </div>
           <div class="figma-soiree-body">
-            <div style="display:flex;gap:6px;margin-bottom:8px;">
+            <div style="display:flex;gap:6px;margin-bottom:10px;">
               <span class="figma-mode-badge">CARRIÈRE MANAGER</span>
             </div>
             <div class="figma-soiree-title">FOOTBALL MANAGER</div>
             <p class="figma-soiree-desc">Une grille calibrée pour vos saisons en club : éclosion de pépites de l'académie, transferts galactiques, trophées majeurs et tactiques.</p>
-            <a href="/admin.html" class="btn btn-secondary-dark" style="margin-top:auto;width:100%;justify-content:center;">Mode Carrière ➔</a>
+            <a href="/admin.html" class="btn btn-secondary-dark" style="margin-top:auto;width:100%;justify-content:center;">Mode Carrière →</a>
           </div>
         </div>
 
         <!-- CARTE 3 : DERBY MATCH -->
         <div class="figma-soiree-card">
-          <div class="figma-soiree-banner" style="background:radial-gradient(circle at center, #2e1e18 0%, #0d1217 80%);">
+          <div class="figma-soiree-banner" style="background:radial-gradient(circle at center, #2a1e14 0%, var(--bg-card) 80%);">
             <div style="text-align:center;">
-              <div style="font-size:42px;">🏟️</div>
-              <div style="font-size:0.72rem;font-weight:900;color:#f59e0b;letter-spacing:0.1em;text-transform:uppercase;margin-top:4px;">SOIR DE GRAND MATCH</div>
+              <div style="font-size:40px;">🏟️</div>
+              <div style="font-size:0.68rem;font-weight:900;color:#f59e0b;letter-spacing:0.12em;text-transform:uppercase;margin-top:6px;">SOIR DE GRAND MATCH</div>
             </div>
           </div>
           <div class="figma-soiree-body">
-            <div style="display:flex;gap:6px;margin-bottom:8px;">
+            <div style="display:flex;gap:6px;margin-bottom:10px;">
               <span class="figma-mode-badge">MULTI-JOUEURS</span>
             </div>
             <div class="figma-soiree-title">DERBY MATCH</div>
             <p class="figma-soiree-desc">Pour les grands soirs de Ligue des Champions, Clasico ou derby entre potes sur le canapé avec vue spectateur live sur le grand écran.</p>
-            <a href="/spectator.html" class="btn btn-secondary-dark" style="margin-top:auto;width:100%;justify-content:center;">Écran Spectateur ➔</a>
+            <a href="/spectator.html" class="btn btn-secondary-dark" style="margin-top:auto;width:100%;justify-content:center;">Écran Spectateur →</a>
           </div>
         </div>
       </div>
@@ -222,49 +219,49 @@
     <!-- ==========================================
          SECTION 2 : DES CASES QUI RACONTENT VOS MATCHS
          ========================================== -->
-    <section id="grille-live" style="padding-top:20px;margin-bottom:80px;">
+    <section id="grille-live" style="padding-top:0;margin-bottom:80px;">
       <span class="section-dash"></span>
       <h2 class="section-title-figma">DES CASES QUI RACONTENT VRAIMENT VOS MATCHS.</h2>
       <p class="section-subtitle-figma">Une grille vivante qui réagit instantanément à chaque action de jeu.</p>
 
       <div style="display:grid;grid-template-columns:1.2fr 0.8fr;gap:24px;align-items:start;">
         <!-- GRILLE INTERACTIVE -->
-        <div style="background:#0d1116;border:1px solid #1a232c;border-radius:14px;padding:20px;">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-            <div style="font-family:var(--font-display);font-size:1.4rem;color:#fff;">GRILLE OFFICIELLE EN COURS</div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-xl);padding:22px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+            <div style="font-family:var(--font-display);font-size:1.35rem;color:#fff;letter-spacing:0.04em;">GRILLE OFFICIELLE EN COURS</div>
             <span class="live-dot"><span class="pulse"></span> 25 DÉFIS</span>
           </div>
 
-          <div class="bingo-grid" id="home-live-grid" style="grid-template-columns:repeat(5, minmax(0, 1fr));gap:8px;">
+          <div class="bingo-grid" id="home-live-grid" style="grid-template-columns:repeat(5, minmax(0, 1fr));gap:7px;">
             <!-- Rendu interactif via JS -->
           </div>
-          <div style="margin-top:14px;font-size:0.75rem;color:#71717a;text-align:center;">
+          <div style="margin-top:12px;font-size:0.73rem;color:var(--muted2);text-align:center;">
             💡 Cliquez sur une case pour la tester en direct.
           </div>
         </div>
 
         <!-- SCORE CARD EN DIRECT -->
-        <div style="background:#0d1116;border:1px solid #1a232c;border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:18px;">
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-xl);padding:24px;display:flex;flex-direction:column;gap:20px;">
           <div>
-            <div style="font-size:0.75rem;font-weight:900;color:#94a3b8;letter-spacing:0.08em;text-transform:uppercase;">SCORE DU LEADER</div>
-            <div style="display:flex;align-items:baseline;gap:10px;margin-top:4px;">
-              <span style="font-family:var(--font-display);font-size:3.8rem;color:var(--lime);line-height:1;" id="home-lead-score">240</span>
-              <span style="font-size:1.1rem;font-weight:800;color:#ffffff;">POINTS</span>
+            <div style="font-size:0.7rem;font-weight:900;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;">SCORE DU LEADER</div>
+            <div style="display:flex;align-items:baseline;gap:10px;margin-top:6px;">
+              <span style="font-family:var(--font-display);font-size:4rem;color:var(--lime);line-height:1;" id="home-lead-score">240</span>
+              <span style="font-size:1rem;font-weight:800;color:#fff;">POINTS</span>
             </div>
-            <div style="height:8px;background:#18212a;border-radius:4px;overflow:hidden;margin-top:8px;">
-              <div style="width:72%;height:100%;background:var(--lime);"></div>
+            <div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:10px;">
+              <div style="width:72%;height:100%;background:var(--lime);border-radius:3px;"></div>
             </div>
           </div>
 
-          <div style="border-top:1px solid #1a232c;padding-top:16px;">
-            <div style="font-size:0.75rem;font-weight:900;color:#94a3b8;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:12px;">CLASSEMENT EN DIRECT</div>
+          <div style="border-top:1px solid var(--border);padding-top:18px;">
+            <div style="font-size:0.7rem;font-weight:900;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:12px;">CLASSEMENT EN DIRECT</div>
             <div id="home-top-players" style="display:flex;flex-direction:column;gap:8px;">
               <!-- Injecté via JS -->
             </div>
           </div>
 
-          <a href="/player.html" class="btn btn-lime" style="width:100%;justify-content:center;padding:12px;font-size:0.9rem;">
-            REJOINDRE LA PARTIE ➔
+          <a href="/player.html" class="btn btn-lime" style="width:100%;justify-content:center;padding:12px;font-size:0.88rem;">
+            REJOINDRE LA PARTIE →
           </a>
         </div>
       </div>
@@ -273,35 +270,35 @@
     <!-- ==========================================
          SECTION 3 : SIMPLE COMME UNE REMISE EN JEU
          ========================================== -->
-    <section id="concept" style="padding-top:20px;">
+    <section id="concept" style="padding-top:0;margin-bottom:80px;">
       <span class="section-dash"></span>
       <h2 class="section-title-figma">SIMPLE COMME UNE REMISE EN JEU.</h2>
       <p class="section-subtitle-figma">Trois étapes ultra simples pour transformer chaque match en arène compétitive.</p>
 
       <div class="figma-steps-row">
-        <!-- ETAPE 1 -->
+        <!-- ÉTAPE 1 -->
         <div class="figma-step-card">
           <div class="figma-step-num">1</div>
           <div class="figma-step-title">CHOISISSEZ</div>
-          <p style="font-size:0.88rem;color:#94a3b8;line-height:1.5;">
+          <p style="font-size:0.86rem;color:var(--muted);line-height:1.55;font-weight:400;">
             Sélectionnez une grille officielle ou générez vos défis sur-mesure avec l'IA en 1 clic selon votre difficulté.
           </p>
         </div>
 
-        <!-- ETAPE 2 -->
+        <!-- ÉTAPE 2 -->
         <div class="figma-step-card">
           <div class="figma-step-num">2</div>
           <div class="figma-step-title">INVITEZ</div>
-          <p style="font-size:0.88rem;color:#94a3b8;line-height:1.5;">
+          <p style="font-size:0.86rem;color:var(--muted);line-height:1.55;font-weight:400;">
             Partagez votre lien de session à vos potes ou intégrez l'overlay interactif directement sur votre stream OBS.
           </p>
         </div>
 
-        <!-- ETAPE 3 -->
+        <!-- ÉTAPE 3 -->
         <div class="figma-step-card">
           <div class="figma-step-num">3</div>
           <div class="figma-step-title">COCHEZ</div>
-          <p style="font-size:0.88rem;color:#94a3b8;line-height:1.5;">
+          <p style="font-size:0.86rem;color:var(--muted);line-height:1.55;font-weight:400;">
             Cochez chaque fait de jeu en direct, débloquez les bonus de lignes complètes et décrochez le Grand Chelem.
           </p>
         </div>
@@ -309,9 +306,9 @@
     </section>
 
     <!-- ==========================================
-         SECTION 4 : CHANGEZ LES RÈGLES, PAS L'AMBIANCE (MODES)
+         SECTION 4 : CHANGEZ LES RÈGLES, PAS L'AMBIANCE
          ========================================== -->
-    <section id="modes" style="padding-top:20px;">
+    <section id="modes" style="margin-bottom:80px;">
       <span class="section-dash"></span>
       <h2 class="section-title-figma">CHANGEZ LES RÈGLES, PAS L'AMBIANCE.</h2>
       <p class="section-subtitle-figma">Plusieurs configurations de grilles adaptées à la durée de votre session.</p>
@@ -331,7 +328,7 @@
           <p class="figma-mode-desc">Format express ultrarapide. Parfait pour une seule mi-temps ou une prolongation intense sous haute tension.</p>
         </a>
 
-        <!-- MODE 3 (SAISON MANAGER - FEATURED GREEN FIGMA!) -->
+        <!-- MODE 3 FEATURED -->
         <a href="/admin.html" class="figma-mode-card featured">
           <span class="figma-mode-badge">★ POPULAIRE • 25 DÉFIS</span>
           <div class="figma-mode-title">SAISON MANAGER</div>
@@ -350,27 +347,26 @@
     <!-- ==========================================
          SECTION 5 : LE CLASSEMENT NE MENT JAMAIS
          ========================================== -->
-    <section id="classement" style="padding-top:20px;margin-bottom:80px;">
+    <section id="classement" style="margin-bottom:80px;">
       <span class="section-dash"></span>
-      <div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:14px;">
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:16px;">
         <div>
           <h2 class="section-title-figma" style="margin-bottom:6px;">LE CLASSEMENT NE MENT JAMAIS.</h2>
-          <p class="section-subtitle-figma" style="margin-bottom:0;">Tous les scores et victoires sont calculés et synchronisés en millisecondes.</p>
+          <p class="section-subtitle-figma" style="margin-bottom:0;">Tous les scores et victoires calculés et synchronisés en millisecondes.</p>
         </div>
-        <a href="/leaderboard.html" class="btn btn-lime btn-sm" style="font-weight:900;padding:8px 18px;">
-          🏆 VOIR LE CLASSEMENT GÉNÉRAL & PODIUM ➔
+        <a href="/leaderboard.html" class="btn btn-lime btn-sm" style="padding:9px 20px;font-weight:900;white-space:nowrap;">
+          🏆 VOIR LE CLASSEMENT →
         </a>
       </div>
 
       <div class="figma-table-wrap">
-        <div style="padding:16px 20px;border-bottom:1px solid #1a222a;display:flex;align-items:center;justify-content:space-between;background:#10141b;">
-          <div style="font-family:var(--font-display);font-size:1.3rem;color:#ffffff;letter-spacing:0.04em;">TABLEAU DES VAINQUEURS & SCORES EN DIRECT</div>
+        <div style="padding:16px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg-card-alt);">
+          <div style="font-family:var(--font-display);font-size:1.25rem;color:#fff;letter-spacing:0.05em;">TABLEAU DES VAINQUEURS & SCORES EN DIRECT</div>
           <span class="live-dot"><span class="pulse"></span> LIVE SYNC</span>
         </div>
 
         <div id="figma-leaderboard-rows">
-          <!-- Injecté par Socket.io -->
-          <div style="padding:30px;text-align:center;color:#71717a;">Chargement du classement…</div>
+          <div style="padding:32px;text-align:center;color:var(--muted2);">Chargement du classement…</div>
         </div>
       </div>
     </section>
@@ -379,37 +375,38 @@
          SECTION 6 : STATS & TÉMOIGNAGE
          ========================================== -->
     <section style="margin-bottom:80px;">
-      <div style="background:#0d1115;border:1px solid #1a232c;border-radius:18px;padding:36px;display:grid;grid-template-columns:1fr 1.3fr;gap:40px;align-items:center;">
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-xl);padding:40px;display:grid;grid-template-columns:1fr 1.2fr;gap:48px;align-items:center;">
         <div>
           <span class="section-dash"></span>
-          <h3 style="font-family:var(--font-display);font-size:2.2rem;line-height:1;margin-bottom:14px;color:#fff;">
+          <h3 style="font-family:var(--font-display);font-size:2.4rem;line-height:1.02;margin-bottom:16px;color:#fff;letter-spacing:0.02em;">
             PENSÉ POUR LE PROCHAIN MATCH. ADOPTÉ DÈS LE PREMIER.
           </h3>
-          <div style="display:flex;gap:24px;margin-top:20px;">
+          <div style="display:flex;gap:32px;flex-wrap:wrap;margin-top:24px;">
             <div>
-              <div style="font-family:var(--font-display);font-size:2.8rem;color:var(--lime);line-height:1;">100+</div>
-              <div style="font-size:0.75rem;color:#71717a;font-weight:700;">PARTIES JOUÉES</div>
+              <div style="font-family:var(--font-display);font-size:3rem;color:var(--lime);line-height:1;">100+</div>
+              <div style="font-size:0.72rem;color:var(--muted2);font-weight:700;text-transform:uppercase;letter-spacing:0.06em;margin-top:4px;">PARTIES JOUÉES</div>
             </div>
             <div>
-              <div style="font-family:var(--font-display);font-size:2.8rem;color:#ffffff;line-height:1;">74%</div>
-              <div style="font-size:0.75rem;color:#71717a;font-weight:700;">COMPLÉTION</div>
+              <div style="font-family:var(--font-display);font-size:3rem;color:#fff;line-height:1;">74%</div>
+              <div style="font-size:0.72rem;color:var(--muted2);font-weight:700;text-transform:uppercase;letter-spacing:0.06em;margin-top:4px;">COMPLÉTION</div>
             </div>
             <div>
-              <div style="font-family:var(--font-display);font-size:2.8rem;color:var(--gold);line-height:1;">4.9</div>
-              <div style="font-size:0.75rem;color:#71717a;font-weight:700;">NOTE MOYENNE</div>
+              <div style="font-family:var(--font-display);font-size:3rem;color:var(--gold);line-height:1;">4.9</div>
+              <div style="font-size:0.72rem;color:var(--muted2);font-weight:700;text-transform:uppercase;letter-spacing:0.06em;margin-top:4px;">NOTE MOYENNE</div>
             </div>
           </div>
         </div>
 
-        <div style="background:#121720;border:1px solid #1f2732;border-radius:12px;padding:24px;position:relative;">
-          <div style="font-size:1.05rem;color:#e2e8f0;line-height:1.6;font-style:italic;margin-bottom:16px;">
+        <div style="background:var(--bg-card-alt);border:1px solid var(--border-light);border-radius:var(--radius-xl);padding:28px;position:relative;">
+          <div style="font-size:1.5rem;color:var(--lime);position:absolute;top:24px;right:24px;opacity:0.4;">❝</div>
+          <div style="font-size:1rem;color:var(--text-dim);line-height:1.65;font-style:italic;margin-bottom:20px;font-weight:400;">
             « On l'a lancé pour un derby OM-PSG entre potes... Même sans but sur le terrain, personne n'a décroché du stream une seule seconde grâce au Bingo ! »
           </div>
           <div style="display:flex;align-items:center;gap:12px;">
-            <div style="width:40px;height:40px;border-radius:50%;background:var(--lime);color:#000;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:18px;">⚽</div>
+            <div style="width:40px;height:40px;border-radius:50%;background:var(--lime);color:#000;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:16px;">⚽</div>
             <div>
-              <div style="font-weight:800;color:#ffffff;font-size:0.9rem;">Alexandre M.</div>
-              <div style="font-size:0.75rem;color:var(--lime);">Streamer Football & FC24</div>
+              <div style="font-weight:800;color:#fff;font-size:0.88rem;">Alexandre M.</div>
+              <div style="font-size:0.74rem;color:var(--lime);">Streamer Football & FC25</div>
             </div>
           </div>
         </div>
@@ -417,22 +414,21 @@
     </section>
 
     <!-- ==========================================
-         SECTION 7 : FAQ (LES QUESTIONS AVANT LE COUP D'ENVOI)
+         SECTION 7 : FAQ
          ========================================== -->
-    <section id="faq" style="padding-top:20px;margin-bottom:80px;">
+    <section id="faq" style="margin-bottom:80px;">
       <span class="section-dash"></span>
       <h2 class="section-title-figma">LES QUESTIONS AVANT LE COUP D'ENVOI.</h2>
       <p class="section-subtitle-figma">Tout ce qu'il faut savoir avant de démarrer votre première grille.</p>
 
-      <div style="display:grid;grid-template-columns:0.8fr 1.2fr;gap:30px;align-items:start;">
-        <!-- CARTE CTA GAUCHE -->
-        <div style="background:#0d1115;border:1px solid #1a232c;border-radius:14px;padding:26px;">
-          <div style="font-size:1.8rem;margin-bottom:8px;">💡</div>
-          <div style="font-family:var(--font-display);font-size:1.6rem;color:#ffffff;margin-bottom:8px;">BESOIN D'UNE GRILLE SUR-MESURE ?</div>
-          <p style="font-size:0.85rem;color:#94a3b8;line-height:1.5;margin-bottom:18px;">
+      <div style="display:grid;grid-template-columns:0.75fr 1.25fr;gap:32px;align-items:start;">
+        <!-- CTA GAUCHE -->
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-xl);padding:28px;">
+          <div style="font-family:var(--font-display);font-size:2rem;color:var(--lime);margin-bottom:10px;line-height:1;">BESOIN D'UNE<br>GRILLE SUR-MESURE ?</div>
+          <p style="font-size:0.84rem;color:var(--muted);line-height:1.55;margin-bottom:20px;font-weight:400;">
             Créez votre propre grille avec l'assistant IA en choisissant vos règles, thèmes et contraintes favorites.
           </p>
-          <a href="/admin.html" class="btn btn-lime" style="width:100%;justify-content:center;">Créer maintenant ➔</a>
+          <a href="/admin.html" class="btn btn-lime" style="width:100%;justify-content:center;padding:12px;">CRÉER MAINTENANT →</a>
         </div>
 
         <!-- ACCORDÉON FAQ -->
@@ -463,7 +459,7 @@
               <span class="faq-toggle-icon" style="font-size:1.2rem;">+</span>
             </div>
             <div class="figma-faq-body">
-              Une page dédiée <code>/obs.html</code> fournit un overlay transparent spécialement calibré pour OBS Studio avec alertes et animations de victoire sonores en live.
+              Une page dédiée <code style="background:var(--border);padding:1px 5px;border-radius:3px;font-size:0.85em;">/obs.html</code> fournit un overlay transparent spécialement calibré pour OBS Studio avec alertes et animations de victoire sonores en live.
             </div>
           </div>
 
@@ -490,47 +486,47 @@
       </div>
     </section>
 
-    <!-- ==========================================
-         SECTION 8 : PRE-FOOTER BANNER
-         ========================================== -->
-    <section class="figma-cta-banner">
-      <span class="section-dash" style="margin:0 auto 14px;"></span>
-      <h2>LE MATCH COMMENCE.<br>VOTRE GRILLE AUSSI.</h2>
-      <p style="font-size:1rem;color:#a1a1aa;max-width:540px;margin:0 auto 28px;line-height:1.5;">
-        Créez votre partie en 30 secondes et invitez vos amis gratuitement pour le coup d'envoi.
-      </p>
-      <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;">
-        <a href="/admin.html" class="btn btn-lime" style="padding:14px 32px;font-size:1rem;font-weight:900;">
-          CRÉER MA GRILLE ➔
-        </a>
-        <a href="/spectator.html" class="btn btn-secondary-dark" style="padding:14px 26px;font-size:1rem;">
-          VUE SPECTATEUR
-        </a>
-      </div>
-    </section>
-
   </main>
+
+  <!-- ==========================================
+       SECTION 8 : PRE-FOOTER STADIUM BANNER
+       ========================================== -->
+  <section class="figma-cta-banner">
+    <span class="section-dash" style="margin:0 auto 18px;"></span>
+    <h2>LE MATCH COMMENCE.<br>VOTRE GRILLE AUSSI.</h2>
+    <p style="font-size:1rem;color:var(--muted);max-width:500px;margin:0 auto 32px;line-height:1.55;font-weight:400;">
+      Créez votre partie en 30 secondes et invitez vos amis gratuitement pour le coup d'envoi.
+    </p>
+    <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap;">
+      <a href="/admin.html" class="btn btn-lime" style="padding:15px 36px;font-size:0.96rem;font-weight:900;letter-spacing:0.05em;">
+        CRÉER MA GRILLE →
+      </a>
+      <a href="/spectator.html" class="btn btn-secondary-dark" style="padding:15px 28px;font-size:0.96rem;">
+        VUE SPECTATEUR
+      </a>
+    </div>
+  </section>
 
   <!-- ==========================================
        FOOTER
        ========================================== -->
   <footer class="figma-footer">
-    <div class="container" style="max-width:1240px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px;">
+    <div class="container" style="max-width:1280px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:24px;">
       <div style="display:flex;align-items:center;gap:10px;">
-        <div class="logo-bf" style="width:28px;height:28px;font-size:0.85rem;border-radius:6px;">BF</div>
-        <span style="font-family:var(--font-display);font-size:1.4rem;color:#fff;">BINGO FOOT</span>
+        <div class="logo-bf" style="width:28px;height:28px;font-size:0.82rem;border-radius:6px;">BF</div>
+        <span style="font-family:var(--font-display);font-size:1.45rem;color:#fff;letter-spacing:0.05em;">BINGO FOOT</span>
       </div>
 
-      <div style="display:flex;gap:18px;font-size:0.8rem;font-weight:700;">
-        <a href="/player.html" style="color:#71717a;text-decoration:none;">Joueur</a>
-        <a href="/spectator.html" style="color:#71717a;text-decoration:none;">Spectateur</a>
-        <a href="/obs.html" style="color:#71717a;text-decoration:none;">Overlay OBS</a>
-        <a href="/leaderboard.html" style="color:#71717a;text-decoration:none;">Classement</a>
-        <a href="/admin.html" style="color:#71717a;text-decoration:none;">Administration</a>
+      <div style="display:flex;gap:24px;font-size:0.8rem;font-weight:600;">
+        <a href="/player.html"      style="color:var(--muted2);text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--muted2)'">Joueur</a>
+        <a href="/spectator.html"   style="color:var(--muted2);text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--muted2)'">Spectateur</a>
+        <a href="/obs.html"         style="color:var(--muted2);text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--muted2)'">Overlay OBS</a>
+        <a href="/leaderboard.html" style="color:var(--muted2);text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--muted2)'">Classement</a>
+        <a href="/admin.html"       style="color:var(--muted2);text-decoration:none;transition:color 0.15s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--muted2)'">Administration</a>
       </div>
 
-      <div style="font-size:0.75rem;color:#52525b;">
-        © 2026 BINGO FOOT • Propulsé par Node.js & Socket.io
+      <div style="font-size:0.74rem;color:var(--muted2);">
+        © 2026 BINGO FOOT · Propulsé par Node.js & Socket.io
       </div>
     </div>
   </footer>
@@ -555,7 +551,7 @@
         el.style.background = 'var(--lime)';
         el.style.borderColor = 'var(--lime)';
         el.querySelector('.tile-title').style.color = '#000';
-        el.querySelector('.tile-desc').style.color = '#182105';
+        el.querySelector('.tile-desc').style.color = 'rgba(0,0,0,0.65)';
       } else {
         el.style.background = '';
         el.style.borderColor = '';
@@ -579,13 +575,13 @@
       const challenges = (activeGrid?.challenges || data.challenges || []).slice(0, 15);
 
       gridEl.innerHTML = challenges.map((ch, i) => `
-        <div class="tile" onclick="togglePreviewTile(this)" style="min-height:95px;padding:8px;cursor:pointer;">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
-            <span style="font-size:1.15rem;">${renderAvatar(ch.icon||'🎯')}</span>
-            <span class="pts pts-${ch.points}" style="font-size:0.65rem;">+${ch.points}pt</span>
+        <div class="tile" onclick="togglePreviewTile(this)" style="min-height:88px;padding:8px;cursor:pointer;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:3px;">
+            <span style="font-size:1.05rem;">${renderAvatar(ch.icon||'🎯')}</span>
+            <span class="pts pts-${ch.points}" style="font-size:0.62rem;">+${ch.points}pt</span>
           </div>
-          <div class="tile-title" style="font-size:0.75rem;line-height:1.2;">${ch.title}</div>
-          <div class="tile-desc" style="font-size:0.68rem;line-height:1.25;">${ch.description ? ch.description.slice(0, 36) + '…' : ''}</div>
+          <div class="tile-title" style="font-size:0.72rem;line-height:1.2;">${ch.title}</div>
+          <div class="tile-desc" style="font-size:0.66rem;line-height:1.2;">${ch.description ? ch.description.slice(0, 36) + '…' : ''}</div>
         </div>
       `).join('');
     }
@@ -598,7 +594,7 @@
 
       const ids = Object.keys(data.players);
       if (!ids.length) {
-        rowsEl.innerHTML = '<div style="padding:24px;text-align:center;color:#71717a;">Aucun joueur actif. Créez un profil pour démarrer !</div>';
+        rowsEl.innerHTML = '<div style="padding:28px;text-align:center;color:var(--muted2);">Aucun joueur actif. Créez un profil pour démarrer !</div>';
         return;
       }
 
@@ -615,16 +611,16 @@
       // Top 3 in sidebar
       if (topListEl) {
         topListEl.innerHTML = sorted.slice(0, 3).map((item, i) => `
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#11161f;border-radius:6px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:var(--bg-card-alt);border:1px solid var(--border);border-radius:var(--radius-md);">
             <div style="display:flex;align-items:center;gap:8px;">
-              <span style="font-weight:900;color:${i===0?'var(--lime)':'#71717a'};font-size:0.85rem;">#${i+1}</span>
-              <span style="font-size:1.2rem;">${renderAvatar(item.p.avatar)}</span>
+              <span style="font-weight:900;color:${i===0?'var(--lime)':'var(--muted2)'};font-size:0.82rem;">#${i+1}</span>
+              <span style="font-size:1.1rem;">${renderAvatar(item.p.avatar)}</span>
               <div>
-                <div style="font-weight:800;font-size:0.85rem;color:#ffffff;">${item.p.name}</div>
-                <div style="font-size:0.7rem;color:#71717a;">${item.p.club}</div>
+                <div style="font-weight:800;font-size:0.82rem;color:#fff;">${item.p.name}</div>
+                <div style="font-size:0.68rem;color:var(--muted2);">${item.p.club}</div>
               </div>
             </div>
-            <span style="font-weight:900;color:var(--lime);font-size:0.95rem;">${item.s?.totalPoints||0} pts</span>
+            <span style="font-weight:900;color:var(--lime);font-size:0.9rem;">${item.s?.totalPoints||0} pts</span>
           </div>
         `).join('');
       }
@@ -639,32 +635,32 @@
         return `
         <div class="figma-table-row">
           <div style="display:flex;align-items:center;gap:14px;">
-            <div style="width:28px;text-align:center;font-family:var(--font-display);font-size:1.4rem;color:${i===0?'var(--lime)':'#71717a'};">
+            <div style="width:26px;text-align:center;font-family:var(--font-display);font-size:1.3rem;color:${i===0?'var(--lime)':'var(--muted2)'};">
               ${i + 1}
             </div>
-            <div style="width:38px;height:38px;border-radius:8px;background:#151b24;border:1px solid #232c38;display:flex;align-items:center;justify-content:center;font-size:18px;">
+            <div style="width:36px;height:36px;border-radius:var(--radius-md);background:var(--bg-card-alt);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:17px;">
               ${renderAvatar(item.p.avatar)}
             </div>
             <div>
               <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                <span style="font-weight:800;font-size:0.95rem;color:#ffffff;">${item.p.name}</span>
-                ${wins > 0 ? `<span style="background:rgba(255,170,0,0.15);color:var(--gold);border:1px solid rgba(255,170,0,0.3);font-size:0.7rem;padding:2px 7px;font-weight:800;border-radius:4px;">🏆 ${wins} vic.</span>` : ''}
-                ${chelems > 0 ? `<span style="background:rgba(187,242,70,0.15);color:var(--lime);border:1px solid rgba(187,242,70,0.3);font-size:0.7rem;padding:2px 7px;font-weight:800;border-radius:4px;">👑 ${chelems} chelem</span>` : ''}
+                <span style="font-weight:800;font-size:0.92rem;color:#fff;">${item.p.name}</span>
+                ${wins > 0 ? `<span style="background:rgba(245,158,11,0.12);color:var(--gold);border:1px solid rgba(245,158,11,0.3);font-size:0.68rem;padding:2px 7px;font-weight:800;border-radius:3px;">🏆 ${wins} vic.</span>` : ''}
+                ${chelems > 0 ? `<span style="background:var(--lime-soft);color:var(--lime);border:1px solid rgba(182,240,0,0.3);font-size:0.68rem;padding:2px 7px;font-weight:800;border-radius:3px;">👑 ${chelems} chelem</span>` : ''}
               </div>
-              <div style="font-size:0.75rem;color:#71717a;">${item.p.club}${played > 0 ? ` • ${played} match${played>1?'s':''} (${winrate}% win)` : ''}</div>
+              <div style="font-size:0.72rem;color:var(--muted2);">${item.p.club}${played > 0 ? ` · ${played} match${played>1?'s':''} (${winrate}% win)` : ''}</div>
             </div>
           </div>
 
           <div style="display:flex;align-items:center;gap:18px;">
             <div style="text-align:right;">
-              <span style="font-size:0.75rem;color:#71717a;">Défis : </span>
-              <strong style="color:#ffffff;font-size:0.85rem;">${item.s?.tilesCompleted||0}/25</strong>
+              <span style="font-size:0.72rem;color:var(--muted2);">Défis : </span>
+              <strong style="color:#fff;font-size:0.84rem;">${item.s?.tilesCompleted||0}/25</strong>
             </div>
-            <div style="font-family:var(--font-display);font-size:1.8rem;color:var(--lime);min-width:70px;text-align:right;">
+            <div style="font-family:var(--font-display);font-size:1.75rem;color:var(--lime);min-width:68px;text-align:right;">
               ${item.s?.totalPoints||0} PTS
             </div>
-            <a href="/player.html?p=${item.id}" class="btn btn-sm btn-secondary-dark" style="padding:6px 12px;">
-              Voir ➔
+            <a href="/player.html?p=${item.id}" class="btn btn-sm btn-secondary-dark" style="padding:5px 12px;">
+              Voir →
             </a>
           </div>
         </div>`;
