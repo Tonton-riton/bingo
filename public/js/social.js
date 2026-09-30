@@ -158,6 +158,124 @@ const SocialHub = (function() {
 
         </div>
       </div>
+
+      <!-- MODAL REJOINDRE UNE PARTIE PRIVÉE -->
+      <div class="modal-overlay" id="modal-social-join-room">
+        <div class="modal-box" style="max-width:460px; border:1px solid #1e293b; border-radius:14px; background:#0e1424;">
+          <div class="modal-header" style="border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:12px;">
+            <div class="modal-title" style="color:#ffffff; font-weight:900; letter-spacing:0.02em;">
+              <span style="color:var(--lime,#bbf246);">🔑</span> REJOINDRE UNE PARTIE PRIVÉE
+            </div>
+            <button class="modal-close" onclick="SocialHub.closeModal('modal-social-join-room')">✕</button>
+          </div>
+          <form onsubmit="SocialHub.submitJoinRoom(event)" style="margin-top:16px;">
+            <div id="join-room-auth-alert" style="display:none;background:rgba(187,242,70,0.1);border:1px solid var(--lime,#bbf246);border-radius:8px;padding:12px 14px;margin-bottom:14px;font-size:0.82rem;color:#cbd5e1;">
+              <div style="font-weight:800;color:var(--lime,#bbf246);margin-bottom:4px;">👤 Compte requis pour jouer :</div>
+              Connectez-vous ou créez votre compte joueur en 2 secondes pour valider votre grille et enregistrer vos victoires.
+              <div style="display:flex;gap:8px;margin-top:8px;">
+                <button type="button" class="btn btn-sm" onclick="SocialHub.switchToLogin()" style="background:#151d2f;color:#fff;">🔑 Se connecter</button>
+                <button type="button" class="btn btn-sm btn-lime" onclick="SocialHub.switchToRegister()">✨ Créer compte</button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" style="color:#cbd5e1; font-size:0.78rem;">CODE DE LA PARTIE (6 LETTRES OU CHIFFRES) *</label>
+              <input type="text" class="form-input" id="join-room-code" required maxlength="8" placeholder="EX: RDQM84" style="background:#090d16; border:2px solid var(--lime,#bbf246); border-radius:8px; color:#fff; font-size:1.4rem; font-weight:900; text-align:center; text-transform:uppercase; letter-spacing:0.15em;">
+            </div>
+
+            <div id="join-room-error" style="display:none; color:#f87171; font-size:0.82rem; margin-bottom:12px; font-weight:700;"></div>
+
+            <div style="display:flex; gap:10px; margin-top:20px;">
+              <button type="button" class="btn btn-secondary-slate btn-full" onclick="SocialHub.closeModal('modal-social-join-room')">Annuler</button>
+              <button type="submit" class="btn btn-lime btn-full" style="font-weight:900;">🚀 REJOINDRE LE MATCH</button>
+            </div>
+
+            <div style="text-align:center; margin-top:14px; font-size:0.8rem; color:#94a3b8;">
+              Vous voulez juste regarder ? <a href="javascript:void(0)" onclick="SocialHub.spectateRoomFromModal()" style="color:var(--lime,#bbf246); font-weight:700; text-decoration:none;">Mode Spectateur seul ➔</a>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- MODAL CRÉER UNE PARTIE PRIVÉE -->
+      <div class="modal-overlay" id="modal-social-create-room">
+        <div class="modal-box" style="max-width:540px; border:1px solid #1e293b; border-radius:14px; background:#0e1424;">
+          <div class="modal-header" style="border-bottom:1px solid rgba(255,255,255,0.08); padding-bottom:12px;">
+            <div class="modal-title" style="color:#ffffff; font-weight:900; letter-spacing:0.02em;">
+              <span style="color:var(--lime,#bbf246);">🎮</span> CRÉER UNE PARTIE PRIVÉE
+            </div>
+            <button class="modal-close" onclick="SocialHub.closeModal('modal-social-create-room')">✕</button>
+          </div>
+
+          <form id="form-create-room" onsubmit="SocialHub.submitCreateRoom(event)" style="margin-top:16px;">
+            <div class="form-group">
+              <label class="form-label" style="color:#cbd5e1; font-size:0.78rem;">NOM DE LA PARTIE / DU STREAM *</label>
+              <input type="text" class="form-input" id="cr-name" required maxlength="50" placeholder="Ex: Soirée Carrière Stream #1" style="background:#090d16; border:1px solid #1e293b; border-radius:8px; color:#fff; font-size:0.95rem; font-weight:700;">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" style="color:#cbd5e1; font-size:0.78rem;">GRILLE DE BINGO *</label>
+              <select class="form-input" id="cr-grid" style="background:#090d16; border:1px solid #1e293b; border-radius:8px; color:#fff;">
+                <option value="">Chargement des grilles…</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" style="color:#cbd5e1; font-size:0.78rem;">CONDITION DE VICTOIRE</label>
+              <select class="form-input" id="cr-win-cond" style="background:#090d16; border:1px solid #1e293b; border-radius:8px; color:#fff;">
+                <option value="first_bingo" selected>🎯 Premier Bingo (Première ligne complétée)</option>
+                <option value="grand_chelem">👑 Grand Chelem (Grille 100% remplie)</option>
+                <option value="most_points">⭐ Plus grand nombre de points</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" style="color:#cbd5e1; font-size:0.78rem;">CODE PERSONNALISÉ (Optionnel, min 3 car.)</label>
+              <input type="text" class="form-input" id="cr-code" maxlength="8" placeholder="Laisser vide pour code automatique" style="background:#090d16; border:1px solid #1e293b; border-radius:8px; color:#fff; text-transform:uppercase;">
+            </div>
+
+            <div id="cr-error" style="display:none; color:#f87171; font-size:0.82rem; margin-bottom:12px; font-weight:700;"></div>
+
+            <div style="display:flex; gap:10px; margin-top:20px;">
+              <button type="button" class="btn btn-secondary-slate btn-full" onclick="SocialHub.closeModal('modal-social-create-room')">Annuler</button>
+              <button type="submit" class="btn btn-lime btn-full" style="font-weight:900;">⚡ GÉNÉRER LA PARTIE PRIVÉE</button>
+            </div>
+          </form>
+
+          <div id="cr-result" style="display:none; margin-top:16px;">
+            <div style="background:rgba(187,242,70,0.12); border:1px solid var(--lime,#bbf246); border-radius:10px; padding:16px; text-align:center; margin-bottom:18px;">
+              <div style="font-size:0.75rem; font-weight:900; color:var(--lime,#bbf246); text-transform:uppercase;">PARTIE CRÉÉE AVEC SUCCÈS !</div>
+              <div style="font-size:2.4rem; font-weight:900; color:#fff; letter-spacing:0.15em; margin:6px 0;" id="cr-res-code">------</div>
+              <div style="font-size:0.8rem; color:#94a3b8;">Partagez ce code avec vos amis pour qu'ils rejoignent directement avec leur compte.</div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:20px;">
+              <div style="background:#090d16; border:1px solid #1e293b; border-radius:8px; padding:10px 14px;">
+                <div style="font-size:0.72rem; font-weight:900; color:#94a3b8; margin-bottom:4px;">📺 LIEN SPECTATEUR LIVE (EXPRÈS) :</div>
+                <div style="display:flex; gap:8px; align-items:center;">
+                  <input type="text" id="cr-spec-link" readonly style="flex:1; background:#070a12; border:1px solid #232c3d; color:#fff; padding:6px 10px; border-radius:6px; font-size:0.82rem;">
+                  <button class="btn btn-sm btn-lime" onclick="SocialHub.copyInput('cr-spec-link', this)">Copier</button>
+                </div>
+              </div>
+
+              <div style="background:#090d16; border:1px solid #1e293b; border-radius:8px; padding:10px 14px;">
+                <div style="font-size:0.72rem; font-weight:900; color:#94a3b8; margin-bottom:4px;">🎥 LIEN OVERLAY OBS STUDIO (TRANSPARENT) :</div>
+                <div style="display:flex; gap:8px; align-items:center;">
+                  <input type="text" id="cr-obs-link" readonly style="flex:1; background:#070a12; border:1px solid #232c3d; color:#fff; padding:6px 10px; border-radius:6px; font-size:0.82rem;">
+                  <button class="btn btn-sm btn-lime" onclick="SocialHub.copyInput('cr-obs-link', this)">Copier</button>
+                </div>
+              </div>
+            </div>
+
+            <div style="display:flex; gap:10px;">
+              <a href="#" id="cr-launch-btn" class="btn btn-lime btn-full" style="font-weight:900; justify-content:center; padding:12px;">
+                ▶ REJOINDRE MA GRILLE DE JEU
+              </a>
+            </div>
+          </div>
+
+        </div>
+      </div>
     `;
     document.body.appendChild(div);
 
@@ -500,6 +618,151 @@ const SocialHub = (function() {
     refreshFriendsList();
   }
 
+  // Room methods
+  function openJoinRoomModal(prefill) {
+    openModal('modal-social-join-room');
+    const user = getCurrentUser();
+    const alertEl = document.getElementById('join-room-auth-alert');
+    if (alertEl) alertEl.style.display = user ? 'none' : 'block';
+
+    const input = document.getElementById('join-room-code');
+    if (input) {
+      if (prefill) input.value = prefill.toUpperCase();
+      input.focus();
+    }
+  }
+
+  async function submitJoinRoom(e) {
+    e.preventDefault();
+    const errEl = document.getElementById('join-room-error');
+    errEl.style.display = 'none';
+
+    const code = (document.getElementById('join-room-code').value || '').trim().toUpperCase();
+    if (!code) return;
+
+    const user = getCurrentUser();
+    if (!user) {
+      document.getElementById('join-room-auth-alert').style.display = 'block';
+      errEl.textContent = 'Veuillez vous connecter avec votre compte pour valider votre participation.';
+      errEl.style.display = 'block';
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/rooms/join', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, playerId: user.id })
+      });
+      const data = await res.json();
+      if (!data.success) {
+        errEl.textContent = '❌ ' + (data.message || 'Impossible de rejoindre la partie');
+        errEl.style.display = 'block';
+        return;
+      }
+
+      closeModal('modal-social-join-room');
+      if (typeof notify === 'function') notify(`✅ Partie ${code} rejointe avec succès !`);
+      window.location.href = `/player.html?room=${code}&p=${user.id}`;
+    } catch (err) {
+      errEl.textContent = '❌ Erreur réseau lors de la connexion.';
+      errEl.style.display = 'block';
+    }
+  }
+
+  function spectateRoomFromModal() {
+    const code = (document.getElementById('join-room-code').value || '').trim().toUpperCase();
+    if (!code) {
+      alert('Veuillez entrer le code de la partie pour la regarder.');
+      return;
+    }
+    closeModal('modal-social-join-room');
+    window.location.href = `/spectator.html?room=${code}`;
+  }
+
+  async function openCreateRoomModal() {
+    openModal('modal-social-create-room');
+    document.getElementById('form-create-room').style.display = 'block';
+    document.getElementById('cr-result').style.display = 'none';
+    const errEl = document.getElementById('cr-error');
+    if (errEl) errEl.style.display = 'none';
+
+    const select = document.getElementById('cr-grid');
+    select.innerHTML = '<option value="">Chargement des grilles…</option>';
+    try {
+      const res = await fetch('/api/grids');
+      const grids = await res.json();
+      select.innerHTML = (grids || []).map(g => `
+        <option value="${g.id}">${g.name} (${g.size || 5}x${g.size || 5} · ${g.challenges?.length || 25} défis)</option>
+      `).join('');
+    } catch (e) {
+      select.innerHTML = '<option value="">Grille officielle standard (5x5)</option>';
+    }
+  }
+
+  async function submitCreateRoom(e) {
+    e.preventDefault();
+    const errEl = document.getElementById('cr-error');
+    errEl.style.display = 'none';
+
+    const name = document.getElementById('cr-name').value.trim();
+    const gridId = document.getElementById('cr-grid').value;
+    const winCondition = document.getElementById('cr-win-cond').value;
+    const customCode = document.getElementById('cr-code').value.trim();
+
+    const user = getCurrentUser();
+    const hostId = user ? user.id : null;
+
+    try {
+      const res = await fetch('/api/rooms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, gridId, hostId, winCondition, customCode })
+      });
+      const data = await res.json();
+      if (!data.success) {
+        errEl.textContent = '❌ ' + (data.message || 'Erreur de création');
+        errEl.style.display = 'block';
+        return;
+      }
+
+      document.getElementById('form-create-room').style.display = 'none';
+      const resEl = document.getElementById('cr-result');
+      resEl.style.display = 'block';
+
+      document.getElementById('cr-res-code').textContent = data.code;
+      const origin = window.location.origin;
+      document.getElementById('cr-spec-link').value = `${origin}/spectator.html?room=${data.code}`;
+      document.getElementById('cr-obs-link').value = `${origin}/obs.html?room=${data.code}`;
+      document.getElementById('cr-launch-btn').href = user ? `/player.html?room=${data.code}&p=${user.id}` : `/player.html?room=${data.code}`;
+
+      if (typeof notify === 'function') notify(`🎉 Partie "${name}" créée ! Code : ${data.code}`);
+    } catch (err) {
+      errEl.textContent = '❌ Erreur réseau lors de la création.';
+      errEl.style.display = 'block';
+    }
+  }
+
+  function copyInput(inputId, btn) {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    input.select();
+    navigator.clipboard.writeText(input.value).then(() => {
+      const prev = btn.textContent;
+      btn.textContent = '✓ Copié !';
+      btn.style.background = 'var(--lime,#bbf246)';
+      btn.style.color = '#000';
+      setTimeout(() => {
+        btn.textContent = prev;
+        btn.style.background = '';
+        btn.style.color = '';
+      }, 1800);
+    }).catch(() => {
+      document.execCommand('copy');
+      btn.textContent = '✓ Copié !';
+    });
+  }
+
   // Auto-init on page load
   document.addEventListener('DOMContentLoaded', () => {
     injectModals();
@@ -522,7 +785,13 @@ const SocialHub = (function() {
     openFriendsModal,
     refreshFriendsList,
     filterPlayers,
-    renderAuthNav
+    renderAuthNav,
+    openJoinRoomModal,
+    submitJoinRoom,
+    spectateRoomFromModal,
+    openCreateRoomModal,
+    submitCreateRoom,
+    copyInput
   };
 })();
 

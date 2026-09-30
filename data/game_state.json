@@ -375,7 +375,14 @@
       "createdAt": "2026-09-29T21:15:47.784Z",
       "friends": [
         "player_1790724686984_25paox"
-      ]
+      ],
+      "stats": {
+        "wins": 16,
+        "grandChelems": 5,
+        "bingos": 34,
+        "gamesPlayed": 21,
+        "careerPoints": 224
+      }
     },
     "player_1790716547802_jbzzbl": {
       "id": "player_1790716547802_jbzzbl",
@@ -425,7 +432,14 @@
         ]
       },
       "createdAt": "2026-09-29T21:15:47.802Z",
-      "friends": []
+      "friends": [],
+      "stats": {
+        "wins": 9,
+        "grandChelems": 2,
+        "bingos": 21,
+        "gamesPlayed": 17,
+        "careerPoints": 154
+      }
     },
     "player_1790724686984_25paox": {
       "id": "player_1790724686984_25paox",
@@ -466,7 +480,14 @@
           false
         ]
       },
-      "createdAt": "2026-09-29T23:31:26.984Z"
+      "createdAt": "2026-09-29T23:31:26.984Z",
+      "stats": {
+        "wins": 6,
+        "grandChelems": 1,
+        "bingos": 14,
+        "gamesPlayed": 12,
+        "careerPoints": 114
+      }
     }
   },
   "settings": {
@@ -474,5 +495,322 @@
     "grandChelemBonus": 10,
     "adminPassword": "admin1234"
   },
-  "history": []
+  "history": [],
+  "rooms": {
+    "RDQM84": {
+      "code": "RDQM84",
+      "name": "Stream Ligue 1",
+      "gridId": "grid_default_s1",
+      "hostId": "player_1790716547784_btwelu",
+      "isPrivate": true,
+      "status": "waiting",
+      "winCondition": "first_bingo",
+      "playerIds": [
+        "player_1790716547784_btwelu",
+        "player_1790724686984_25paox"
+      ],
+      "checked": {
+        "player_1790716547784_btwelu": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "player_1790724686984_25paox": [
+          true,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ]
+      },
+      "winnerId": null,
+      "winningReason": null,
+      "createdAt": "2026-09-30T00:00:25.331Z",
+      "history": [
+        {
+          "id": 1790726437707,
+          "timestamp": "2026-09-30T00:00:37.707Z",
+          "playerId": "player_1790724686984_25paox",
+          "playerName": "Alex_Streamer",
+          "challengeId": 0,
+          "challengeTitle": "Invincibilité Domicile",
+          "challengeIcon": "🛡️",
+          "points": 2,
+          "action": "check"
+        }
+      ]
+    },
+    "49G2XA": {
+      "code": "49G2XA",
+      "name": "Derby des Champions",
+      "gridId": "grid_default_s1",
+      "hostId": "player_1790716547784_btwelu",
+      "isPrivate": true,
+      "status": "finished",
+      "winCondition": "first_bingo",
+      "playerIds": [
+        "player_1790716547784_btwelu",
+        "player_1790716547802_jbzzbl"
+      ],
+      "checked": {
+        "player_1790716547784_btwelu": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ],
+        "player_1790716547802_jbzzbl": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ]
+      },
+      "winnerId": "player_1790716547784_btwelu",
+      "winningReason": "Premier Bingo complété (Ligne 1) !",
+      "createdAt": "2026-09-30T00:06:12.388Z",
+      "history": [
+        {
+          "id": 1790726772393,
+          "timestamp": "2026-09-30T00:06:12.393Z",
+          "playerId": "player_1790716547784_btwelu",
+          "playerName": "Tonton-riton",
+          "challengeId": 0,
+          "challengeTitle": "Invincibilité Domicile",
+          "challengeIcon": "🛡️",
+          "points": 2,
+          "action": "check"
+        },
+        {
+          "id": 1790726772396,
+          "timestamp": "2026-09-30T00:06:12.396Z",
+          "playerId": "player_1790716547784_btwelu",
+          "playerName": "Tonton-riton",
+          "challengeId": 1,
+          "challengeTitle": "Balance Positive",
+          "challengeIcon": "💰",
+          "points": 1,
+          "action": "check"
+        },
+        {
+          "id": 1790726772399,
+          "timestamp": "2026-09-30T00:06:12.399Z",
+          "playerId": "player_1790716547784_btwelu",
+          "playerName": "Tonton-riton",
+          "challengeId": 2,
+          "challengeTitle": "Éclosion Académie",
+          "challengeIcon": "🌱",
+          "points": 1,
+          "action": "check"
+        },
+        {
+          "id": 1790726772402,
+          "timestamp": "2026-09-30T00:06:12.402Z",
+          "playerId": "player_1790716547784_btwelu",
+          "playerName": "Tonton-riton",
+          "challengeId": 3,
+          "challengeTitle": "Tactique Immuable",
+          "challengeIcon": "📋",
+          "points": 1,
+          "action": "check"
+        },
+        {
+          "id": 1790726772405,
+          "timestamp": "2026-09-30T00:06:12.405Z",
+          "playerId": "player_1790716547784_btwelu",
+          "playerName": "Tonton-riton",
+          "challengeId": 4,
+          "challengeTitle": "Discipline & Podium",
+          "challengeIcon": "🟥",
+          "points": 2,
+          "action": "check"
+        }
+      ]
+    },
+    "E9UU9M": {
+      "code": "E9UU9M",
+      "name": "Grande Finale Test",
+      "gridId": "grid_default_s1",
+      "hostId": "player_1790716547784_btwelu",
+      "isPrivate": true,
+      "status": "finished",
+      "winCondition": "first_bingo",
+      "playerIds": [
+        "player_1790716547784_btwelu"
+      ],
+      "checked": {
+        "player_1790716547784_btwelu": [
+          true,
+          true,
+          true,
+          true,
+          true,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ]
+      },
+      "winnerId": "player_1790716547784_btwelu",
+      "winningReason": "Premier Bingo complété (Ligne 1) !",
+      "createdAt": "2026-09-30T00:07:01.645Z",
+      "history": [
+        {
+          "id": 1790726821651,
+          "timestamp": "2026-09-30T00:07:01.651Z",
+          "playerId": "player_1790716547784_btwelu",
+          "playerName": "Tonton-riton",
+          "challengeId": 0,
+          "challengeTitle": "Invincibilité Domicile",
+          "challengeIcon": "🛡️",
+          "points": 2,
+          "action": "check"
+        },
+        {
+          "id": 1790726821654,
+          "timestamp": "2026-09-30T00:07:01.654Z",
+          "playerId": "player_1790716547784_btwelu",
+          "playerName": "Tonton-riton",
+          "challengeId": 1,
+          "challengeTitle": "Balance Positive",
+          "challengeIcon": "💰",
+          "points": 1,
+          "action": "check"
+        },
+        {
+          "id": 1790726821660,
+          "timestamp": "2026-09-30T00:07:01.660Z",
+          "playerId": "player_1790716547784_btwelu",
+          "playerName": "Tonton-riton",
+          "challengeId": 2,
+          "challengeTitle": "Éclosion Académie",
+          "challengeIcon": "🌱",
+          "points": 1,
+          "action": "check"
+        },
+        {
+          "id": 1790726821663,
+          "timestamp": "2026-09-30T00:07:01.663Z",
+          "playerId": "player_1790716547784_btwelu",
+          "playerName": "Tonton-riton",
+          "challengeId": 3,
+          "challengeTitle": "Tactique Immuable",
+          "challengeIcon": "📋",
+          "points": 1,
+          "action": "check"
+        },
+        {
+          "id": 1790726821665,
+          "timestamp": "2026-09-30T00:07:01.665Z",
+          "playerId": "player_1790716547784_btwelu",
+          "playerName": "Tonton-riton",
+          "challengeId": 4,
+          "challengeTitle": "Discipline & Podium",
+          "challengeIcon": "🟥",
+          "points": 2,
+          "action": "check"
+        }
+      ]
+    }
+  }
 }

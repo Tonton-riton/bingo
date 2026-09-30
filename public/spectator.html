@@ -72,6 +72,51 @@
 
   <main class="container">
 
+    <!-- PRIVATE ROOM BANNER -->
+    <div id="room-banner" style="display:none;background:linear-gradient(135deg,#0e1526,#0a0e1a);border:1px solid #1e293b;border-left:4px solid var(--lime);border-radius:12px;padding:14px 20px;margin-bottom:18px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:0.72rem;font-weight:900;background:var(--lime);color:#000;padding:2px 8px;border-radius:4px;text-transform:uppercase;">🔒 PARTIE PRIVÉE</span>
+            <span id="room-code-tag" style="font-size:1.1rem;font-weight:900;color:#fff;letter-spacing:0.08em;">CODE: ------</span>
+          </div>
+          <div id="room-name-display" style="font-weight:800;font-size:1.1rem;color:#ffffff;margin-top:4px;">Nom de la partie</div>
+        </div>
+
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-sm btn-lime" id="btn-copy-spec" onclick="copySpectatorLink(this)">
+            📋 Copier lien spectateur
+          </button>
+          <button class="btn btn-sm" id="btn-copy-obs" onclick="copyObsLink(this)" style="border-color:#2a3648;color:#fff;">
+            🎥 Copier lien OBS
+          </button>
+          <button class="btn btn-sm" id="btn-copy-player" onclick="copyPlayerInvite(this)" style="border-color:#2a3648;color:var(--lime);">
+            🎮 Inviter joueur
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROOM CODE SWITCHER (Quand on n'est pas dans une room) -->
+    <div id="global-room-switcher" style="display:none;background:#0d121c;border:1px solid #1e293b;border-radius:10px;padding:12px 18px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+      <div style="display:flex;align-items:center;gap:8px;font-size:0.85rem;color:#cbd5e1;">
+        <span style="font-size:1.1rem;">🔑</span>
+        <span>Vous avez un code pour regarder une <strong>partie privée</strong> ?</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input type="text" id="spec-switch-code" placeholder="Ex: RDQM84" maxlength="8" style="background:#070a12;border:1px solid #232d3f;color:#fff;font-weight:800;text-transform:uppercase;padding:6px 12px;border-radius:6px;width:120px;text-align:center;">
+        <button class="btn btn-sm btn-lime" onclick="switchSpectatorRoom()">Regarder ➔</button>
+        <a href="/leaderboard.html" class="btn btn-sm" style="border-color:#2a3648;color:var(--lime);">🏆 Classement</a>
+      </div>
+    </div>
+
+    <!-- WINNER CELEBRATION BANNER -->
+    <div id="winner-banner" style="display:none;background:linear-gradient(135deg,rgba(187,242,70,0.18),rgba(245,158,11,0.15));border:2px solid var(--lime);border-radius:12px;padding:18px 24px;margin-bottom:18px;text-align:center;box-shadow:0 0 40px rgba(187,242,70,0.25);">
+      <div style="font-size:2rem;margin-bottom:4px;">🏆 👑 🏆</div>
+      <div style="font-family:var(--font-display);font-size:2.2rem;color:var(--lime);letter-spacing:0.04em;" id="winner-banner-title">VICTOIRE !</div>
+      <div style="font-size:1.1rem;font-weight:800;color:#fff;margin-top:2px;" id="winner-banner-desc">...</div>
+    </div>
+
     <!-- SCOREBOARD -->
     <div class="scoreboard mb-4">
       <div id="spec-scoreboard" class="scoreboard-inner" style="flex-wrap:wrap;">
@@ -120,27 +165,140 @@
       if (state) renderGrids(state);
     }
 
-    socket.on('stateUpdate', (data) => {
-      state = data;
-      renderScoreboard(data);
-      renderGrids(data);
-      renderFeed(data.history || []);
-      updateSingleTabs(data);
-    });
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomCode = urlParams.get('room') ? urlParams.get('room').toUpperCase().trim() : null;
 
-    socket.on('tileToggled', (ev) => {
-      if (!ev.checked) return;
-      if (ev.newGrandChelem) {
+    if (roomCode) {
+      document.getElementById('room-banner').style.display = 'block';
+      document.getElementById('global-room-switcher').style.display = 'none';
+      document.getElementById('room-code-tag').textContent = `CODE : ${roomCode}`;
+
+      // Join room socket channel
+      socket.emit('joinRoom', { roomCode, isSpectator: true });
+
+      // Initial fetch
+      fetch(`/api/rooms/${roomCode}`).then(r => r.json()).then(data => {
+        if (data.success && data.room) {
+          state = data.room;
+          document.getElementById('room-name-display').textContent = data.room.name;
+          renderScoreboard(data.room);
+          renderGrids(data.room);
+          renderFeed(data.room.history || []);
+          updateSingleTabs(data.room);
+          if (data.room.status === 'finished' && data.room.winnerId) {
+            showWinnerCelebration(data.room.winnerId, data.room.winningReason);
+          }
+        }
+      }).catch(()=>{});
+
+      socket.on('roomStateUpdate', (data) => {
+        state = data;
+        document.getElementById('room-name-display').textContent = data.name;
+        renderScoreboard(data);
+        renderGrids(data);
+        renderFeed(data.history || []);
+        updateSingleTabs(data);
+        if (data.status === 'finished' && data.winnerId) {
+          showWinnerCelebration(data.winnerId, data.winningReason);
+        }
+      });
+
+      socket.on('roomTileToggled', (ev) => {
+        if (!ev.checked) return;
+        if (ev.newGrandChelem) {
+          window.soundFx?.playGrandChelem();
+          window.launchConfetti?.({ count: 250 });
+        } else if (ev.newLineAchieved) {
+          window.soundFx?.playBingo();
+          window.launchConfetti?.({ count: 120 });
+        } else {
+          window.soundFx?.playCheck();
+        }
+        showToast(ev.playerName, ev.challenge, ev.newLineAchieved, ev.newGrandChelem);
+
+        if (ev.winnerDeclared && ev.winner) {
+          window.soundFx?.playGrandChelem();
+          window.launchConfetti?.({ count: 350 });
+          showWinnerCelebration(ev.winner.id, ev.winner.reason);
+        }
+      });
+
+      socket.on('roomWinner', (ev) => {
         window.soundFx?.playGrandChelem();
-        window.launchConfetti?.({ count: 250 });
-      } else if (ev.newLineAchieved) {
-        window.soundFx?.playBingo();
-        window.launchConfetti?.({ count: 120 });
-      } else {
-        window.soundFx?.playCheck();
-      }
-      showToast(ev.playerName, ev.challenge, ev.newLineAchieved, ev.newGrandChelem);
-    });
+        window.launchConfetti?.({ count: 350 });
+        showWinnerCelebration(ev.winnerId, ev.reason);
+      });
+
+      socket.on('roomReset', () => {
+        document.getElementById('winner-banner').style.display = 'none';
+      });
+    } else {
+      document.getElementById('room-banner').style.display = 'none';
+      document.getElementById('global-room-switcher').style.display = 'flex';
+
+      socket.on('stateUpdate', (data) => {
+        state = data;
+        renderScoreboard(data);
+        renderGrids(data);
+        renderFeed(data.history || []);
+        updateSingleTabs(data);
+      });
+
+      socket.on('tileToggled', (ev) => {
+        if (!ev.checked) return;
+        if (ev.newGrandChelem) {
+          window.soundFx?.playGrandChelem();
+          window.launchConfetti?.({ count: 250 });
+        } else if (ev.newLineAchieved) {
+          window.soundFx?.playBingo();
+          window.launchConfetti?.({ count: 120 });
+        } else {
+          window.soundFx?.playCheck();
+        }
+        showToast(ev.playerName, ev.challenge, ev.newLineAchieved, ev.newGrandChelem);
+      });
+    }
+
+    function copySpectatorLink(btn) {
+      navigator.clipboard.writeText(window.location.href).then(() => {
+        const prev = btn.textContent;
+        btn.textContent = '✓ Lien copié !';
+        setTimeout(() => btn.textContent = prev, 1800);
+      });
+    }
+
+    function copyObsLink(btn) {
+      const url = `${window.location.origin}/obs.html?room=${roomCode}`;
+      navigator.clipboard.writeText(url).then(() => {
+        const prev = btn.textContent;
+        btn.textContent = '✓ Lien OBS copié !';
+        setTimeout(() => btn.textContent = prev, 1800);
+      });
+    }
+
+    function copyPlayerInvite(btn) {
+      const url = `${window.location.origin}/player.html?room=${roomCode}`;
+      navigator.clipboard.writeText(url).then(() => {
+        const prev = btn.textContent;
+        btn.textContent = '✓ Lien Joueur copié !';
+        setTimeout(() => btn.textContent = prev, 1800);
+      });
+    }
+
+    function switchSpectatorRoom() {
+      const code = (document.getElementById('spec-switch-code').value || '').trim().toUpperCase();
+      if (!code) return;
+      window.location.href = `/spectator.html?room=${code}`;
+    }
+
+    function showWinnerCelebration(winnerId, reason) {
+      const p = state?.players?.[winnerId];
+      if (!p) return;
+      const b = document.getElementById('winner-banner');
+      b.style.display = 'block';
+      document.getElementById('winner-banner-title').textContent = `🏆 VICTOIRE DE ${p.name.toUpperCase()} !`;
+      document.getElementById('winner-banner-desc').textContent = `${reason || 'Partie remportée'} • Félicitations au champion !`;
+    }
 
     function updateSingleTabs(data) {
       const ids = Object.keys(data.players || {});

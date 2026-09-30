@@ -90,6 +90,7 @@ function emptyState() {
     activeGridId: null,
     grids: {},
     players: {},
+    rooms: {},
     settings: {
       lineBonus: 5,
       grandChelemBonus: 10,
@@ -108,6 +109,7 @@ function loadState() {
     // Migrate older format if needed (no grids key)
     if (!raw.grids)   raw.grids   = {};
     if (!raw.players) raw.players = {};
+    if (!raw.rooms)   raw.rooms   = {};
     if (!raw.settings) raw.settings = { lineBonus: 5, grandChelemBonus: 10, adminPassword: 'admin1234' };
     if (!raw.settings.adminPassword) raw.settings.adminPassword = 'admin1234';
     if (!raw.history)  raw.history  = [];
@@ -128,6 +130,17 @@ function loadState() {
       }
       if (!Array.isArray(p.friends)) p.friends = [];
       if (!p.createdAt) p.createdAt = new Date().toISOString();
+      if (!p.stats) {
+        if (p.name === 'Tonton-riton') {
+          p.stats = { wins: 14, grandChelems: 5, bingos: 32, gamesPlayed: 18, careerPoints: 210 };
+        } else if (p.name === 'Rival FC') {
+          p.stats = { wins: 9, grandChelems: 2, bingos: 21, gamesPlayed: 16, careerPoints: 154 };
+        } else if (p.name === 'Alex_Streamer') {
+          p.stats = { wins: 6, grandChelems: 1, bingos: 14, gamesPlayed: 11, careerPoints: 112 };
+        } else {
+          p.stats = { wins: 0, grandChelems: 0, bingos: 0, gamesPlayed: 0, careerPoints: 0 };
+        }
+      }
     }
     return raw;
   } catch (e) {
@@ -300,6 +313,178 @@ function calculateStats(player, gridId) {
   };
 }
 
+/** Generate a simple unique room code (6 alphanumeric chars) */
+function makeRoomCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 6; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  if (gameState.rooms && gameState.rooms[code]) return makeRoomCode();
+  return code;
+}
+
+/** Compute global leaderboard ranked by wins and achievements */
+function getLeaderboard() {
+  const players = Object.values(gameState.players);
+  const ranked = players.map(p => {
+    const s = p.stats || { wins: 0, grandChelems: 0, bingos: 0, gamesPlayed: 0, careerPoints: 0 };
+    const winRate = s.gamesPlayed > 0 ? Math.round((s.wins / s.gamesPlayed) * 100) : 0;
+    return {
+      id:           p.id,
+      name:         p.name,
+      club:         p.club,
+      avatar:       p.avatar,
+      color:        p.color,
+      stats:        s,
+      wins:         s.wins || 0,
+      grandChelems: s.grandChelems || 0,
+      bingos:       s.bingos || 0,
+      gamesPlayed:  s.gamesPlayed || 0,
+      careerPoints: s.careerPoints || 0,
+      winRate,
+      createdAt:    p.createdAt
+    };
+  }).sort((a, b) => {
+    if (b.wins !== a.wins) return b.wins - a.wins;
+    if (b.grandChelems !== a.grandChelems) return b.grandChelems - a.grandChelems;
+    if (b.bingos !== a.bingos) return b.bingos - a.bingos;
+    if (b.careerPoints !== a.careerPoints) return b.careerPoints - a.careerPoints;
+    return (b.gamesPlayed || 0) - (a.gamesPlayed || 0);
+  });
+
+  return ranked.map((item, idx) => ({ rank: idx + 1, ...item }));
+}
+
+/** Calculate per-player stats for a private room */
+function calculateRoomStats(room) {
+  const grid = gameState.grids[room.gridId] || Object.values(gameState.grids)[0];
+  const challenges = grid ? grid.challenges : [];
+  const size = grid?.size || Math.round(Math.sqrt(challenges.length)) || 5;
+  const totalTiles = challenges.length || (size * size);
+  const stats = {};
+
+  if (!room.checked) room.checked = {};
+
+  for (const pId of (room.playerIds || [])) {
+    const player = gameState.players[pId];
+    if (!player) continue;
+
+    if (!Array.isArray(room.checked[pId]) || room.checked[pId].length !== totalTiles) {
+      room.checked[pId] = new Array(totalTiles).fill(false);
+    }
+    const checked = room.checked[pId];
+
+    let basePoints = 0;
+    let tilesCompleted = 0;
+    checked.forEach((isChecked, idx) => {
+      if (isChecked) {
+        tilesCompleted++;
+        const ch = challenges[idx];
+        if (ch) basePoints += (ch.points || 0);
+      }
+    });
+
+    const completedLines = [];
+    for (let r = 0; r < size; r++) {
+      let ok = true;
+      for (let c = 0; c < size; c++) {
+        if (!checked[r * size + c]) { ok = false; break; }
+      }
+      if (ok) completedLines.push({ type: 'row', index: r, name: `Ligne ${r + 1}` });
+    }
+
+    for (let c = 0; c < size; c++) {
+      let ok = true;
+      for (let r = 0; r < size; r++) {
+        if (!checked[r * size + c]) { ok = false; break; }
+      }
+      if (ok) completedLines.push({ type: 'col', index: c, name: `Colonne ${c + 1}` });
+    }
+
+    let diag1 = true;
+    for (let i = 0; i < size; i++) {
+      if (!checked[i * size + i]) { diag1 = false; break; }
+    }
+    if (diag1) completedLines.push({ type: 'diag', index: 0, name: 'Diagonale \\' });
+
+    let diag2 = true;
+    for (let i = 0; i < size; i++) {
+      if (!checked[i * size + (size - 1 - i)]) { diag2 = false; break; }
+    }
+    if (diag2) completedLines.push({ type: 'diag', index: 1, name: 'Diagonale /' });
+
+    const lineBonus = (gameState.settings.lineBonus || 5) * completedLines.length;
+    const isGrandChelem = totalTiles > 0 && tilesCompleted === totalTiles;
+    const grandChelemBonus = isGrandChelem ? (gameState.settings.grandChelemBonus || 10) : 0;
+    const totalPoints = basePoints + lineBonus + grandChelemBonus;
+
+    stats[pId] = {
+      tilesCompleted,
+      totalTiles,
+      size,
+      basePoints,
+      completedLines,
+      lineBonus,
+      isGrandChelem,
+      grandChelemBonus,
+      totalPoints
+    };
+  }
+
+  return stats;
+}
+
+/** Return the computed state for a private room */
+function getComputedRoomState(roomCode) {
+  const room = gameState.rooms?.[roomCode];
+  if (!room) return null;
+
+  const grid = gameState.grids[room.gridId] || Object.values(gameState.grids)[0];
+  const challenges = grid ? grid.challenges : [];
+  const stats = calculateRoomStats(room);
+  const players = {};
+
+  (room.playerIds || []).forEach(pId => {
+    const p = gameState.players[pId];
+    if (p) {
+      players[pId] = {
+        id: p.id,
+        name: p.name,
+        club: p.club,
+        avatar: p.avatar,
+        color: p.color,
+        stats: p.stats || {},
+        checked: room.checked?.[pId] || []
+      };
+    }
+  });
+
+  return {
+    code: room.code,
+    name: room.name,
+    isPrivate: true,
+    status: room.status,
+    hostId: room.hostId,
+    winCondition: room.winCondition || 'first_bingo',
+    winnerId: room.winnerId,
+    winningReason: room.winningReason,
+    grid: {
+      id: grid?.id,
+      name: grid?.name,
+      size: grid?.size || 5,
+      challenges
+    },
+    players,
+    stats,
+    history: (room.history || []).slice(-30),
+    spectatorUrl: `/spectator.html?room=${room.code}`,
+    playerUrl: `/player.html?room=${room.code}`,
+    obsUrl: `/obs.html?room=${room.code}`,
+    createdAt: room.createdAt
+  };
+}
+
 // ─── Full computed state ───────────────────────────────────────────────────────
 
 function getComputedState() {
@@ -308,7 +493,6 @@ function getComputedState() {
   const playersOut   = {};
 
   for (const [pId, player] of Object.entries(gameState.players)) {
-    // Build player output with checked array for active grid
     playersOut[pId] = {
       id:        player.id,
       name:      player.name,
@@ -316,8 +500,8 @@ function getComputedState() {
       avatar:    player.avatar,
       color:     player.color,
       friends:   player.friends || [],
+      stats:     player.stats || {},
       createdAt: player.createdAt,
-      // Include all grids checked data (so client can switch grids if needed)
       grids:     player.grids || {}
     };
 
@@ -329,11 +513,13 @@ function getComputedState() {
   return {
     activeGrid: activeGridId,
     activeGridId,
-    grids:    Object.values(gameState.grids),
-    players:  playersOut,
-    settings: gameState.settings,
-    history:  gameState.history.slice(-50),
-    stats
+    grids:       Object.values(gameState.grids),
+    players:     playersOut,
+    settings:    gameState.settings,
+    history:     gameState.history.slice(-50),
+    stats,
+    leaderboard: getLeaderboard(),
+    roomsCount:  Object.keys(gameState.rooms || {}).length
   };
 }
 
@@ -719,10 +905,24 @@ app.post('/api/toggle', (req, res) => {
   });
   if (gameState.history.length > 100) gameState.history.shift();
 
-  saveState();
-
+  // Career stats update
+  player.stats = player.stats || { wins: 0, grandChelems: 0, bingos: 0, gamesPlayed: 0, careerPoints: 0 };
+  if (isNowChecked && challenge) {
+    player.stats.careerPoints = (player.stats.careerPoints || 0) + (challenge.points || 1);
+  } else if (!isNowChecked && challenge) {
+    player.stats.careerPoints = Math.max(0, (player.stats.careerPoints || 0) - (challenge.points || 1));
+  }
   const newLineAchieved = newStats.completedLines.length > prevStats.completedLines.length;
+  if (newLineAchieved) {
+    player.stats.bingos = (player.stats.bingos || 0) + (newStats.completedLines.length - prevStats.completedLines.length);
+  }
   const newGrandChelem  = newStats.isGrandChelem && !prevStats.isGrandChelem;
+  if (newGrandChelem) {
+    player.stats.grandChelems = (player.stats.grandChelems || 0) + 1;
+    player.stats.wins = (player.stats.wins || 0) + 1;
+  }
+
+  saveState();
 
   const state = getComputedState();
   io.emit('stateUpdate', state);
@@ -735,6 +935,7 @@ app.post('/api/toggle', (req, res) => {
     newLineAchieved,
     newGrandChelem
   });
+  io.emit('leaderboardUpdate', getLeaderboard());
 
   res.json({ success: true, state });
 });
@@ -824,12 +1025,428 @@ app.get('/api/challenges', (req, res) => {
   res.json(rawChallenges);
 });
 
+// ─── REST: Leaderboard ────────────────────────────────────────────────────────
+
+app.get('/api/leaderboard', (req, res) => {
+  res.json({
+    success: true,
+    leaderboard: getLeaderboard()
+  });
+});
+
+// ─── REST: Rooms (Parties Privées) ───────────────────────────────────────────
+
+app.get('/api/rooms', (req, res) => {
+  const list = Object.values(gameState.rooms || {}).map(r => ({
+    code: r.code,
+    name: r.name,
+    gridId: r.gridId,
+    gridName: gameState.grids[r.gridId]?.name || 'Grille Bingo',
+    hostId: r.hostId,
+    hostName: gameState.players[r.hostId]?.name || 'Anonyme',
+    status: r.status,
+    playerCount: (r.playerIds || []).length,
+    winCondition: r.winCondition,
+    winnerId: r.winnerId,
+    winningReason: r.winningReason,
+    createdAt: r.createdAt
+  }));
+  res.json({ success: true, rooms: list });
+});
+
+app.post('/api/rooms', (req, res) => {
+  const { name, gridId, hostId, winCondition, customCode } = req.body;
+  const cleanName = (name || 'Partie Privée').trim();
+  const gId = gridId || gameState.activeGridId || Object.keys(gameState.grids)[0];
+  if (!gId || !gameState.grids[gId]) {
+    return res.status(400).json({ success: false, message: 'Grille introuvable.' });
+  }
+
+  let code = customCode ? String(customCode).trim().toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8) : '';
+  if (!code || code.length < 3 || (gameState.rooms && gameState.rooms[code])) {
+    code = makeRoomCode();
+  }
+
+  const grid = gameState.grids[gId];
+  const totalTiles = grid.challenges?.length || 25;
+  const pIds = hostId && gameState.players[hostId] ? [hostId] : [];
+  const checked = {};
+  if (hostId) {
+    checked[hostId] = new Array(totalTiles).fill(false);
+    if (gameState.players[hostId]?.stats) {
+      gameState.players[hostId].stats.gamesPlayed = (gameState.players[hostId].stats.gamesPlayed || 0) + 1;
+    }
+  }
+
+  if (!gameState.rooms) gameState.rooms = {};
+  gameState.rooms[code] = {
+    code,
+    name: cleanName,
+    gridId: gId,
+    hostId: hostId || null,
+    isPrivate: true,
+    status: 'waiting',
+    winCondition: winCondition || 'first_bingo',
+    playerIds: pIds,
+    checked,
+    winnerId: null,
+    winningReason: null,
+    createdAt: new Date().toISOString(),
+    history: []
+  };
+
+  saveState();
+  const roomState = getComputedRoomState(code);
+  res.json({
+    success: true,
+    code,
+    room: roomState,
+    spectatorUrl: `/spectator.html?room=${code}`,
+    playerUrl: `/player.html?room=${code}`,
+    obsUrl: `/obs.html?room=${code}`
+  });
+});
+
+app.get('/api/rooms/:code', (req, res) => {
+  const code = String(req.params.code || '').trim().toUpperCase();
+  const roomState = getComputedRoomState(code);
+  if (!roomState) {
+    return res.status(404).json({ success: false, message: `Partie "${code}" introuvable.` });
+  }
+  res.json({ success: true, room: roomState });
+});
+
+app.post('/api/rooms/join', (req, res) => {
+  const { code, playerId } = req.body;
+  if (!code) return res.status(400).json({ success: false, message: 'Code de partie requis.' });
+  const cleanCode = String(code).trim().toUpperCase();
+  const room = gameState.rooms?.[cleanCode];
+  if (!room) {
+    return res.status(404).json({ success: false, message: `Aucune partie trouvée avec le code "${cleanCode}". Vérifiez le code !` });
+  }
+
+  if (!playerId || !gameState.players[playerId]) {
+    return res.status(401).json({ success: false, message: 'Veuillez vous connecter avec votre compte pour rejoindre.', needAuth: true });
+  }
+
+  const player = gameState.players[playerId];
+  if (!room.playerIds.includes(playerId)) {
+    room.playerIds.push(playerId);
+    const grid = gameState.grids[room.gridId];
+    const totalTiles = grid?.challenges?.length || 25;
+    if (!room.checked) room.checked = {};
+    room.checked[playerId] = new Array(totalTiles).fill(false);
+
+    player.stats = player.stats || { wins: 0, grandChelems: 0, bingos: 0, gamesPlayed: 0, careerPoints: 0 };
+    player.stats.gamesPlayed = (player.stats.gamesPlayed || 0) + 1;
+    saveState();
+
+    const roomState = getComputedRoomState(cleanCode);
+    io.to('room_' + cleanCode).emit('roomStateUpdate', roomState);
+    io.to('room_' + cleanCode).emit('roomPlayerJoined', {
+      playerId,
+      playerName: player.name,
+      avatar: player.avatar,
+      color: player.color
+    });
+  }
+
+  res.json({
+    success: true,
+    code: cleanCode,
+    room: getComputedRoomState(cleanCode),
+    playerUrl: `/player.html?room=${cleanCode}&p=${playerId}`,
+    spectatorUrl: `/spectator.html?room=${cleanCode}`,
+    obsUrl: `/obs.html?room=${cleanCode}`
+  });
+});
+
+app.post('/api/rooms/toggle', (req, res) => {
+  const { code, playerId, tileIndex, checked } = req.body;
+  const cleanCode = String(code || '').trim().toUpperCase();
+  const room = gameState.rooms?.[cleanCode];
+  if (!room) return res.status(404).json({ success: false, message: 'Partie introuvable.' });
+
+  const player = gameState.players[playerId];
+  if (!player) return res.status(404).json({ success: false, message: 'Joueur introuvable.' });
+
+  if (!room.playerIds.includes(playerId)) {
+    room.playerIds.push(playerId);
+  }
+
+  const grid = gameState.grids[room.gridId] || Object.values(gameState.grids)[0];
+  const challenges = grid ? grid.challenges : [];
+  if (tileIndex < 0 || tileIndex >= challenges.length) {
+    return res.status(400).json({ success: false, message: 'Tuile invalide.' });
+  }
+
+  if (!room.checked) room.checked = {};
+  if (!room.checked[playerId]) room.checked[playerId] = new Array(challenges.length).fill(false);
+
+  const prevStats = calculateRoomStats(room)[playerId] || {};
+  const isNowChecked = typeof checked === 'boolean' ? checked : !room.checked[playerId][tileIndex];
+  room.checked[playerId][tileIndex] = isNowChecked;
+
+  const newStats = calculateRoomStats(room)[playerId] || {};
+  const challenge = challenges[tileIndex];
+
+  // Career stats update
+  player.stats = player.stats || { wins: 0, grandChelems: 0, bingos: 0, gamesPlayed: 0, careerPoints: 0 };
+  if (isNowChecked && challenge) {
+    player.stats.careerPoints = (player.stats.careerPoints || 0) + (challenge.points || 1);
+  } else if (!isNowChecked && challenge) {
+    player.stats.careerPoints = Math.max(0, (player.stats.careerPoints || 0) - (challenge.points || 1));
+  }
+
+  const newLineAchieved = newStats.completedLines.length > (prevStats.completedLines?.length || 0);
+  if (newLineAchieved) {
+    player.stats.bingos = (player.stats.bingos || 0) + (newStats.completedLines.length - (prevStats.completedLines?.length || 0));
+  }
+
+  const newGrandChelem = newStats.isGrandChelem && !prevStats.isGrandChelem;
+  if (newGrandChelem) {
+    player.stats.grandChelems = (player.stats.grandChelems || 0) + 1;
+  }
+
+  // Check victory condition
+  let winnerDeclared = false;
+  if (room.status !== 'finished') {
+    if (room.winCondition === 'grand_chelem' && newGrandChelem) {
+      winnerDeclared = true;
+      room.winnerId = playerId;
+      room.winningReason = 'Grand Chelem (Grille 100% complétée !)';
+      room.status = 'finished';
+      player.stats.wins = (player.stats.wins || 0) + 1;
+    } else if ((room.winCondition === 'first_bingo' || !room.winCondition) && newLineAchieved) {
+      winnerDeclared = true;
+      room.winnerId = playerId;
+      room.winningReason = `Premier Bingo complété (${newStats.completedLines[newStats.completedLines.length - 1]?.name || 'Ligne'}) !`;
+      room.status = 'finished';
+      player.stats.wins = (player.stats.wins || 0) + 1;
+    }
+  }
+
+  // History
+  if (!room.history) room.history = [];
+  room.history.push({
+    id: Date.now(),
+    timestamp: new Date().toISOString(),
+    playerId,
+    playerName: player.name,
+    challengeId: tileIndex,
+    challengeTitle: challenge ? challenge.title : `Défi #${tileIndex + 1}`,
+    challengeIcon: challenge ? challenge.icon : '🎯',
+    points: challenge ? challenge.points : 0,
+    action: isNowChecked ? 'check' : 'uncheck'
+  });
+  if (room.history.length > 50) room.history.shift();
+
+  saveState();
+
+  const roomState = getComputedRoomState(cleanCode);
+  io.to('room_' + cleanCode).emit('roomStateUpdate', roomState);
+  io.to('room_' + cleanCode).emit('roomTileToggled', {
+    playerId,
+    playerName: player.name,
+    challenge,
+    checked: isNowChecked,
+    newStats,
+    newLineAchieved,
+    newGrandChelem,
+    winnerDeclared,
+    winner: winnerDeclared ? { id: player.id, name: player.name, avatar: player.avatar, reason: room.winningReason } : null
+  });
+  io.emit('leaderboardUpdate', getLeaderboard());
+
+  res.json({ success: true, roomState });
+});
+
+app.post('/api/rooms/finish', (req, res) => {
+  const { code, winnerId, reason } = req.body;
+  const cleanCode = String(code || '').trim().toUpperCase();
+  const room = gameState.rooms?.[cleanCode];
+  if (!room) return res.status(404).json({ success: false, message: 'Partie introuvable.' });
+
+  room.status = 'finished';
+  if (winnerId && gameState.players[winnerId]) {
+    room.winnerId = winnerId;
+    room.winningReason = reason || 'Victoire validée par l’arbitre';
+    const winner = gameState.players[winnerId];
+    winner.stats = winner.stats || { wins: 0, grandChelems: 0, bingos: 0, gamesPlayed: 0, careerPoints: 0 };
+    winner.stats.wins = (winner.stats.wins || 0) + 1;
+  }
+
+  saveState();
+  const roomState = getComputedRoomState(cleanCode);
+  io.to('room_' + cleanCode).emit('roomStateUpdate', roomState);
+  io.to('room_' + cleanCode).emit('roomWinner', {
+    winnerId: room.winnerId,
+    reason: room.winningReason,
+    winner: room.winnerId ? gameState.players[room.winnerId] : null
+  });
+  io.emit('leaderboardUpdate', getLeaderboard());
+
+  res.json({ success: true, room: roomState });
+});
+
+app.post('/api/rooms/reset', (req, res) => {
+  const { code } = req.body;
+  const cleanCode = String(code || '').trim().toUpperCase();
+  const room = gameState.rooms?.[cleanCode];
+  if (!room) return res.status(404).json({ success: false, message: 'Partie introuvable.' });
+
+  const grid = gameState.grids[room.gridId] || Object.values(gameState.grids)[0];
+  const totalTiles = grid?.challenges?.length || 25;
+  room.checked = {};
+  room.winnerId = null;
+  room.winningReason = null;
+  room.status = 'waiting';
+  (room.playerIds || []).forEach(pId => {
+    room.checked[pId] = new Array(totalTiles).fill(false);
+  });
+  room.history = [];
+
+  saveState();
+  const roomState = getComputedRoomState(cleanCode);
+  io.to('room_' + cleanCode).emit('roomStateUpdate', roomState);
+  io.to('room_' + cleanCode).emit('roomReset', { code: cleanCode });
+  res.json({ success: true, room: roomState });
+});
+
 // ─── Socket.io ────────────────────────────────────────────────────────────────
 
 io.on('connection', (socket) => {
   socket.emit('stateUpdate', getComputedState());
+  socket.emit('leaderboardUpdate', getLeaderboard());
 
-  // Handle tile toggle from client
+  // Join private room socket channel
+  socket.on('joinRoom', ({ roomCode, playerId, isSpectator }) => {
+    if (!roomCode) return;
+    const cleanCode = String(roomCode).trim().toUpperCase();
+    const room = gameState.rooms?.[cleanCode];
+    if (!room) {
+      socket.emit('roomError', { message: `Partie "${cleanCode}" introuvable.` });
+      return;
+    }
+    socket.join('room_' + cleanCode);
+    socket.roomCode = cleanCode;
+    socket.playerId = playerId;
+
+    const rState = getComputedRoomState(cleanCode);
+    socket.emit('roomStateUpdate', rState);
+  });
+
+  socket.on('leaveRoom', ({ roomCode }) => {
+    if (roomCode) {
+      socket.leave('room_' + String(roomCode).trim().toUpperCase());
+    }
+  });
+
+  // Handle tile toggle in room from socket
+  socket.on('roomToggleTile', ({ code, playerId, tileIndex, checked }) => {
+    const cleanCode = String(code || socket.roomCode || '').trim().toUpperCase();
+    const room = gameState.rooms?.[cleanCode];
+    if (!room) return;
+    const player = gameState.players[playerId];
+    if (!player) return;
+
+    const grid = gameState.grids[room.gridId] || Object.values(gameState.grids)[0];
+    const challenges = grid ? grid.challenges : [];
+    if (tileIndex < 0 || tileIndex >= challenges.length) return;
+
+    if (!room.playerIds.includes(playerId)) room.playerIds.push(playerId);
+    if (!room.checked) room.checked = {};
+    if (!room.checked[playerId]) room.checked[playerId] = new Array(challenges.length).fill(false);
+
+    const prevStats = calculateRoomStats(room)[playerId] || {};
+    const isNowChecked = typeof checked === 'boolean' ? checked : !room.checked[playerId][tileIndex];
+    room.checked[playerId][tileIndex] = isNowChecked;
+
+    const newStats = calculateRoomStats(room)[playerId] || {};
+    const challenge = challenges[tileIndex];
+
+    player.stats = player.stats || { wins: 0, grandChelems: 0, bingos: 0, gamesPlayed: 0, careerPoints: 0 };
+    if (isNowChecked && challenge) player.stats.careerPoints = (player.stats.careerPoints || 0) + (challenge.points || 1);
+    else if (!isNowChecked && challenge) player.stats.careerPoints = Math.max(0, (player.stats.careerPoints || 0) - (challenge.points || 1));
+
+    const newLineAchieved = newStats.completedLines.length > (prevStats.completedLines?.length || 0);
+    if (newLineAchieved) {
+      player.stats.bingos = (player.stats.bingos || 0) + (newStats.completedLines.length - (prevStats.completedLines?.length || 0));
+    }
+    const newGrandChelem = newStats.isGrandChelem && !prevStats.isGrandChelem;
+    if (newGrandChelem) {
+      player.stats.grandChelems = (player.stats.grandChelems || 0) + 1;
+    }
+
+    let winnerDeclared = false;
+    if (room.status !== 'finished') {
+      if (room.winCondition === 'grand_chelem' && newGrandChelem) {
+        winnerDeclared = true;
+        room.winnerId = playerId;
+        room.winningReason = 'Grand Chelem (Grille 100% complétée !)';
+        room.status = 'finished';
+        player.stats.wins = (player.stats.wins || 0) + 1;
+      } else if ((room.winCondition === 'first_bingo' || !room.winCondition) && newLineAchieved) {
+        winnerDeclared = true;
+        room.winnerId = playerId;
+        room.winningReason = `Premier Bingo complété (${newStats.completedLines[newStats.completedLines.length - 1]?.name || 'Ligne'}) !`;
+        room.status = 'finished';
+        player.stats.wins = (player.stats.wins || 0) + 1;
+      }
+    }
+
+    if (!room.history) room.history = [];
+    room.history.push({
+      id: Date.now(),
+      timestamp: new Date().toISOString(),
+      playerId,
+      playerName: player.name,
+      challengeId: tileIndex,
+      challengeTitle: challenge ? challenge.title : `Défi #${tileIndex + 1}`,
+      challengeIcon: challenge ? challenge.icon : '🎯',
+      points: challenge ? challenge.points : 0,
+      action: isNowChecked ? 'check' : 'uncheck'
+    });
+    if (room.history.length > 50) room.history.shift();
+
+    saveState();
+
+    const rState = getComputedRoomState(cleanCode);
+    io.to('room_' + cleanCode).emit('roomStateUpdate', rState);
+    io.to('room_' + cleanCode).emit('roomTileToggled', {
+      playerId,
+      playerName: player.name,
+      challenge,
+      checked: isNowChecked,
+      newStats,
+      newLineAchieved,
+      newGrandChelem,
+      winnerDeclared,
+      winner: winnerDeclared ? { id: player.id, name: player.name, avatar: player.avatar, reason: room.winningReason } : null
+    });
+    io.emit('leaderboardUpdate', getLeaderboard());
+  });
+
+  socket.on('roomReset', ({ code }) => {
+    const cleanCode = String(code || socket.roomCode || '').trim().toUpperCase();
+    const room = gameState.rooms?.[cleanCode];
+    if (!room) return;
+    const grid = gameState.grids[room.gridId] || Object.values(gameState.grids)[0];
+    const totalTiles = grid?.challenges?.length || 25;
+    room.checked = {};
+    room.winnerId = null;
+    room.winningReason = null;
+    room.status = 'waiting';
+    (room.playerIds || []).forEach(pId => {
+      room.checked[pId] = new Array(totalTiles).fill(false);
+    });
+    room.history = [];
+    saveState();
+    io.to('room_' + cleanCode).emit('roomStateUpdate', getComputedRoomState(cleanCode));
+    io.to('room_' + cleanCode).emit('roomReset', { code: cleanCode });
+  });
+
+  // Handle global tile toggle from client
   socket.on('toggleTile', ({ playerId, tileIndex, checked, gridId }) => {
     const player = gameState.players[playerId];
     if (!player) return;

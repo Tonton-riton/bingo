@@ -23,18 +23,75 @@
     </a>
     <div class="header-nav">
       <button class="btn btn-icon" id="btn-sound" title="Son">🔊</button>
+      <button class="btn btn-sm" onclick="SocialHub.openJoinRoomModal()" style="border-color:var(--lime);color:var(--lime);font-weight:800;" title="Rejoindre avec un code">🔑 Code</button>
+      <button class="btn btn-sm" onclick="SocialHub.openCreateRoomModal()" style="border-color:#2a3645;color:#e2e8f0;font-weight:700;" title="Créer une partie privée">🎮 Créer Salle</button>
+      <a href="/leaderboard.html" class="btn btn-sm" style="border-color:#2a3645;color:var(--gold);font-weight:800;" title="Classement Général">🏆 Classement</a>
       <button class="btn btn-sm" onclick="SocialHub.openFriendsModal()" title="Mes Amis" style="border-color:var(--accent);color:var(--accent);font-weight:800;">👥 Mes Amis</button>
       <button class="btn btn-sm" onclick="openModal('modal-profile')">✏️ Profil</button>
       <div style="display:flex;gap:4px;background:#10141b;padding:4px;border:1px solid var(--border);border-radius:8px;" id="player-switcher">
         <!-- filled by JS -->
       </div>
       <div id="auth-nav-slot"></div>
-      <a href="/spectator.html" target="_blank" class="btn btn-sm">📺</a>
+      <a href="/spectator.html" id="btn-hdr-spec" target="_blank" class="btn btn-sm" title="Vue Spectateur">📺</a>
       <a href="/admin.html" class="btn btn-sm" style="border-color:rgba(255,255,255,0.2);">🔐 Admin</a>
     </div>
   </header>
 
   <main class="container" style="max-width:1100px;">
+
+    <!-- PRIVATE ROOM BANNER (Hidden by default, shown if in room mode) -->
+    <div id="room-banner" style="display:none;background:#0d1118;border:2px solid var(--lime);border-radius:12px;padding:14px 18px;margin-bottom:16px;box-shadow:0 0 25px rgba(187,242,70,0.15);">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+          <div style="background:var(--lime);color:#000;font-weight:900;padding:4px 10px;border-radius:6px;font-size:0.8rem;letter-spacing:0.05em;display:flex;align-items:center;gap:6px;">
+            <span>🔒 SALLE PRIVÉE</span>
+            <span id="room-code-tag" style="background:#000;color:var(--lime);padding:2px 8px;border-radius:4px;font-family:var(--font-display);font-size:1.1rem;letter-spacing:0.1em;">------</span>
+          </div>
+          <div>
+            <div style="font-weight:800;font-size:1rem;color:#ffffff;" id="room-title">Partie Privée</div>
+            <div style="font-size:0.75rem;color:#94a3b8;" id="room-subtitle">Grille exclusive • Synchro live</div>
+          </div>
+          <span id="room-status-badge" class="badge" style="background:rgba(187,242,70,0.15);color:var(--lime);border:1px solid var(--lime);font-size:0.75rem;padding:3px 8px;font-weight:800;">🟢 EN COURS</span>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-sm" onclick="copySpectatorLink()" id="btn-copy-spec" style="background:#151c27;border-color:var(--lime);color:var(--lime);font-weight:700;">
+            📺 Lien Spectateur
+          </button>
+          <button class="btn btn-sm" onclick="copyObsLink()" id="btn-copy-obs" style="background:#151c27;border-color:#334155;color:#e2e8f0;">
+            🎥 Lien OBS
+          </button>
+          <button class="btn btn-sm" onclick="copyInviteLink()" id="btn-copy-invite" style="background:#151c27;border-color:#334155;color:#e2e8f0;">
+            🔗 Inviter Joueur
+          </button>
+          <a href="/player.html" class="btn btn-sm btn-danger" style="font-weight:700;">
+            🚪 Quitter
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROOM WINNER CELEBRATION BANNER -->
+    <div id="room-winner-banner" style="display:none;background:linear-gradient(135deg, rgba(255,170,0,0.2) 0%, rgba(187,242,70,0.15) 100%);border:2px solid var(--gold);border-radius:12px;padding:16px 20px;margin-bottom:16px;box-shadow:0 0 35px rgba(255,170,0,0.3);">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;">
+        <div style="display:flex;align-items:center;gap:16px;">
+          <div style="font-size:42px;animation:bounce 1s infinite alternate;">👑</div>
+          <div>
+            <div style="font-size:0.75rem;font-weight:900;color:var(--gold);text-transform:uppercase;letter-spacing:0.1em;">VICTOIRE HOMOLOGUÉE ! 🏆</div>
+            <div style="font-size:1.25rem;font-weight:900;color:#ffffff;" id="room-winner-name">Le joueur a remporté la partie !</div>
+            <div style="font-size:0.8rem;color:#cbd5e1;" id="room-winner-reason">Premier Bingo complété</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;">
+          <a href="/leaderboard.html" class="btn btn-lime btn-sm" style="font-weight:900;">
+            🏆 Voir le Classement Général
+          </a>
+          <button class="btn btn-sm btn-secondary-dark" onclick="resetMyGrid()">
+            🔄 Relancer la partie
+          </button>
+        </div>
+      </div>
+    </div>
 
     <!-- PLAYER SCORE BANNER -->
     <div class="scoreboard mb-4" style="background:#0e1424;border:1px solid #1e293b;border-left:4px solid var(--accent);border-radius:12px;">
@@ -174,50 +231,170 @@
   <script>
     const socket = io();
     const params = new URLSearchParams(window.location.search);
+    const roomCode = params.get('room') ? params.get('room').toUpperCase().trim() : null;
     let playerId = params.get('p');
     let state = null;
+    let roomState = null;
+    const isRoomMode = !!roomCode;
+
     const COLOR_MAP = {
       blue:'#4f8ef7',red:'#ef4444',purple:'#8b5cf6',green:'#10b981',
       gold:'#ffaa00',pink:'#ec4899',cyan:'#06b6d4',orange:'#ff5500',lime:'#bbf246'
     };
 
-    // Pick first player if none specified
+    // Copy link helpers for room
+    function copySpectatorLink() {
+      if (!roomCode) return;
+      const url = `${window.location.origin}/spectator.html?room=${roomCode}`;
+      navigator.clipboard.writeText(url).then(() => {
+        const btn = document.getElementById('btn-copy-spec');
+        if (!btn) return;
+        const old = btn.innerHTML;
+        btn.innerHTML = '✓ Lien Copié !';
+        setTimeout(() => btn.innerHTML = old, 2000);
+      });
+    }
+    function copyObsLink() {
+      if (!roomCode) return;
+      const url = `${window.location.origin}/obs.html?room=${roomCode}&mode=hud`;
+      navigator.clipboard.writeText(url).then(() => {
+        const btn = document.getElementById('btn-copy-obs');
+        if (!btn) return;
+        const old = btn.innerHTML;
+        btn.innerHTML = '✓ Lien OBS Copié !';
+        setTimeout(() => btn.innerHTML = old, 2000);
+      });
+    }
+    function copyInviteLink() {
+      if (!roomCode) return;
+      const url = `${window.location.origin}/player.html?room=${roomCode}`;
+      navigator.clipboard.writeText(url).then(() => {
+        const btn = document.getElementById('btn-copy-invite');
+        if (!btn) return;
+        const old = btn.innerHTML;
+        btn.innerHTML = '✓ Lien Copié !';
+        setTimeout(() => btn.innerHTML = old, 2000);
+      });
+    }
+
+    // Initialize room mode if roomCode present
+    async function initRoom() {
+      if (!isRoomMode) return;
+      const rBanner = document.getElementById('room-banner');
+      if (rBanner) rBanner.style.display = 'block';
+      const cTag = document.getElementById('room-code-tag');
+      if (cTag) cTag.textContent = '#' + roomCode;
+      const hdrSpec = document.getElementById('btn-hdr-spec');
+      if (hdrSpec) hdrSpec.href = `/spectator.html?room=${roomCode}`;
+
+      const cu = window.SocialHub?.getCurrentUser();
+      if (!playerId && cu) {
+        playerId = cu.id;
+        window.history.replaceState({}, '', `/player.html?room=${roomCode}&p=${playerId}`);
+      }
+
+      if (playerId) {
+        try {
+          await fetch('/api/rooms/join', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ code: roomCode, playerId })
+          });
+        } catch (e) {
+          console.error('Error joining room via API', e);
+        }
+      }
+
+      socket.emit('joinRoom', { roomCode, playerId });
+
+      try {
+        const res = await fetch(`/api/rooms/${roomCode}`);
+        const data = await res.json();
+        if (data.success && data.room) {
+          roomState = data.room;
+          renderRoomUI(data.room);
+        }
+      } catch (err) {
+        console.error('Failed to load room:', err);
+      }
+    }
+
+    // Room Socket Handlers
+    socket.on('roomStateUpdate', (rState) => {
+      if (!isRoomMode || rState.code !== roomCode) return;
+      const prev = roomState;
+      roomState = rState;
+
+      // Sound & celebration if victory
+      if (rState.status === 'finished' && (!prev || prev.status !== 'finished')) {
+        window.soundFx?.playGrandChelem();
+        window.launchConfetti?.({ count: 280 });
+      }
+
+      renderRoomUI(rState);
+      if (window.SocialHub) SocialHub.renderAuthNav();
+    });
+
+    socket.on('roomTileToggled', (ev) => {
+      if (!isRoomMode) return;
+      if (ev.checked) showToast(ev.playerName, ev.challenge, ev.newLineAchieved, ev.newGrandChelem);
+      if (ev.winnerDeclared) {
+        window.soundFx?.playGrandChelem();
+        window.launchConfetti?.({ count: 300 });
+      }
+    });
+
+    socket.on('roomWinner', (ev) => {
+      if (!isRoomMode) return;
+      window.soundFx?.playGrandChelem();
+      window.launchConfetti?.({ count: 320 });
+      const wBanner = document.getElementById('room-winner-banner');
+      if (wBanner) {
+        wBanner.style.display = 'block';
+        document.getElementById('room-winner-name').textContent = `${ev.winner?.name || 'Un joueur'} a remporté la partie !`;
+        document.getElementById('room-winner-reason').textContent = ev.reason || 'Victoire !';
+      }
+    });
+
+    // Global state update (for non-room mode or background state)
     socket.on('stateUpdate', (data) => {
       const prevState = state;
       state = data;
-      if (!playerId || !data.players[playerId]) {
-        const cu = window.SocialHub?.getCurrentUser();
-        if (cu && data.players[cu.id]) {
-          playerId = cu.id;
-        } else {
-          const ids = Object.keys(data.players);
-          if (!ids.length) return;
-          playerId = ids[0];
+      if (!isRoomMode) {
+        if (!playerId || !data.players[playerId]) {
+          const cu = window.SocialHub?.getCurrentUser();
+          if (cu && data.players[cu.id]) {
+            playerId = cu.id;
+          } else {
+            const ids = Object.keys(data.players);
+            if (!ids.length) return;
+            playerId = ids[0];
+          }
+          window.history.replaceState({}, '', `/player.html?p=${playerId}`);
         }
-        window.history.replaceState({}, '', `/player.html?p=${playerId}`);
-      }
 
-      // Sound + confetti on line/grand chelem achievement
-      if (prevState) {
-        const ps = prevState.stats?.[playerId];
-        const ns = data.stats?.[playerId];
-        if (ps && ns) {
-          if (ns.isGrandChelem && !ps.isGrandChelem) {
-            window.soundFx?.playGrandChelem();
-            window.launchConfetti?.({ count: 250 });
-          } else if (ns.completedLines?.length > ps.completedLines?.length) {
-            window.soundFx?.playBingo();
-            window.launchConfetti?.({ count: 120 });
+        // Sound + confetti on line/grand chelem achievement
+        if (prevState) {
+          const ps = prevState.stats?.[playerId];
+          const ns = data.stats?.[playerId];
+          if (ps && ns) {
+            if (ns.isGrandChelem && !ps.isGrandChelem) {
+              window.soundFx?.playGrandChelem();
+              window.launchConfetti?.({ count: 250 });
+            } else if (ns.completedLines?.length > ps.completedLines?.length) {
+              window.soundFx?.playBingo();
+              window.launchConfetti?.({ count: 120 });
+            }
           }
         }
-      }
 
-      renderUI(data);
+        renderUI(data);
+      }
       if (window.SocialHub) SocialHub.renderAuthNav();
     });
 
     socket.on('tileToggled', (ev) => {
-      if (ev.checked) showToast(ev.playerName, ev.challenge, ev.newLineAchieved, ev.newGrandChelem);
+      if (!isRoomMode && ev.checked) showToast(ev.playerName, ev.challenge, ev.newLineAchieved, ev.newGrandChelem);
     });
 
     function renderUI(data) {
@@ -380,7 +557,161 @@
       }).join('');
     }
 
+    // Rendu pour une salle privée
+    function renderRoomUI(rData) {
+      if (!rData) return;
+      if (!playerId || !rData.players[playerId]) {
+        const cu = window.SocialHub?.getCurrentUser();
+        if (cu && rData.players[cu.id]) {
+          playerId = cu.id;
+        } else if (rData.playerIds && rData.playerIds.length > 0) {
+          playerId = rData.playerIds[0];
+        }
+      }
+
+      const player = rData.players[playerId] || (state?.players?.[playerId]);
+      if (!player) return;
+
+      const colorHex = COLOR_MAP[player.color] || '#bbf246';
+      const stats = rData.stats?.[playerId] || { totalPoints: 0, tilesCompleted: 0, completedLines: [], basePoints: 0, lineBonus: 0 };
+      const challenges = rData.challenges || rData.grid?.challenges || [];
+      const totalTiles = challenges.length || 25;
+
+      // Header
+      document.getElementById('hdr-avatar').innerHTML = renderAvatar(player.avatar);
+      document.getElementById('hdr-avatar').style.border = `2px solid ${colorHex}`;
+      document.getElementById('hdr-name').textContent = player.name;
+      document.getElementById('hdr-club').textContent = player.club;
+
+      // Banner
+      const bannerAvatar = document.getElementById('banner-avatar');
+      bannerAvatar.innerHTML = renderAvatar(player.avatar);
+      bannerAvatar.style.borderColor = colorHex;
+      bannerAvatar.style.background = '#151722';
+
+      document.getElementById('banner-name').textContent = player.name;
+      document.getElementById('banner-club').textContent = player.club;
+      document.getElementById('banner-score').textContent = stats.totalPoints || 0;
+      document.getElementById('banner-score').style.color = colorHex;
+      document.getElementById('stat-tiles').textContent = `${stats.tilesCompleted || 0}/${totalTiles}`;
+      document.getElementById('stat-lines').textContent = stats.completedLines?.length || 0;
+      document.getElementById('stat-line-bonus').textContent = stats.lineBonus || 0;
+      document.getElementById('stat-base').textContent = stats.basePoints || 0;
+
+      // Grid title and Room info
+      document.getElementById('grid-title').textContent = rData.name || 'Partie Privée';
+      const rTitle = document.getElementById('room-title');
+      if (rTitle) rTitle.textContent = rData.name || 'Partie Privée';
+      const rSub = document.getElementById('room-subtitle');
+      if (rSub) {
+        const winModeText = rData.winCondition === 'grand_chelem' ? '👑 Grand Chelem (100% de la grille)' : '🎯 Premier Bingo (1 ligne = Victoire)';
+        rSub.textContent = `${rData.gridName || 'Grille Bingo'} • Mode : ${winModeText}`;
+      }
+
+      // Room status badge
+      const sBadge = document.getElementById('room-status-badge');
+      if (sBadge) {
+        if (rData.status === 'finished') {
+          sBadge.textContent = '🏁 PARTIE TERMINÉE';
+          sBadge.style.background = 'rgba(255, 170, 0, 0.2)';
+          sBadge.style.borderColor = 'var(--gold)';
+          sBadge.style.color = 'var(--gold)';
+        } else {
+          sBadge.textContent = '🟢 EN COURS';
+          sBadge.style.background = 'rgba(187, 242, 70, 0.15)';
+          sBadge.style.borderColor = 'var(--lime)';
+          sBadge.style.color = 'var(--lime)';
+        }
+      }
+
+      // Winner banner
+      const wBanner = document.getElementById('room-winner-banner');
+      if (wBanner) {
+        if (rData.status === 'finished' && rData.winnerId) {
+          wBanner.style.display = 'block';
+          const winnerPlayer = rData.players[rData.winnerId];
+          document.getElementById('room-winner-name').textContent = `${winnerPlayer?.name || 'Un joueur'} a remporté la victoire !`;
+          document.getElementById('room-winner-reason').textContent = rData.winningReason || 'Condition de victoire atteinte';
+        } else {
+          wBanner.style.display = 'none';
+        }
+      }
+
+      // Other room players
+      const otherIds = (rData.playerIds || []).filter(id => id !== playerId);
+      const rivalBar = document.getElementById('rival-bar');
+      if (otherIds.length > 0) {
+        rivalBar.style.display = 'flex';
+        document.getElementById('rival-pills').innerHTML = otherIds.map(rid => {
+          const rp = rData.players[rid] || state?.players?.[rid];
+          if (!rp) return '';
+          const rs = rData.stats?.[rid];
+          const rc = COLOR_MAP[rp.color] || '#bbf246';
+          return `<div style="display:flex;align-items:center;gap:6px;background:#141722;border:1px solid ${rc}44;padding:4px 10px;border-radius:4px;font-size:0.8rem;">
+            <span>${renderAvatar(rp.avatar)}</span>
+            <span style="font-weight:700;">${rp.name}</span>
+            <span style="color:${rc};font-weight:900;">${rs?.totalPoints||0} pts</span>
+            <span class="text-xs text-muted">(${rs?.tilesCompleted||0}/${totalTiles})</span>
+          </div>`;
+        }).join('');
+      } else {
+        rivalBar.style.display = 'none';
+      }
+
+      // Lines bar
+      const lines = stats.completedLines || [];
+      if (lines.length > 0) {
+        document.getElementById('lines-bar').classList.remove('hidden');
+        document.getElementById('lines-tags').innerHTML = lines.map(l => `<span class="line-tag">⭐ ${l.name}</span>`).join('');
+      } else {
+        document.getElementById('lines-bar').classList.add('hidden');
+      }
+
+      // Player switcher for room participants
+      const rPlayers = (rData.playerIds || []).map(id => rData.players[id] || state?.players?.[id]).filter(Boolean);
+      document.getElementById('player-switcher').innerHTML = rPlayers.map(p => {
+        const c = COLOR_MAP[p.color] || '#bbf246';
+        const active = p.id === playerId;
+        return `<button onclick="switchPlayer('${p.id}')" class="btn btn-sm" style="${active ? `background:${c};border-color:${c};color:${c === '#bbf246' ? '#000' : '#fff'};font-weight:900;` : ''}">${renderAvatar(p.avatar)} ${p.name.split(' ')[0]}</button>`;
+      }).join('');
+
+      // Grid
+      const checkedArr = rData.checked?.[playerId] || Array(totalTiles).fill(false);
+      renderGrid(challenges, checkedArr, lines, player.color, playerId);
+
+      // Feed
+      renderFeed(rData.history || []);
+    }
+
     function toggleTile(idx, currentChecked) {
+      if (isRoomMode) {
+        if (!roomState || !playerId) {
+          if (!playerId && window.SocialHub) {
+            SocialHub.openJoinRoomModal();
+          }
+          return;
+        }
+        const newChecked = !currentChecked;
+        if (newChecked) window.soundFx?.playCheck();
+        else window.soundFx?.playUncheck();
+
+        // Optimistic UI for room
+        if (!roomState.checked) roomState.checked = {};
+        if (!roomState.checked[playerId]) {
+          const challenges = roomState.challenges || roomState.grid?.challenges || [];
+          roomState.checked[playerId] = Array(challenges.length || 25).fill(false);
+        }
+        roomState.checked[playerId][idx] = newChecked;
+
+        const challenges = roomState.challenges || roomState.grid?.challenges || [];
+        const stats = roomState.stats?.[playerId] || {};
+        const player = roomState.players[playerId] || (state?.players?.[playerId]) || {};
+        renderGrid(challenges, roomState.checked[playerId], stats.completedLines || [], player.color || 'lime', playerId);
+
+        socket.emit('roomToggleTile', { code: roomCode, playerId, tileIndex: idx, checked: newChecked });
+        return;
+      }
+
       if (!state || !playerId) return;
       const newChecked = !currentChecked;
       if (newChecked) window.soundFx?.playCheck();
@@ -404,11 +735,30 @@
 
     function switchPlayer(id) {
       playerId = id;
-      window.history.replaceState({}, '', `/player.html?p=${id}`);
-      if (state) renderUI(state);
+      if (isRoomMode) {
+        window.history.replaceState({}, '', `/player.html?room=${roomCode}&p=${id}`);
+        if (roomState) renderRoomUI(roomState);
+      } else {
+        window.history.replaceState({}, '', `/player.html?p=${id}`);
+        if (state) renderUI(state);
+      }
     }
 
     function resetMyGrid() {
+      if (isRoomMode) {
+        if (!confirm('Réinitialiser la grille de cette partie privée ?')) return;
+        fetch('/api/rooms/reset', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: roomCode })
+        }).then(res => res.json()).then(data => {
+          if (data.success && data.room) {
+            roomState = data.room;
+            renderRoomUI(data.room);
+          }
+        });
+        return;
+      }
       if (!confirm('Réinitialiser toutes vos coches ?')) return;
       socket.emit('resetGrid', { target: `player:${playerId}`, gridId: state?.activeGrid });
     }
@@ -478,6 +828,11 @@
       container.appendChild(toast);
       requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.add('in')));
       setTimeout(() => { toast.classList.remove('in'); toast.classList.add('out'); setTimeout(() => toast.remove(), 350); }, 4000);
+    }
+
+    // Lance l'initialisation de salle si applicable
+    if (isRoomMode) {
+      initRoom();
     }
   </script>
 </body>

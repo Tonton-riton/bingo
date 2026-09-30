@@ -22,13 +22,16 @@
       </div>
     </a>
 
-    <nav class="header-nav" style="display:flex;align-items:center;gap:18px;">
+    <nav class="header-nav" style="display:flex;align-items:center;gap:12px;">
       <a href="#soirees" class="btn btn-sm" style="background:transparent;border:none;color:#94a3b8;font-weight:700;">Soirées</a>
       <a href="#grille-live" class="btn btn-sm" style="background:transparent;border:none;color:#94a3b8;font-weight:700;">Expérience</a>
-      <a href="#modes" class="btn btn-sm" style="background:transparent;border:none;color:#94a3b8;font-weight:700;">Modes</a>
-      <a href="#classement" class="btn btn-sm" style="background:transparent;border:none;color:#94a3b8;font-weight:700;">Classement</a>
-      <a href="#faq" class="btn btn-sm" style="background:transparent;border:none;color:#94a3b8;font-weight:700;">FAQ</a>
-
+      <a href="/leaderboard.html" class="btn btn-sm" style="border-color:#2a3645;color:var(--gold);font-weight:800;" title="Classement Général">🏆 Classement</a>
+      <button class="btn btn-sm" onclick="SocialHub.openJoinRoomModal()" style="border-color:var(--lime);color:var(--lime);font-weight:800;" title="Rejoindre avec un code">
+        🔑 Code
+      </button>
+      <button class="btn btn-sm" onclick="SocialHub.openCreateRoomModal()" style="border-color:#2a3645;color:#e2e8f0;font-weight:700;" title="Créer une salle privée">
+        🎮 Salle Privée
+      </button>
       <button class="btn btn-sm" onclick="SocialHub.openFriendsModal()" style="border-color:#2a3645;color:var(--lime);font-weight:800;">
         👥 Mes Amis
       </button>
@@ -38,7 +41,7 @@
       </div>
 
       <a href="/admin.html" class="btn btn-lime btn-sm" style="padding:7px 16px;">
-        + CRÉER UNE GRILLE
+        + CRÉER GRILLE
       </a>
     </nav>
   </header>
@@ -62,12 +65,15 @@
           Validez vos grilles de 25 cases en live, défiez vos amis et suivez chaque passe décisive, poteau ou carton rouge pendant que vous vibrez sur vos matchs.
         </p>
 
-        <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-bottom:28px;">
-          <a href="/admin.html" class="btn btn-lime" style="padding:14px 28px;font-size:0.95rem;font-weight:900;border-radius:8px;">
-            CRÉER UNE GRILLE ➔
-          </a>
-          <a href="/player.html" class="btn btn-secondary-dark" style="padding:14px 24px;font-size:0.95rem;border-radius:8px;">
-            REJOINDRE LE LIVE
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:28px;">
+          <button onclick="SocialHub.openJoinRoomModal()" class="btn btn-lime" style="padding:14px 24px;font-size:0.95rem;font-weight:900;border-radius:8px;cursor:pointer;">
+            🔑 REJOINDRE AVEC CODE ➔
+          </button>
+          <button onclick="SocialHub.openCreateRoomModal()" class="btn btn-secondary-dark" style="padding:14px 22px;font-size:0.95rem;font-weight:800;border-radius:8px;cursor:pointer;">
+            🎮 CRÉER SALLE PRIVÉE
+          </button>
+          <a href="/leaderboard.html" class="btn btn-secondary-dark" style="padding:14px 20px;font-size:0.95rem;font-weight:800;border-radius:8px;color:var(--gold);">
+            🏆 CLASSEMENT
           </a>
         </div>
 
@@ -343,12 +349,19 @@
          ========================================== -->
     <section id="classement" style="padding-top:20px;margin-bottom:80px;">
       <span class="section-dash"></span>
-      <h2 class="section-title-figma">LE CLASSEMENT NE MENT JAMAIS.</h2>
-      <p class="section-subtitle-figma">Tous les scores sont calculés et synchronisés en millisecondes.</p>
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:14px;">
+        <div>
+          <h2 class="section-title-figma" style="margin-bottom:6px;">LE CLASSEMENT NE MENT JAMAIS.</h2>
+          <p class="section-subtitle-figma" style="margin-bottom:0;">Tous les scores et victoires sont calculés et synchronisés en millisecondes.</p>
+        </div>
+        <a href="/leaderboard.html" class="btn btn-lime btn-sm" style="font-weight:900;padding:8px 18px;">
+          🏆 VOIR LE CLASSEMENT GÉNÉRAL & PODIUM ➔
+        </a>
+      </div>
 
       <div class="figma-table-wrap">
         <div style="padding:16px 20px;border-bottom:1px solid #1a222a;display:flex;align-items:center;justify-content:space-between;background:#10141b;">
-          <div style="font-family:var(--font-display);font-size:1.3rem;color:#ffffff;letter-spacing:0.04em;">TABLEAU DES SCORES EN DIRECT</div>
+          <div style="font-family:var(--font-display);font-size:1.3rem;color:#ffffff;letter-spacing:0.04em;">TABLEAU DES VAINQUEURS & SCORES EN DIRECT</div>
           <span class="live-dot"><span class="pulse"></span> LIVE SYNC</span>
         </div>
 
@@ -613,7 +626,13 @@
       }
 
       // Full table
-      rowsEl.innerHTML = sorted.map((item, i) => `
+      rowsEl.innerHTML = sorted.map((item, i) => {
+        const wins = item.p.stats?.wins || 0;
+        const chelems = item.p.stats?.grandChelems || 0;
+        const played = item.p.stats?.gamesPlayed || 0;
+        const winrate = played > 0 ? Math.round((wins / played) * 100) : 0;
+
+        return `
         <div class="figma-table-row">
           <div style="display:flex;align-items:center;gap:14px;">
             <div style="width:28px;text-align:center;font-family:var(--font-display);font-size:1.4rem;color:${i===0?'var(--lime)':'#71717a'};">
@@ -623,8 +642,12 @@
               ${renderAvatar(item.p.avatar)}
             </div>
             <div>
-              <div style="font-weight:800;font-size:0.95rem;color:#ffffff;">${item.p.name}</div>
-              <div style="font-size:0.75rem;color:#71717a;">${item.p.club}</div>
+              <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                <span style="font-weight:800;font-size:0.95rem;color:#ffffff;">${item.p.name}</span>
+                ${wins > 0 ? `<span style="background:rgba(255,170,0,0.15);color:var(--gold);border:1px solid rgba(255,170,0,0.3);font-size:0.7rem;padding:2px 7px;font-weight:800;border-radius:4px;">🏆 ${wins} vic.</span>` : ''}
+                ${chelems > 0 ? `<span style="background:rgba(187,242,70,0.15);color:var(--lime);border:1px solid rgba(187,242,70,0.3);font-size:0.7rem;padding:2px 7px;font-weight:800;border-radius:4px;">👑 ${chelems} chelem</span>` : ''}
+              </div>
+              <div style="font-size:0.75rem;color:#71717a;">${item.p.club}${played > 0 ? ` • ${played} match${played>1?'s':''} (${winrate}% win)` : ''}</div>
             </div>
           </div>
 
@@ -640,9 +663,20 @@
               Voir ➔
             </a>
           </div>
-        </div>
-      `).join('');
+        </div>`;
+      }).join('');
     }
+
+    socket.on('leaderboardUpdate', (lb) => {
+      if (state && Array.isArray(lb)) {
+        lb.forEach(r => {
+          if (state.players && state.players[r.id]) {
+            state.players[r.id].stats = r.stats;
+          }
+        });
+        renderLeaderboard(state);
+      }
+    });
   </script>
 </body>
 </html>

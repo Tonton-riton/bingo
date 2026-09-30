@@ -377,53 +377,147 @@
   const socket = io();
   const params = new URLSearchParams(window.location.search);
   const mode = params.get('mode') || 'alerts'; // hud | grid | alerts
+  const roomCode = params.get('room') ? params.get('room').toUpperCase().trim() : null;
   const targetIdx = parseInt(params.get('p') || '0');
   const noControls = params.has('nocontrols');
 
   if (noControls) document.getElementById('obs-controls-panel').style.display = 'none';
 
+  // Update controls panel links if in room mode
+  if (roomCode) {
+    const cp = document.getElementById('obs-controls-panel');
+    if (cp) {
+      const roomTag = document.createElement('div');
+      roomTag.style.cssText = 'background:var(--lime,#bbf246);color:#000;font-weight:900;padding:3px 8px;font-size:0.75rem;margin-bottom:8px;border-radius:4px;display:inline-block;';
+      roomTag.textContent = `🔒 SALLE OBS : #${roomCode}`;
+      cp.prepend(roomTag);
+
+      cp.querySelectorAll('.ctrl-btn').forEach(btn => {
+        const url = new URL(btn.href, window.location.origin);
+        url.searchParams.set('room', roomCode);
+        btn.href = url.pathname + url.search;
+      });
+    }
+  }
+
   const COLOR_MAP = {
     blue:'#4f8ef7', red:'#ef4444', purple:'#8b5cf6', green:'#10b981',
-    gold:'#f5a623', pink:'#ec4899', cyan:'#06b6d4', orange:'#f97316'
+    gold:'#f5a623', pink:'#ec4899', cyan:'#06b6d4', orange:'#f97316', lime:'#bbf246'
   };
 
   // Show right container
   if (mode === 'hud') {
     document.getElementById('hud-bar').style.display = 'flex';
-    document.querySelector('[href="?mode=hud"]').classList.add('active-mode');
+    const activeBtn = document.querySelector('[href*="mode=hud"]');
+    if (activeBtn) activeBtn.classList.add('active-mode');
   } else if (mode === 'grid') {
     document.getElementById('grid-panel').style.display = 'block';
   } else {
-    document.querySelector('[href="?mode=alerts"]').classList.add('active-mode');
+    const activeBtn = document.querySelector('[href*="mode=alerts"]');
+    if (activeBtn) activeBtn.classList.add('active-mode');
   }
 
   let gameState = null;
 
-  socket.on('stateUpdate', (data) => {
-    gameState = data;
-    if (mode === 'hud') renderHud(data);
-    else if (mode === 'grid') renderGrid(data);
-  });
+  // Socket: Room mode
+  if (roomCode) {
+    socket.emit('joinRoom', { roomCode, isSpectator: true });
 
-  socket.on('tileToggled', (ev) => {
-    if (!ev.checked) return;
-    if (ev.newGrandChelem) {
+    fetch(`/api/rooms/${roomCode}`).then(r => r.json()).then(data => {
+      if (data.success && data.room) {
+        gameState = data.room;
+        if (mode === 'hud') renderHud(data.room);
+        else if (mode === 'grid') renderGrid(data.room);
+      }
+    }).catch(console.error);
+
+    socket.on('roomStateUpdate', (rState) => {
+      if (rState.code !== roomCode) return;
+      gameState = rState;
+      if (mode === 'hud') renderHud(rState);
+      else if (mode === 'grid') renderGrid(rState);
+    });
+
+    socket.on('roomTileToggled', (ev) => {
+      if (!ev.checked) return;
+      if (ev.newGrandChelem) {
+        window.soundFx?.playGrandChelem();
+        window.launchConfetti?.({ count: 200 });
+      } else if (ev.newLineAchieved) {
+        window.soundFx?.playBingo();
+        window.launchConfetti?.({ count: 100 });
+      } else {
+        window.soundFx?.playCheck();
+      }
+      triggerAlert(ev.playerName, ev.challenge, ev.newLineAchieved, ev.newGrandChelem);
+    });
+
+    socket.on('roomWinner', (ev) => {
       window.soundFx?.playGrandChelem();
-      window.launchConfetti?.({ count: 200 });
-    } else if (ev.newLineAchieved) {
-      window.soundFx?.playBingo();
-      window.launchConfetti?.({ count: 100 });
-    } else {
-      window.soundFx?.playCheck();
+      window.launchConfetti?.({ count: 300 });
+      triggerWinnerAlert(ev);
+    });
+  } else {
+    // Normal global mode
+    socket.on('stateUpdate', (data) => {
+      gameState = data;
+      if (mode === 'hud') renderHud(data);
+      else if (mode === 'grid') renderGrid(data);
+    });
+
+    socket.on('tileToggled', (ev) => {
+      if (!ev.checked) return;
+      if (ev.newGrandChelem) {
+        window.soundFx?.playGrandChelem();
+        window.launchConfetti?.({ count: 200 });
+      } else if (ev.newLineAchieved) {
+        window.soundFx?.playBingo();
+        window.launchConfetti?.({ count: 100 });
+      } else {
+        window.soundFx?.playCheck();
+      }
+      triggerAlert(ev.playerName, ev.challenge, ev.newLineAchieved, ev.newGrandChelem);
+    });
+  }
+
+  function triggerWinnerAlert(ev) {
+    document.getElementById('obs-alert-icon').innerHTML = '👑';
+    document.getElementById('obs-alert-tag').textContent = '🏆 VAINQUEUR DE LA PARTIE !';
+    document.getElementById('obs-alert-title').textContent = `${ev.winner?.name || 'Un joueur'} REMPORTE LA VICTOIRE !`;
+    document.getElementById('obs-alert-sub').textContent = ev.reason || 'Victoire validée !';
+    
+    clearInterval(progressTimer);
+    clearTimeout(alertHideTimer);
+    progressEl.style.transition = 'none';
+    progressEl.style.width = '100%';
+
+    if (!alertVisible) {
+      alertVisible = true;
+      alertEl.classList.add('show');
     }
-    triggerAlert(ev.playerName, ev.challenge, ev.newLineAchieved, ev.newGrandChelem);
-  });
+
+    const WIN_DURATION = 8000;
+    progressStart = Date.now();
+    progressTimer = setInterval(() => {
+      const elapsed = Date.now() - progressStart;
+      const pct = Math.max(0, 100 - (elapsed / WIN_DURATION) * 100);
+      progressEl.style.width = pct + '%';
+      if (pct <= 0) clearInterval(progressTimer);
+    }, 16);
+
+    alertHideTimer = setTimeout(() => {
+      alertEl.classList.remove('show');
+      alertVisible = false;
+      clearInterval(progressTimer);
+    }, WIN_DURATION);
+  }
 
   /* ======== HUD SCOREBOARD ======== */
   function renderHud(data) {
     const { players, stats } = data;
-    const ids = Object.keys(players || {});
+    const ids = data.playerIds || Object.keys(players || {});
     const sorted = ids.map(id => ({ id, p: players[id], s: stats?.[id] }))
+      .filter(x => x.p)
       .sort((a, b) => (b.s?.totalPoints || 0) - (a.s?.totalPoints || 0));
 
     const total = sorted.reduce((acc, x) => acc + (x.s?.totalPoints || 0), 0) || 1;
@@ -461,17 +555,18 @@
 
   /* ======== COMPACT GRID ======== */
   function renderGrid(data) {
-    const ids = Object.keys(data.players || {});
+    const ids = data.playerIds || Object.keys(data.players || {});
     const pid = ids[targetIdx] || ids[0];
     if (!pid) return;
 
     const p = data.players[pid];
+    if (!p) return;
     const s = data.stats?.[pid];
     const c = COLOR_MAP[p.color] || '#4f8ef7';
-    const challenges = data.grids?.find(g => g.id === data.activeGrid)?.challenges || [];
+    const challenges = data.challenges || data.grids?.find(g => g.id === data.activeGrid)?.challenges || [];
     const N = Math.round(Math.sqrt(challenges.length)) || 5;
     const totalTiles = challenges.length || 25;
-    const checked = p.grids?.[data.activeGrid] || Array(totalTiles).fill(false);
+    const checked = data.checked?.[pid] || p.grids?.[data.activeGrid] || Array(totalTiles).fill(false);
 
     document.getElementById('gp-avatar').innerHTML = renderAvatar(p.avatar);
     document.getElementById('gp-name').textContent = p.name;

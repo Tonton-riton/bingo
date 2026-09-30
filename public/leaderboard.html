@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BINGO CARRIÈRE | Classement Général & Victoires</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/avatar.js"></script>
+  <script src="/js/social.js"></script>
+  <style>
+    .podium-container {
+      display: grid;
+      grid-template-columns: 1fr 1.15fr 1fr;
+      gap: 16px;
+      align-items: end;
+      margin: 32px 0 40px;
+    }
+    @media (max-width: 768px) {
+      .podium-container {
+        grid-template-columns: 1fr;
+        align-items: stretch;
+      }
+    }
+    .podium-card {
+      background: #0d121c;
+      border: 1px solid #1e293b;
+      border-radius: 14px;
+      padding: 24px 20px;
+      text-align: center;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+    .podium-card:hover {
+      border-color: var(--lime);
+      transform: translateY(-4px);
+    }
+    .podium-card.first {
+      background: linear-gradient(180deg, #16221c 0%, #0c131a 100%);
+      border: 2px solid var(--lime);
+      box-shadow: 0 0 35px rgba(187, 242, 70, 0.25);
+      padding-top: 32px;
+      padding-bottom: 32px;
+    }
+    .podium-rank-badge {
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 4px 16px;
+      border-radius: 20px;
+      font-weight: 900;
+      font-size: 0.85rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .podium-card.first .podium-rank-badge {
+      background: var(--lime);
+      color: #000;
+      box-shadow: 0 0 15px rgba(187, 242, 70, 0.5);
+    }
+    .podium-card.second .podium-rank-badge {
+      background: #94a3b8;
+      color: #000;
+    }
+    .podium-card.third .podium-rank-badge {
+      background: #d97706;
+      color: #fff;
+    }
+    .podium-avatar {
+      width: 72px;
+      height: 72px;
+      margin: 0 auto 12px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 38px;
+      background: #111726;
+      border: 3px solid;
+    }
+    .podium-card.first .podium-avatar {
+      width: 86px;
+      height: 86px;
+      font-size: 44px;
+      border-color: var(--lime);
+    }
+    .filter-pills {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .filter-pill {
+      background: #0f1422;
+      border: 1px solid #1e293b;
+      color: #94a3b8;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: 0.82rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .filter-pill:hover,
+    .filter-pill.active {
+      background: #192338;
+      border-color: var(--lime);
+      color: #ffffff;
+    }
+    .filter-pill.active {
+      background: rgba(187, 242, 70, 0.12);
+      color: var(--lime);
+    }
+    .lb-row {
+      display: grid;
+      grid-template-columns: 50px 1.5fr 110px 100px 110px 90px 100px;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 18px;
+      background: #090d16;
+      border: 1px solid #1a2332;
+      border-radius: 10px;
+      margin-bottom: 8px;
+      transition: all 0.15s ease;
+    }
+    .lb-row:hover {
+      background: #0e1424;
+      border-color: #2a374f;
+    }
+    .lb-row.top-1 {
+      border-left: 4px solid var(--lime);
+      background: rgba(187, 242, 70, 0.04);
+    }
+    .lb-row.top-2 {
+      border-left: 4px solid #94a3b8;
+    }
+    .lb-row.top-3 {
+      border-left: 4px solid #d97706;
+    }
+    @media (max-width: 900px) {
+      .lb-table-wrapper {
+        overflow-x: auto;
+        padding-bottom: 8px;
+      }
+      .lb-row, .lb-header {
+        min-width: 740px;
+      }
+    }
+    .lb-header {
+      display: grid;
+      grid-template-columns: 50px 1.5fr 110px 100px 110px 90px 100px;
+      gap: 12px;
+      padding: 10px 18px;
+      font-size: 0.72rem;
+      font-weight: 900;
+      color: #64748b;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="app-header">
+    <a href="/" class="logo-link">
+      <div class="logo-icon-wrap" style="background:var(--lime);border-radius:6px;width:34px;height:34px;color:#000;font-weight:900;font-size:18px;">🏆</div>
+      <div class="logo-text">
+        <div style="font-family:var(--font-display);font-size:1.7rem;letter-spacing:0.04em;color:#ffffff;line-height:1;">BINGOLIVE</div>
+      </div>
+    </a>
+
+    <nav class="header-nav" style="display:flex;align-items:center;gap:12px;">
+      <a href="/" class="btn btn-sm">🏠 Accueil</a>
+      <a href="/spectator.html" class="btn btn-sm">📺 Spectateur</a>
+      <button class="btn btn-sm" onclick="SocialHub.openJoinRoomModal()" style="border-color:#2a3645;color:var(--lime);font-weight:800;">
+        🔑 Rejoindre avec code
+      </button>
+      <button class="btn btn-sm" onclick="SocialHub.openFriendsModal()" style="border-color:#2a3645;color:#fff;font-weight:800;">
+        👥 Mes Amis
+      </button>
+      <div id="auth-nav-slot"></div>
+      <button class="btn btn-lime btn-sm" onclick="SocialHub.openCreateRoomModal()">
+        + CRÉER UNE PARTIE
+      </button>
+    </nav>
+  </header>
+
+  <main class="container" style="max-width:1200px;padding-top:24px;padding-bottom:60px;">
+
+    <!-- TOP TITLE -->
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:28px;">
+      <div>
+        <span class="section-dash"></span>
+        <div style="font-size:0.8rem;font-weight:900;color:var(--lime);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">
+          HALL OF FAME & COMPÉTITION
+        </div>
+        <h1 style="font-family:var(--font-display);font-size:3rem;line-height:1;color:#fff;margin:0;">
+          CLASSEMENT DES <span class="lime">CHAMPIONS.</span>
+        </h1>
+        <p style="color:#94a3b8;font-size:0.9rem;margin-top:6px;margin-bottom:0;">
+          Découvrez qui a remporté le plus de victoires, de lignes complètes et de Grands Chelems.
+        </p>
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn btn-secondary-slate btn-sm" onclick="SocialHub.openJoinRoomModal()">
+          🔑 Entrer un code de partie
+        </button>
+        <button class="btn btn-lime btn-sm" onclick="SocialHub.openCreateRoomModal()">
+          🎮 Défier vos amis
+        </button>
+      </div>
+    </div>
+
+    <!-- PODIUM DU TOP 3 -->
+    <div class="podium-container" id="podium-wrap">
+      <div class="text-muted text-sm card" style="padding:20px;grid-column:1/-1;text-align:center;">
+        Chargement du podium des champions…
+      </div>
+    </div>
+
+    <!-- FILTER TABS -->
+    <div class="filter-pills">
+      <button class="filter-pill active" onclick="setSortMode('wins', this)">🏆 Plus de Victoires</button>
+      <button class="filter-pill" onclick="setSortMode('bingos', this)">🎯 Plus de Bingos (Lignes)</button>
+      <button class="filter-pill" onclick="setSortMode('grandChelems', this)">👑 Grands Chelems</button>
+      <button class="filter-pill" onclick="setSortMode('careerPoints', this)">⭐ Total Points Carrière</button>
+      <button class="filter-pill" onclick="setSortMode('winRate', this)">📈 Meilleur Winrate %</button>
+    </div>
+
+    <!-- LEADERBOARD TABLE -->
+    <div class="lb-table-wrapper">
+      <div class="lb-header">
+        <span style="text-align:center;">Rang</span>
+        <span>Joueur / Streamer</span>
+        <span style="text-align:center;">Victoires 🏆</span>
+        <span style="text-align:center;">Bingos 🎯</span>
+        <span style="text-align:center;">G. Chelems 👑</span>
+        <span style="text-align:center;">Parties</span>
+        <span style="text-align:right;">Pts Total</span>
+      </div>
+
+      <div id="lb-rows">
+        <div class="text-muted text-sm card" style="padding:30px;text-align:center;">Chargement…</div>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    const socket = io();
+    let leaderboardData = [];
+    let currentSort = 'wins';
+
+    const COLOR_MAP = {
+      blue:'#4f8ef7', red:'#ef4444', purple:'#8b5cf6', green:'#10b981',
+      gold:'#f5a623', pink:'#ec4899', cyan:'#06b6d4', orange:'#f97316', lime:'#bbf246'
+    };
+
+    async function loadLeaderboard() {
+      try {
+        const res = await fetch('/api/leaderboard');
+        const data = await res.json();
+        if (data.success && data.leaderboard) {
+          leaderboardData = data.leaderboard;
+          renderLeaderboard();
+        }
+      } catch (e) {
+        console.error('Error fetching leaderboard', e);
+      }
+    }
+
+    socket.on('leaderboardUpdate', (data) => {
+      leaderboardData = data;
+      renderLeaderboard();
+    });
+
+    socket.on('stateUpdate', (data) => {
+      if (data.leaderboard) {
+        leaderboardData = data.leaderboard;
+        renderLeaderboard();
+      }
+    });
+
+    function setSortMode(field, btn) {
+      document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentSort = field;
+      renderLeaderboard();
+    }
+
+    function renderLeaderboard() {
+      if (!leaderboardData || !leaderboardData.length) return;
+
+      const sorted = [...leaderboardData].sort((a, b) => {
+        if (b[currentSort] !== a[currentSort]) return (b[currentSort] || 0) - (a[currentSort] || 0);
+        return (b.wins || 0) - (a.wins || 0);
+      });
+
+      // Render Podium (top 3)
+      const p1 = sorted[0];
+      const p2 = sorted[1];
+      const p3 = sorted[2];
+
+      const podiumEl = document.getElementById('podium-wrap');
+      if (p1) {
+        const c1 = COLOR_MAP[p1.color] || '#bbf246';
+        const c2 = p2 ? (COLOR_MAP[p2.color] || '#94a3b8') : '#94a3b8';
+        const c3 = p3 ? (COLOR_MAP[p3.color] || '#d97706') : '#d97706';
+
+        podiumEl.innerHTML = `
+          <!-- 2ND PLACE -->
+          ${p2 ? `
+          <div class="podium-card second">
+            <div class="podium-rank-badge">🥈 2ème Place</div>
+            <div class="podium-avatar" style="border-color:${c2};">${renderAvatar(p2.avatar)}</div>
+            <div style="font-weight:900;font-size:1.15rem;color:#fff;">${p2.name}</div>
+            <div style="font-size:0.75rem;color:#94a3b8;margin-bottom:12px;">${p2.club || 'Club Inconnu'}</div>
+            <div style="display:flex;justify-content:center;gap:16px;">
+              <div>
+                <div style="font-family:var(--font-display);font-size:1.7rem;color:#fff;line-height:1;">${p2.wins}</div>
+                <div style="font-size:0.65rem;font-weight:800;color:#64748b;">VICTOIRES</div>
+              </div>
+              <div>
+                <div style="font-family:var(--font-display);font-size:1.7rem;color:var(--lime);line-height:1;">${p2.bingos}</div>
+                <div style="font-size:0.65rem;font-weight:800;color:#64748b;">BINGOS</div>
+              </div>
+            </div>
+          </div>
+          ` : '<div></div>'}
+
+          <!-- 1ST PLACE (CHAMPION) -->
+          <div class="podium-card first">
+            <div class="podium-rank-badge">🥇 1er CHAMPION</div>
+            <div style="font-size:2rem;margin-bottom:-10px;">👑</div>
+            <div class="podium-avatar" style="border-color:${c1};">${renderAvatar(p1.avatar)}</div>
+            <div style="font-family:var(--font-display);font-size:1.7rem;color:var(--lime);letter-spacing:0.04em;">${p1.name}</div>
+            <div style="font-size:0.8rem;color:#cbd5e1;font-weight:700;margin-bottom:14px;">${p1.club || 'Club Inconnu'}</div>
+            <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:8px;background:rgba(0,0,0,0.4);border:1px solid rgba(187,242,70,0.25);border-radius:10px;padding:12px 6px;">
+              <div>
+                <div style="font-family:var(--font-display);font-size:2rem;color:var(--lime);line-height:1;">${p1.wins}</div>
+                <div style="font-size:0.65rem;font-weight:900;color:#cbd5e1;">VICTOIRES 🏆</div>
+              </div>
+              <div>
+                <div style="font-family:var(--font-display);font-size:2rem;color:#ffffff;line-height:1;">${p1.bingos}</div>
+                <div style="font-size:0.65rem;font-weight:900;color:#cbd5e1;">BINGOS 🎯</div>
+              </div>
+              <div>
+                <div style="font-family:var(--font-display);font-size:2rem;color:#fbbf24;line-height:1;">${p1.grandChelems}</div>
+                <div style="font-size:0.65rem;font-weight:900;color:#cbd5e1;">CHELEMS 👑</div>
+              </div>
+            </div>
+            <div style="font-size:0.75rem;color:var(--lime);margin-top:10px;font-weight:800;">
+              Winrate : ${p1.winRate}% (${p1.gamesPlayed} matchs joués)
+            </div>
+          </div>
+
+          <!-- 3RD PLACE -->
+          ${p3 ? `
+          <div class="podium-card third">
+            <div class="podium-rank-badge">🥉 3ème Place</div>
+            <div class="podium-avatar" style="border-color:${c3};">${renderAvatar(p3.avatar)}</div>
+            <div style="font-weight:900;font-size:1.15rem;color:#fff;">${p3.name}</div>
+            <div style="font-size:0.75rem;color:#94a3b8;margin-bottom:12px;">${p3.club || 'Club Inconnu'}</div>
+            <div style="display:flex;justify-content:center;gap:16px;">
+              <div>
+                <div style="font-family:var(--font-display);font-size:1.7rem;color:#fff;line-height:1;">${p3.wins}</div>
+                <div style="font-size:0.65rem;font-weight:800;color:#64748b;">VICTOIRES</div>
+              </div>
+              <div>
+                <div style="font-family:var(--font-display);font-size:1.7rem;color:var(--lime);line-height:1;">${p3.bingos}</div>
+                <div style="font-size:0.65rem;font-weight:800;color:#64748b;">BINGOS</div>
+              </div>
+            </div>
+          </div>
+          ` : '<div></div>'}
+        `;
+      }
+
+      // Render full table
+      const rowsEl = document.getElementById('lb-rows');
+      rowsEl.innerHTML = sorted.map((p, idx) => {
+        const rank = idx + 1;
+        const color = COLOR_MAP[p.color] || '#4f8ef7';
+        const rankMedal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`;
+        const topCls = rank === 1 ? 'top-1' : rank === 2 ? 'top-2' : rank === 3 ? 'top-3' : '';
+
+        return `
+          <div class="lb-row ${topCls}">
+            <div style="text-align:center;font-weight:900;font-size:1.1rem;color:${rank<=3?'var(--lime)':'#64748b'};">
+              ${rankMedal}
+            </div>
+            <div style="display:flex;align-items:center;gap:12px;min-width:0;">
+              <div style="width:38px;height:38px;border-radius:8px;background:#111624;border:2px solid ${color};display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">
+                ${renderAvatar(p.avatar)}
+              </div>
+              <div style="min-width:0;">
+                <div style="font-weight:800;font-size:0.95rem;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                  ${p.name} ${rank === 1 ? '👑' : ''}
+                </div>
+                <div style="font-size:0.75rem;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                  ${p.club || 'Simulation'}
+                </div>
+              </div>
+            </div>
+            <div style="text-align:center;">
+              <span style="font-weight:900;font-size:1.05rem;color:var(--lime);">${p.wins}</span>
+              <span style="font-size:0.7rem;color:#64748b;">vict.</span>
+            </div>
+            <div style="text-align:center;">
+              <span style="font-weight:800;font-size:0.95rem;color:#ffffff;">${p.bingos}</span>
+              <span style="font-size:0.7rem;color:#64748b;">lig.</span>
+            </div>
+            <div style="text-align:center;">
+              <span style="font-weight:800;font-size:0.95rem;color:#fbbf24;">${p.grandChelems}</span>
+              <span style="font-size:0.7rem;color:#64748b;">x 100%</span>
+            </div>
+            <div style="text-align:center;font-size:0.85rem;color:#cbd5e1;font-weight:700;">
+              ${p.gamesPlayed} <span style="font-size:0.7rem;color:#64748b;">(${p.winRate}%)</span>
+            </div>
+            <div style="text-align:right;">
+              <span style="font-weight:900;font-size:1rem;color:#ffffff;">${p.careerPoints}</span>
+              <span style="font-size:0.7rem;color:#64748b;">pts</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    loadLeaderboard();
+  </script>
+</body>
+</html>
