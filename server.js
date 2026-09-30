@@ -13,6 +13,7 @@ const cors    = require('cors');
 const fs      = require('fs');
 const path    = require('path');
 const aiGenerator = require('./data/ai_generator');
+const db      = require('./db');
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -183,6 +184,32 @@ function saveState() {
     fs.writeFileSync(STATE_FILE, JSON.stringify(gameState, null, 2), 'utf8');
   } catch (err) {
     console.error('[BINGO] Error saving state:', err.message);
+  }
+}
+
+// ─── Dual Persistence Helpers (Local File + PostgreSQL) ───────────────────────
+
+function persistPlayer(player) {
+  if (!player) return;
+  saveState();
+  if (db.isPostgres) {
+    db.savePlayerToDB(player).catch(e => console.error('[DB] Erreur persistPlayer:', e.message));
+  }
+}
+
+function persistRoom(room) {
+  if (!room) return;
+  saveState();
+  if (db.isPostgres) {
+    db.saveRoomToDB(room).catch(e => console.error('[DB] Erreur persistRoom:', e.message));
+  }
+}
+
+function persistGrid(grid) {
+  if (!grid) return;
+  saveState();
+  if (db.isPostgres) {
+    db.saveGridToDB(grid).catch(e => console.error('[DB] Erreur persistGrid:', e.message));
   }
 }
 
@@ -430,7 +457,7 @@ function getOrCreateRoom(roomCode, hostId = null) {
       gridId: defaultGridId,
       hostId: hostId || null,
       isPrivate: true,
-      status: 'waiting',
+      status: 'active',
       winCondition: 'first_bingo',
       playerIds: pIds,
       checked,
@@ -439,7 +466,7 @@ function getOrCreateRoom(roomCode, hostId = null) {
       createdAt: new Date().toISOString(),
       history: []
     };
-    saveState();
+    persistRoom(gameState.rooms[cleanCode]);
     console.log(`[BINGO] Auto-created room #${cleanCode} with grid ${defaultGridId}`);
   }
   return gameState.rooms[cleanCode];
@@ -710,12 +737,13 @@ app.post('/api/grids', (req, res) => {
       });
       room.winnerId = null;
       room.winningReason = null;
-      room.status = 'waiting';
+      room.status = 'active';
+      persistRoom(room);
       io.to('room_' + cleanCode).emit('roomStateUpdate', getComputedRoomState(cleanCode));
     }
   }
 
-  saveState();
+  persistGrid(gameState.grids[gridId]);
   io.emit('stateUpdate', getComputedState());
   res.json({ success: true, grid: gameState.grids[gridId] });
 });
@@ -759,12 +787,13 @@ app.post('/api/ai/generate-grid', (req, res) => {
         });
         room.winnerId = null;
         room.winningReason = null;
-        room.status = 'waiting';
+        room.status = 'active';
+        persistRoom(room);
         io.to('room_' + cleanCode).emit('roomStateUpdate', getComputedRoomState(cleanCode));
       }
     }
 
-    saveState();
+    persistGrid(newGrid);
     io.emit('stateUpdate', getComputedState());
     res.json({ success: true, gridId, grid: newGrid, ...result });
   } catch (err) {
@@ -832,14 +861,16 @@ app.post('/api/players', (req, res) => {
   }
 
   const playerId = `player_${makeId()}`;
+  const hashedPin = pin ? db.hashPassword(pin) : db.hashPassword('0000');
   const player = {
     id:        playerId,
     name:      name.trim(),
     club:      (club   || 'FC Unknown').trim(),
     avatar:    sanitizeAvatar(avatar),
     color:     (color  || '#3b82f6').trim(),
-    pin:       (pin    || '0000').trim(),
+    pin:       hashedPin,
     grids:     {},
+    stats:     { wins: 0, grandChelems: 0, bingos: 0, gamesPlayed: 0, careerPoints: 0 },
     createdAt: new Date().toISOString()
   };
 
@@ -849,13 +880,24 @@ app.post('/api/players', (req, res) => {
   }
 
   gameState.players[playerId] = player;
-  saveState();
+  persistPlayer(player);
 
   const state = getComputedState();
   io.emit('stateUpdate', state);
   io.emit('playerAdded', { playerId, playerName: player.name, avatar: player.avatar, color: player.color });
 
-  res.json({ success: true, player, state });
+  res.json({
+    success: true,
+    player: {
+      id: player.id,
+      name: player.name,
+      club: player.club,
+      avatar: player.avatar,
+      color: player.color,
+      stats: player.stats
+    },
+    state
+  });
 });
 
 app.delete('/api/players/:id', (req, res) => {
@@ -890,15 +932,17 @@ app.post(['/api/auth/register', '/api/register'], (req, res) => {
   }
 
   const playerId = `player_${makeId()}`;
+  const hashedPin = pin ? db.hashPassword(pin) : db.hashPassword('0000');
   const player = {
     id:        playerId,
     name:      cleanName,
     club:      (club || 'FC Simulation').trim(),
     avatar:    sanitizeAvatar(avatar),
-    color:     (color || 'orange').trim(),
-    pin:       (pin || '0000').trim(),
+    color:     (color || 'lime').trim(),
+    pin:       hashedPin,
     friends:   [],
     grids:     {},
+    stats:     { wins: 0, grandChelems: 0, bingos: 0, gamesPlayed: 0, careerPoints: 0 },
     createdAt: new Date().toISOString()
   };
 
@@ -908,13 +952,25 @@ app.post(['/api/auth/register', '/api/register'], (req, res) => {
   }
 
   gameState.players[playerId] = player;
-  saveState();
+  persistPlayer(player);
 
   const state = getComputedState();
   io.emit('stateUpdate', state);
   io.emit('playerAdded', { playerId, playerName: player.name, avatar: player.avatar, color: player.color });
 
-  res.json({ success: true, player, state });
+  res.json({
+    success: true,
+    player: {
+      id: player.id,
+      name: player.name,
+      club: player.club,
+      avatar: player.avatar,
+      color: player.color,
+      stats: player.stats,
+      friends: player.friends
+    },
+    state
+  });
 });
 
 // ─── REST: Login ──────────────────────────────────────────────────────────────
@@ -936,7 +992,7 @@ app.post(['/api/auth/login', '/api/login'], (req, res) => {
     return res.status(404).json({ success: false, message: 'Aucun compte trouvé avec ce pseudo.' });
   }
 
-  if (player.pin && player.pin !== String(pin || '').trim()) {
+  if (player.pin && !db.verifyPassword(pin, player.pin)) {
     return res.status(401).json({ success: false, message: 'Code PIN ou mot de passe incorrect.' });
   }
 
@@ -948,7 +1004,8 @@ app.post(['/api/auth/login', '/api/login'], (req, res) => {
       club:    player.club,
       avatar:  player.avatar,
       color:   player.color,
-      friends: player.friends || []
+      friends: player.friends || [],
+      stats:   player.stats || {}
     }
   });
 });
@@ -996,7 +1053,8 @@ app.post('/api/friends/add', (req, res) => {
     f.friends.push(playerId);
   }
 
-  saveState();
+  persistPlayer(p);
+  persistPlayer(f);
   io.emit('stateUpdate', getComputedState());
   res.json({ success: true, friends: p.friends, friendName: f.name });
 });
@@ -1017,7 +1075,8 @@ app.post('/api/friends/remove', (req, res) => {
     f.friends = f.friends.filter(id => id !== playerId);
   }
 
-  saveState();
+  persistPlayer(p);
+  if (f) persistPlayer(f);
   io.emit('stateUpdate', getComputedState());
   res.json({ success: true, friends: p.friends });
 });
@@ -1035,12 +1094,25 @@ app.post('/api/profile', (req, res) => {
   if (club   !== undefined) player.club   = String(club).trim();
   if (avatar !== undefined) player.avatar = sanitizeAvatar(avatar);
   if (color  !== undefined) player.color  = String(color).trim();
-  if (pin    !== undefined) player.pin    = String(pin).trim();
+  if (pin    !== undefined && String(pin).trim()) {
+    player.pin = db.hashPassword(String(pin).trim());
+  }
 
-  saveState();
+  persistPlayer(player);
   const state = getComputedState();
   io.emit('stateUpdate', state);
-  res.json({ success: true, player });
+  res.json({
+    success: true,
+    player: {
+      id: player.id,
+      name: player.name,
+      club: player.club,
+      avatar: player.avatar,
+      color: player.color,
+      stats: player.stats || {},
+      friends: player.friends || []
+    }
+  });
 });
 
 // ─── REST: Toggle tile ────────────────────────────────────────────────────────
@@ -1266,7 +1338,7 @@ app.post('/api/rooms', (req, res) => {
     gridId: gId,
     hostId: hostId || null,
     isPrivate: true,
-    status: 'waiting',
+    status: 'active',
     winCondition: winCondition || 'first_bingo',
     playerIds: pIds,
     checked,
@@ -1276,7 +1348,11 @@ app.post('/api/rooms', (req, res) => {
     history: []
   };
 
-  saveState();
+  persistRoom(gameState.rooms[code]);
+  if (hostId && gameState.players[hostId]) {
+    persistPlayer(gameState.players[hostId]);
+  }
+
   const roomState = getComputedRoomState(code);
   res.json({
     success: true,
@@ -1315,13 +1391,14 @@ app.post('/api/rooms/join', (req, res) => {
       club: 'FC Direct',
       avatar: '⚽',
       color: 'lime',
-      pin: '',
+      pin: db.hashPassword('0000'),
       friends: [],
       grids: {},
+      stats: { wins: 0, grandChelems: 0, bingos: 0, gamesPlayed: 0, careerPoints: 0 },
       createdAt: new Date().toISOString()
     };
     activePlayerId = newId;
-    saveState();
+    persistPlayer(gameState.players[newId]);
   }
 
   const player = gameState.players[activePlayerId];
@@ -1334,7 +1411,8 @@ app.post('/api/rooms/join', (req, res) => {
 
     player.stats = player.stats || { wins: 0, grandChelems: 0, bingos: 0, gamesPlayed: 0, careerPoints: 0 };
     player.stats.gamesPlayed = (player.stats.gamesPlayed || 0) + 1;
-    saveState();
+    persistPlayer(player);
+    persistRoom(room);
 
     const roomState = getComputedRoomState(cleanCode);
     io.to('room_' + cleanCode).emit('roomStateUpdate', roomState);
@@ -1438,7 +1516,8 @@ app.post('/api/rooms/toggle', (req, res) => {
   });
   if (room.history.length > 50) room.history.shift();
 
-  saveState();
+  persistRoom(room);
+  persistPlayer(player);
 
   const roomState = getComputedRoomState(cleanCode);
   io.to('room_' + cleanCode).emit('roomStateUpdate', roomState);
@@ -1465,15 +1544,33 @@ app.post('/api/rooms/finish', (req, res) => {
   if (!room) return res.status(404).json({ success: false, message: 'Partie introuvable.' });
 
   room.status = 'finished';
-  if (winnerId && gameState.players[winnerId]) {
-    room.winnerId = winnerId;
-    room.winningReason = reason || 'Victoire validée par l’arbitre';
-    const winner = gameState.players[winnerId];
-    winner.stats = winner.stats || { wins: 0, grandChelems: 0, bingos: 0, gamesPlayed: 0, careerPoints: 0 };
-    winner.stats.wins = (winner.stats.wins || 0) + 1;
+  let targetWinnerId = winnerId;
+
+  // Si aucun vainqueur spécifié, déterminer le joueur avec le meilleur score
+  if (!targetWinnerId && room.playerIds?.length > 0) {
+    const rStats = calculateRoomStats(room);
+    let topScore = -1;
+    for (const [pId, st] of Object.entries(rStats)) {
+      if ((st.totalPoints || 0) > topScore) {
+        topScore = st.totalPoints || 0;
+        targetWinnerId = pId;
+      }
+    }
   }
 
-  saveState();
+  if (targetWinnerId && gameState.players[targetWinnerId]) {
+    room.winnerId = targetWinnerId;
+    room.winningReason = reason || 'Victoire validée (Fin du match)';
+    const winner = gameState.players[targetWinnerId];
+    winner.stats = winner.stats || { wins: 0, grandChelems: 0, bingos: 0, gamesPlayed: 0, careerPoints: 0 };
+    winner.stats.wins = (winner.stats.wins || 0) + 1;
+    persistPlayer(winner);
+  } else {
+    room.winningReason = reason || 'Match terminé par les participants';
+  }
+
+  persistRoom(room);
+
   const roomState = getComputedRoomState(cleanCode);
   io.to('room_' + cleanCode).emit('roomStateUpdate', roomState);
   io.to('room_' + cleanCode).emit('roomWinner', {
@@ -1484,6 +1581,26 @@ app.post('/api/rooms/finish', (req, res) => {
   io.emit('leaderboardUpdate', getLeaderboard());
 
   res.json({ success: true, room: roomState });
+});
+
+// Fermer définitivement une salle et la marquer archivée en BDD
+app.post('/api/rooms/close', (req, res) => {
+  const { code } = req.body;
+  const cleanCode = String(code || '').trim().toUpperCase();
+  const room = gameState.rooms?.[cleanCode];
+  if (!room) return res.status(404).json({ success: false, message: 'Partie introuvable.' });
+
+  room.status = 'closed';
+  persistRoom(room);
+  if (db.isPostgres) {
+    db.deleteRoomFromDB(cleanCode);
+  }
+
+  io.to('room_' + cleanCode).emit('roomClosed', { code: cleanCode });
+  delete gameState.rooms[cleanCode];
+  saveState();
+
+  res.json({ success: true, message: `Salle ${cleanCode} fermée et archivée.` });
 });
 
 app.post('/api/rooms/reset', (req, res) => {
@@ -1497,13 +1614,14 @@ app.post('/api/rooms/reset', (req, res) => {
   room.checked = {};
   room.winnerId = null;
   room.winningReason = null;
-  room.status = 'waiting';
+  room.status = 'active'; // Reste actif pour continuer la compétition
   (room.playerIds || []).forEach(pId => {
     room.checked[pId] = new Array(totalTiles).fill(false);
   });
   room.history = [];
 
-  saveState();
+  persistRoom(room);
+
   const roomState = getComputedRoomState(cleanCode);
   io.to('room_' + cleanCode).emit('roomStateUpdate', roomState);
   io.to('room_' + cleanCode).emit('roomReset', { code: cleanCode });
@@ -1531,9 +1649,9 @@ app.post('/api/rooms/grid', (req, res) => {
   });
   room.winnerId = null;
   room.winningReason = null;
-  room.status = 'waiting';
+  room.status = 'active'; // Reste actif avec la nouvelle grille
 
-  saveState();
+  persistRoom(room);
 
   const roomState = getComputedRoomState(cleanCode);
   io.to('room_' + cleanCode).emit('roomStateUpdate', roomState);
@@ -1544,6 +1662,18 @@ app.post('/api/rooms/grid', (req, res) => {
   });
 
   res.json({ success: true, room: roomState });
+});
+
+// État de la base de données et diagnostic
+app.get('/api/db/status', (req, res) => {
+  res.json({
+    success: true,
+    isPostgres: db.isPostgres,
+    mode: db.isPostgres ? 'PostgreSQL (Cloud Persistant)' : 'Fichier Local (game_state.json)',
+    playersCount: Object.keys(gameState.players || {}).length,
+    roomsCount: Object.keys(gameState.rooms || {}).length,
+    gridsCount: Object.keys(gameState.grids || {}).length
+  });
 });
 
 // Route conviviale vers la page de création de salle
@@ -1585,9 +1715,9 @@ io.on('connection', (socket) => {
     });
     room.winnerId = null;
     room.winningReason = null;
-    room.status = 'waiting';
+    room.status = 'active';
 
-    saveState();
+    persistRoom(room);
     const roomState = getComputedRoomState(cleanCode);
     io.to('room_' + cleanCode).emit('roomStateUpdate', roomState);
     io.to('room_' + cleanCode).emit('roomGridChanged', {
@@ -1670,7 +1800,8 @@ io.on('connection', (socket) => {
     });
     if (room.history.length > 50) room.history.shift();
 
-    saveState();
+    persistRoom(room);
+    persistPlayer(player);
 
     const rState = getComputedRoomState(cleanCode);
     io.to('room_' + cleanCode).emit('roomStateUpdate', rState);
@@ -1688,6 +1819,46 @@ io.on('connection', (socket) => {
     io.emit('leaderboardUpdate', getLeaderboard());
   });
 
+  // Clôture explicite de la partie depuis le salon
+  socket.on('roomFinishMatch', ({ code, winnerId, reason }) => {
+    const cleanCode = String(code || socket.roomCode || '').trim().toUpperCase();
+    const room = gameState.rooms?.[cleanCode];
+    if (!room) return;
+
+    room.status = 'finished';
+    let targetWinnerId = winnerId;
+    if (!targetWinnerId && room.playerIds?.length > 0) {
+      const rStats = calculateRoomStats(room);
+      let topScore = -1;
+      for (const [pId, st] of Object.entries(rStats)) {
+        if ((st.totalPoints || 0) > topScore) {
+          topScore = st.totalPoints || 0;
+          targetWinnerId = pId;
+        }
+      }
+    }
+
+    if (targetWinnerId && gameState.players[targetWinnerId]) {
+      room.winnerId = targetWinnerId;
+      room.winningReason = reason || 'Victoire validée (Fin du match)';
+      const winner = gameState.players[targetWinnerId];
+      winner.stats = winner.stats || { wins: 0, grandChelems: 0, bingos: 0, gamesPlayed: 0, careerPoints: 0 };
+      winner.stats.wins = (winner.stats.wins || 0) + 1;
+      persistPlayer(winner);
+    } else {
+      room.winningReason = reason || 'Match terminé par les participants';
+    }
+
+    persistRoom(room);
+    io.to('room_' + cleanCode).emit('roomStateUpdate', getComputedRoomState(cleanCode));
+    io.to('room_' + cleanCode).emit('roomWinner', {
+      winnerId: room.winnerId,
+      reason: room.winningReason,
+      winner: room.winnerId ? gameState.players[room.winnerId] : null
+    });
+    io.emit('leaderboardUpdate', getLeaderboard());
+  });
+
   socket.on('roomReset', ({ code }) => {
     const cleanCode = String(code || socket.roomCode || '').trim().toUpperCase();
     const room = gameState.rooms?.[cleanCode];
@@ -1697,12 +1868,12 @@ io.on('connection', (socket) => {
     room.checked = {};
     room.winnerId = null;
     room.winningReason = null;
-    room.status = 'waiting';
+    room.status = 'active';
     (room.playerIds || []).forEach(pId => {
       room.checked[pId] = new Array(totalTiles).fill(false);
     });
     room.history = [];
-    saveState();
+    persistRoom(room);
     io.to('room_' + cleanCode).emit('roomStateUpdate', getComputedRoomState(cleanCode));
     io.to('room_' + cleanCode).emit('roomReset', { code: cleanCode });
   });
@@ -1770,30 +1941,60 @@ io.on('connection', (socket) => {
 
 // ─── Start ────────────────────────────────────────────────────────────────────
 
-server.listen(PORT, () => {
-  const activeGrid = gameState.activeGridId ? gameState.grids[gameState.activeGridId] : null;
-  const playerCount = Object.keys(gameState.players).length;
-  const gridCount   = Object.keys(gameState.grids).length;
-
-  console.log(`\n╔═══════════════════════════════════════════════════╗`);
-  console.log(`║     🎮 BINGO CARRIÈRE MANAGER  —  RUNNING         ║`);
-  console.log(`╠═══════════════════════════════════════════════════╣`);
-  console.log(`║  Port       : ${PORT}                                 `.padEnd(52) + '║');
-  console.log(`║  Players    : ${playerCount}                                 `.padEnd(52) + '║');
-  console.log(`║  Grids      : ${gridCount}                                 `.padEnd(52) + '║');
-  if (activeGrid) {
-    console.log(`║  Active Grid: ${activeGrid.name}`.padEnd(52) + '║');
+async function startServer() {
+  if (db.isPostgres) {
+    try {
+      console.log('[DB] Connexion PostgreSQL détectée, initialisation du schéma...');
+      await db.initSchema();
+      gameState = await db.loadFullState(gameState);
+      console.log(`[DB] ✅ État synchronisé depuis PostgreSQL : ${Object.keys(gameState.players).length} joueurs, ${Object.keys(gameState.rooms).length} salons, ${Object.keys(gameState.grids).length} grilles.`);
+    } catch (err) {
+      console.error('[DB] ❌ Erreur initialisation PostgreSQL:', err.message);
+    }
   }
-  console.log(`╠═══════════════════════════════════════════════════╣`);
-  console.log(`║  🏠 Accueil        http://localhost:${PORT}/          `.padEnd(52) + '║');
-  console.log(`║  🎮 Joueur         http://localhost:${PORT}/player.html`.padEnd(52) + '║');
-  console.log(`║  📺 Spectateur     http://localhost:${PORT}/spectator.html`.padEnd(52) + '║');
-  console.log(`║  🎥 Overlay OBS    http://localhost:${PORT}/obs.html  `.padEnd(52) + '║');
-  console.log(`╠═══════════════════════════════════════════════════╣`);
-  console.log(`║  API /api/state    GET  — full computed state      ║`);
-  console.log(`║  API /api/grids    GET/POST — list/create grids    ║`);
-  console.log(`║  API /api/players  POST — add player               ║`);
-  console.log(`║  API /api/toggle   POST — toggle tile              ║`);
-  console.log(`║  API /api/reset    POST — reset player or all      ║`);
-  console.log(`╚═══════════════════════════════════════════════════╝\n`);
-});
+
+  bootstrapDefaultGrid();
+
+  if (db.isPostgres) {
+    try {
+      for (const grid of Object.values(gameState.grids)) {
+        await db.saveGridToDB(grid);
+      }
+    } catch (err) {
+      console.error('[DB] Erreur synchronisation des grilles par défaut:', err.message);
+    }
+  }
+
+  server.listen(PORT, () => {
+    const activeGrid = gameState.activeGridId ? gameState.grids[gameState.activeGridId] : null;
+    const playerCount = Object.keys(gameState.players).length;
+    const gridCount   = Object.keys(gameState.grids).length;
+    const roomCount   = Object.keys(gameState.rooms || {}).length;
+
+    console.log(`\n╔═══════════════════════════════════════════════════╗`);
+    console.log(`║     🎮 BINGO FOOT EN DIRECT  —  SERVEUR EN LIGNE  ║`);
+    console.log(`╠═══════════════════════════════════════════════════╣`);
+    console.log(`║  Port       : ${PORT}                                 `.padEnd(52) + '║');
+    console.log(`║  Stockage   : ${db.isPostgres ? 'PostgreSQL (Cloud Persistant)' : 'Local (game_state.json)'} `.padEnd(52) + '║');
+    console.log(`║  Salons     : ${roomCount} actifs                           `.padEnd(52) + '║');
+    console.log(`║  Joueurs    : ${playerCount}                                 `.padEnd(52) + '║');
+    console.log(`║  Grilles    : ${gridCount}                                 `.padEnd(52) + '║');
+    if (activeGrid) {
+      console.log(`║  Active Grid: ${activeGrid.name}`.padEnd(52) + '║');
+    }
+    console.log(`╠═══════════════════════════════════════════════════╣`);
+    console.log(`║  🏠 Accueil        http://localhost:${PORT}/          `.padEnd(52) + '║');
+    console.log(`║  🎮 Joueur         http://localhost:${PORT}/player.html`.padEnd(52) + '║');
+    console.log(`║  ➕ Créer Salle    http://localhost:${PORT}/create-room`.padEnd(52) + '║');
+    console.log(`║  📺 Spectateur     http://localhost:${PORT}/spectator.html`.padEnd(52) + '║');
+    console.log(`║  🎥 Overlay OBS    http://localhost:${PORT}/obs.html  `.padEnd(52) + '║');
+    console.log(`╠═══════════════════════════════════════════════════╣`);
+    console.log(`║  API /api/db/status   GET  — état base de données  ║`);
+    console.log(`║  API /api/state       GET  — état complet          ║`);
+    console.log(`║  API /api/rooms       GET/POST — gestion salons    ║`);
+    console.log(`║  API /api/rooms/finish POST — terminer le match    ║`);
+    console.log(`╚═══════════════════════════════════════════════════╝\n`);
+  });
+}
+
+startServer();

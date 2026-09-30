@@ -124,6 +124,9 @@
           <a href="/spectator.html" id="btn-link-spec" target="_blank" class="btn btn-sm btn-secondary-slate">
             📺 Vue Spectateur
           </a>
+          <button onclick="confirmFinishMatch()" id="btn-finish-match" class="btn btn-sm" style="font-weight:900;background:rgba(239,68,68,0.18);color:#ef4444;border:1px solid rgba(239,68,68,0.45);" title="Arrêter la partie et figer le score">
+            🏁 Terminer le match
+          </button>
           <button onclick="resetMyGrid()" class="btn btn-sm btn-danger" style="margin-left:auto;">
             🔄 Réinitialiser
           </button>
@@ -770,6 +773,43 @@
       currentChecked = new Array(currentChallenges.length).fill(false);
       renderGrid(currentChallenges, currentChecked, [], 'lime', playerId);
       updateScoreboard(localPlayer, { totalPoints: 0, tilesCompleted: 0 }, currentChallenges.length);
+    }
+
+    async function confirmFinishMatch() {
+      if (!confirm("Voulez-vous vraiment terminer la partie et figer les scores finaux pour tout le monde ?")) return;
+      try {
+        let winnerId = null;
+        let reason = "Partie clôturée par les joueurs";
+        if (roomState && roomState.stats) {
+          let topScore = -1;
+          for (const [pId, st] of Object.entries(roomState.stats)) {
+            if ((st.totalPoints || 0) > topScore) {
+              topScore = st.totalPoints || 0;
+              winnerId = pId;
+            }
+          }
+          if (winnerId && roomState.players?.[winnerId]) {
+            reason = `Vainqueur au score : ${roomState.players[winnerId].name} (${topScore} pts)`;
+          }
+        }
+        if (!winnerId) winnerId = playerId;
+
+        if (isRoomMode) {
+          const res = await fetch('/api/rooms/finish', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code: roomCode, winnerId, reason })
+          });
+          const data = await res.json();
+          if (data.success && data.room) {
+            applyRoomState(data.room);
+          }
+        } else {
+          socket.emit('roomFinishMatch', { code: roomCode, winnerId, reason });
+        }
+      } catch (err) {
+        console.error('Erreur confirmFinishMatch:', err);
+      }
     }
 
     function showToast(playerName, challenge, isLine, isGrandChelem) {
