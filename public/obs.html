@@ -2,187 +2,538 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>BINGO | Overlay OBS</title>
+  <title>BINGO FOOT | Overlay OBS Esports</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@600;700;800;900&family=Montserrat:wght@600;700;800;900&display=swap" rel="stylesheet">
   <script src="/socket.io/socket.io.js"></script>
   <script src="/js/audio.js"></script>
   <script src="/js/confetti.js"></script>
   <script src="/js/avatar.js"></script>
   <style>
     /* =====================================================
-       RESET TOTAL - fond chromakey transparent
+       RESET TOTAL - FOND TRANSPARENT OBS
        ===================================================== */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --lime: #bbf246;
+      --lime-glow: rgba(187, 242, 70, 0.45);
+      --bg-dark: #0a0d14;
+      --card-bg: #0f1422;
+      --card-inner: #131929;
+      --card-border: #1e283d;
+      --text-white: #ffffff;
+      --text-muted: #75849b;
+      --font-display: 'Chakra Petch', 'Montserrat', sans-serif;
+      --font-body: 'Montserrat', sans-serif;
+    }
 
     html, body {
       background: transparent !important;
       background-color: transparent !important;
-      overflow: hidden;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif;
+      overflow-x: hidden;
+      font-family: var(--font-body);
       -webkit-font-smoothing: antialiased;
-      color: #eef2ff;
+      color: #ffffff;
     }
 
-    .hud-avatar img, #gp-avatar img, #obs-alert-icon img {
-      width: 100%; height: 100%; object-fit: cover; border-radius: inherit;
-    }
-    .hud-avatar, #gp-avatar, #obs-alert-icon {
-      font-family: 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif;
-      overflow: hidden;
+    /* In showcase mode when viewing in regular browser, show dark background */
+    body.showcase-bg {
+      background: #06080d !important;
+      background-color: #06080d !important;
+      min-height: 100vh;
+      padding: 20px;
     }
 
-    /* Wrapper de la page - top-left pour la plupart des modes */
-    #obs-wrapper {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      pointer-events: none;
+    /* Container for OBS elements */
+    #obs-root {
+      width: 100%;
+      position: relative;
     }
 
     /* =====================================================
-       MODE HUD - barre de score en haut à gauche
+       TOP BAR (SCOREBOARD HUD - ESPOIRTS BROADCAST)
        ===================================================== */
-    #hud-bar {
-      display: none;
-      position: absolute;
-      top: 16px;
-      left: 16px;
-      align-items: center;
-      gap: 12px;
-      background: #0d0f16;
-      border: 2px solid #ff5500;
-      border-radius: 0px;
-      padding: 8px 16px;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.9), 0 0 20px rgba(255,85,0,0.25);
-      overflow: hidden;
-    }
-
-    #hud-bar::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 3px;
-      background: linear-gradient(90deg, #ff5500, #ffaa00, #ff5500);
-    }
-
-    .hud-player {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .hud-avatar {
-      width: 34px; height: 34px;
-      border-radius: 0px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 18px;
-      border: 2px solid;
-      background: #151824;
-    }
-
-    .hud-score {
-      font-size: 1.6rem;
-      font-weight: 900;
-      font-variant-numeric: tabular-nums;
-      line-height: 1;
-    }
-
-    .hud-vs {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      padding: 0 4px;
-    }
-
-    .hud-vs-label {
-      font-size: 0.65rem;
-      font-weight: 900;
-      color: #ffaa00;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-    }
-
-    .hud-progress {
-      width: 55px; height: 4px;
-      background: rgba(255,255,255,0.08);
-      border-radius: 0px;
-      overflow: hidden;
-      display: flex;
-    }
-
-    /* =====================================================
-       MODE GRILLE COMPACTE
-       ===================================================== */
-    #grid-panel {
-      display: none;
-      position: absolute;
-      top: 16px;
-      left: 16px;
-    }
-
-    .grid-panel-header {
-      background: #0d0f16;
-      border: 2px solid #ff5500;
-      border-radius: 0px;
-      padding: 6px 12px;
+    .obs-topbar {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 10px;
-      border-bottom: none;
+      gap: 20px;
+      background: #0b0e17;
+      border: 1px solid #1a2234;
+      border-radius: 12px;
+      padding: 10px 22px;
+      width: 100%;
+      max-width: 1300px;
+      margin: 0 auto 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
     }
 
-    .obs-mini-grid {
-      display: grid;
-      grid-template-columns: repeat(5, 62px);
-      gap: 3px;
-      background: #08090f;
-      border: 2px solid #ff5500;
-      border-radius: 0px;
-      padding: 7px;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.9);
+    /* Left: Logo & Subtitle */
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
 
-    .obs-tile {
-      height: 54px;
-      background: #111420;
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 0px;
+    .topbar-logo-icon {
+      width: 42px;
+      height: 42px;
+      background: rgba(187, 242, 70, 0.12);
+      border: 1.5px solid var(--lime);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 0 15px rgba(187, 242, 70, 0.2);
+    }
+
+    .topbar-title {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      font-weight: 900;
+      letter-spacing: 0.05em;
+      color: #ffffff;
+      line-height: 1.1;
+    }
+
+    .topbar-subtitle {
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      color: var(--lime);
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    /* Center: Duel match */
+    .topbar-center {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      flex: 1;
+      justify-content: center;
+    }
+
+    .topbar-player {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .topbar-player.p1 {
+      flex-direction: row;
+    }
+
+    .topbar-player.p2 {
+      flex-direction: row;
+    }
+
+    .topbar-player-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar-player-info.text-right { text-align: right; }
+    .topbar-player-info.text-left { text-align: left; }
+
+    .topbar-p-name {
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      font-weight: 900;
+      letter-spacing: 0.03em;
+      color: #ffffff;
+      white-space: nowrap;
+    }
+
+    .topbar-p-lines {
+      font-size: 0.65rem;
+      font-weight: 800;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-top: 2px;
+    }
+
+    /* Big Score Capsules */
+    .topbar-score-box {
+      font-family: var(--font-display);
+      font-size: 1.8rem;
+      font-weight: 900;
+      min-width: 54px;
+      height: 48px;
+      padding: 0 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      line-height: 1;
+      letter-spacing: -0.02em;
+      transition: all 0.3s ease;
+    }
+
+    .topbar-score-box.is-lime {
+      background: var(--lime);
+      color: #0b0e14;
+      box-shadow: 0 0 20px rgba(187, 242, 70, 0.4);
+    }
+
+    .topbar-score-box.is-dark {
+      background: #141b2a;
+      border: 1px solid #243048;
+      color: #ffffff;
+    }
+
+    /* Center VS */
+    .topbar-vs-wrap {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      text-align: center;
-      padding: 3px;
-      transition: background 0.25s, border-color 0.25s, box-shadow 0.25s;
+      padding: 0 10px;
     }
 
-    .obs-tile.checked-tile {
-      background: rgba(255,85,0,0.25);
-      border-color: #ff5500;
-      box-shadow: 0 0 10px rgba(255,85,0,0.4);
+    .topbar-status {
+      font-size: 0.58rem;
+      font-weight: 900;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      white-space: nowrap;
     }
 
-    .obs-tile.line-tile {
-      border-color: #ffaa00 !important;
-      box-shadow: 0 0 14px rgba(255,170,0,0.6) !important;
+    .topbar-vs {
+      font-family: var(--font-display);
+      font-size: 1.1rem;
+      font-weight: 900;
+      color: #ffffff;
+      letter-spacing: 0.06em;
     }
 
-    /* Player color overrides */
-    .obs-tile.checked-tile.c-blue { background: rgba(79,142,247,0.22); border-color: #4f8ef7; }
-    .obs-tile.checked-tile.c-red { background: rgba(239,68,68,0.22); border-color: #ef4444; }
-    .obs-tile.checked-tile.c-purple { background: rgba(139,92,246,0.22); border-color: #8b5cf6; }
-    .obs-tile.checked-tile.c-green { background: rgba(16,185,129,0.22); border-color: #10b981; }
-    .obs-tile.checked-tile.c-gold { background: rgba(255,170,0,0.22); border-color: #ffaa00; }
-    .obs-tile.checked-tile.c-pink { background: rgba(236,72,153,0.22); border-color: #ec4899; }
-    .obs-tile.checked-tile.c-cyan { background: rgba(6,182,212,0.22); border-color: #06b6d4; }
-    .obs-tile.checked-tile.c-orange { background: rgba(255,85,0,0.25); border-color: #ff5500; }
+    /* Right: Manche & Chrono */
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+    }
 
-    .obs-tile-emoji { font-size: 18px; line-height: 1; }
-    .obs-tile-pts { font-size: 7px; font-weight: 900; color: #ffaa00; margin-top: 2px; }
+    .topbar-meta-item {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+
+    .meta-label {
+      font-size: 0.58rem;
+      font-weight: 900;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .meta-val {
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+      font-weight: 900;
+      color: #ffffff;
+      letter-spacing: 0.04em;
+    }
 
     /* =====================================================
-       ALERTE STREAM
+       WIDGETS LAYOUT & CARDS (FIGMA 3 PRESETS)
+       ===================================================== */
+    .obs-widgets-container {
+      display: flex;
+      gap: 24px;
+      justify-content: center;
+      align-items: stretch;
+      flex-wrap: wrap;
+      width: 100%;
+      max-width: 1380px;
+      margin: 0 auto;
+    }
+
+    .obs-widget-card {
+      background: #090c14;
+      border: 1px solid #1a2233;
+      border-radius: 12px;
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-width: 380px;
+      max-width: 440px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    }
+
+    /* Widget Header */
+    .widget-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .widget-tag {
+      font-size: 0.62rem;
+      font-weight: 900;
+      color: #f59e0b;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 3px;
+    }
+
+    .widget-title {
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      font-weight: 900;
+      color: #ffffff;
+      letter-spacing: 0.03em;
+    }
+
+    .widget-badge {
+      font-size: 0.65rem;
+      font-weight: 900;
+      color: var(--lime);
+      background: rgba(187, 242, 70, 0.12);
+      border: 1px solid rgba(187, 242, 70, 0.3);
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.04em;
+    }
+
+    /* Content Row */
+    .widget-content {
+      display: flex;
+      gap: 12px;
+      flex: 1;
+    }
+
+    /* =====================================================
+       DUEL PLAYER CARD (GRIDS & SCORES)
+       ===================================================== */
+    .duel-player-card {
+      background: #0f1422;
+      border: 1px solid #1a2436;
+      border-radius: 8px;
+      padding: 10px 10px 8px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .duel-card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 6px;
+      margin-bottom: 8px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .player-role-tag {
+      font-size: 0.58rem;
+      font-weight: 900;
+      color: var(--lime);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .player-card-name {
+      font-family: var(--font-display);
+      font-size: 0.92rem;
+      font-weight: 900;
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      letter-spacing: 0.02em;
+    }
+
+    .player-card-lines {
+      font-size: 0.72rem;
+      font-weight: 900;
+      color: var(--lime);
+      white-space: nowrap;
+      background: rgba(187, 242, 70, 0.12);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    /* Bingo Grid inside widget */
+    .duel-grid-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .duel-grid {
+      display: grid;
+      gap: 4px;
+      width: 100%;
+    }
+
+    .duel-grid.grid-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .duel-grid.grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .duel-grid.grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+    /* Bingo Tile */
+    .duel-tile {
+      aspect-ratio: 1 / 1;
+      min-height: 28px;
+      background: #0d121e;
+      border: 1px solid #1a2336;
+      border-radius: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2px;
+      font-size: 0.52rem;
+      font-weight: 800;
+      line-height: 1.05;
+      text-transform: uppercase;
+      color: #64748b;
+      overflow: hidden;
+      user-select: none;
+      transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+    }
+
+    /* Checked tile = SOLID LIME, BLACK TEXT, HIGHLIGHTED! */
+    .duel-tile.is-checked {
+      background: var(--lime) !important;
+      border-color: var(--lime) !important;
+      color: #0b0e14 !important;
+      font-weight: 900 !important;
+      box-shadow: 0 0 10px rgba(187, 242, 70, 0.35);
+    }
+
+    .duel-tile.is-line {
+      border-color: #ffffff !important;
+      box-shadow: 0 0 12px rgba(187, 242, 70, 0.7) !important;
+    }
+
+    .duel-tile-text {
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      word-break: normal;
+      overflow-wrap: break-word;
+      hyphens: none;
+    }
+
+    .duel-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 8px;
+      padding-top: 6px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 0.58rem;
+      font-weight: 800;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    /* =====================================================
+       SCORE CAPSULES (WIDGET 2 & 3)
+       ===================================================== */
+    .duel-score-body {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 6px;
+      flex: 1;
+      padding: 6px 0;
+    }
+
+    .score-capsule-label {
+      font-size: 0.6rem;
+      font-weight: 900;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .score-capsule {
+      height: 64px;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .score-capsule.is-lime {
+      background: var(--lime);
+      color: #0b0e14;
+      box-shadow: 0 0 25px rgba(187, 242, 70, 0.35);
+    }
+
+    .score-capsule.is-dark {
+      background: #121828;
+      border: 1px solid #1f2b42;
+      color: #ffffff;
+    }
+
+    .score-capsule-num {
+      font-family: var(--font-display);
+      font-size: 2.5rem;
+      font-weight: 900;
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+
+    .score-capsule-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 4px;
+      background: rgba(0, 0, 0, 0.25);
+    }
+
+    .score-capsule.is-dark .score-capsule-bar {
+      background: var(--lime);
+    }
+
+    /* Compact card in Widget 3 */
+    .duel-compact-card {
+      background: #0f1422;
+      border: 1px solid #1a2436;
+      border-radius: 8px;
+      padding: 10px 10px 8px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .duel-compact-card .score-capsule {
+      height: 48px;
+    }
+
+    .duel-compact-card .score-capsule-num {
+      font-size: 1.9rem;
+    }
+
+    /* =====================================================
+       STREAM ALERT (BROADCAST POPUP BANNER)
        ===================================================== */
     #obs-alert {
       position: fixed;
@@ -191,42 +542,30 @@
       right: 0;
       margin: 0 auto;
       width: fit-content;
-      min-width: 340px;
-      max-width: 520px;
-
-      background: #0d0f16;
-      border: 2px solid #ff5500;
-      border-radius: 0px;
-      padding: 18px 24px 22px;
+      min-width: 360px;
+      max-width: 540px;
+      background: #090c14;
+      border: 2px solid var(--lime);
+      border-radius: 10px;
+      padding: 16px 22px 20px;
       display: flex;
       align-items: center;
       gap: 16px;
-      box-shadow:
-        0 24px 80px rgba(0,0,0,0.95),
-        0 0 45px rgba(255,85,0,0.25);
+      box-shadow: 0 20px 70px rgba(0, 0, 0, 0.95), 0 0 35px rgba(187, 242, 70, 0.3);
       pointer-events: none;
       z-index: 9999;
       overflow: hidden;
-      transition: top 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: top 0.45s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     #obs-alert.show {
-      top: 16px;
-    }
-
-    #obs-alert::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 3px;
-      background: linear-gradient(90deg, #ff5500, #ffaa00, #ff5500);
+      top: 20px;
     }
 
     #obs-alert-icon {
-      font-size: 40px;
+      font-size: 38px;
       line-height: 1;
       flex-shrink: 0;
-      filter: drop-shadow(0 0 12px rgba(255,255,255,0.3));
     }
 
     #obs-alert-content { flex: 1; }
@@ -235,13 +574,14 @@
       font-size: 0.68rem;
       font-weight: 900;
       text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: #f5a623;
-      margin-bottom: 4px;
+      letter-spacing: 0.08em;
+      color: var(--lime);
+      margin-bottom: 2px;
     }
 
     #obs-alert-title {
-      font-size: 1.1rem;
+      font-family: var(--font-display);
+      font-size: 1.15rem;
       font-weight: 900;
       color: #ffffff;
       line-height: 1.2;
@@ -250,202 +590,354 @@
     #obs-alert-sub {
       font-size: 0.8rem;
       color: #94a3b8;
-      margin-top: 4px;
-      font-weight: 600;
+      margin-top: 3px;
+      font-weight: 700;
     }
 
-    /* Barre de progression — SÉPARÉE du transform de l'alerte */
     #obs-alert-progress {
       position: absolute;
       bottom: 0;
       left: 0;
       height: 4px;
-      background: linear-gradient(90deg, #f5a623, #ef4444);
-      border-radius: 0 0 16px 16px;
-      /* La largeur est animée via JS (setInterval) pour éviter les conflits CSS */
+      background: var(--lime);
     }
 
     /* =====================================================
-       PANEL DE CONTRÔLE (visible dans le navigateur seulement)
+       STREAMER CONTROLS DOCK (PANEL NAVIGATEUR)
        ===================================================== */
-    #obs-controls-panel {
+    #obs-dock {
       position: fixed;
-      bottom: 12px;
-      right: 12px;
-      background: rgba(8,12,20,0.95);
-      border: 1px solid rgba(255,255,255,0.1);
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(9, 12, 20, 0.96);
+      border: 1px solid #1e283d;
       border-radius: 10px;
-      padding: 10px 14px;
+      padding: 8px 16px;
       display: flex;
-      flex-direction: column;
-      gap: 6px;
-      font-size: 0.75rem;
+      align-items: center;
+      gap: 10px;
       z-index: 9998;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(8px);
     }
 
-    #obs-controls-panel .ctrl-title {
-      font-size: 0.7rem;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: #64748b;
-      margin-bottom: 2px;
-    }
-
-    #obs-controls-panel .ctrl-row {
-      display: flex;
-      gap: 5px;
-      flex-wrap: wrap;
-    }
-
-    .ctrl-btn {
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.1);
+    .dock-btn {
+      background: #131929;
+      border: 1px solid #232f48;
       color: #e2e8f0;
-      padding: 4px 9px;
+      padding: 6px 12px;
       border-radius: 6px;
-      font-size: 0.72rem;
-      font-weight: 600;
+      font-size: 0.75rem;
+      font-weight: 800;
       cursor: pointer;
       text-decoration: none;
-      display: inline-block;
-      transition: background 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      white-space: nowrap;
     }
 
-    .ctrl-btn:hover {
-      background: rgba(255,255,255,0.15);
+    .dock-btn:hover {
+      background: #1c263c;
+      color: #ffffff;
+      border-color: var(--lime);
     }
 
-    .ctrl-btn.active-mode {
-      background: #4f8ef7;
-      border-color: #4f8ef7;
-      color: white;
+    .dock-btn.active {
+      background: var(--lime);
+      border-color: var(--lime);
+      color: #000000;
+      box-shadow: 0 0 12px rgba(187, 242, 70, 0.4);
+    }
+
+    .dock-btn-copy {
+      background: rgba(187, 242, 70, 0.15);
+      border-color: rgba(187, 242, 70, 0.4);
+      color: var(--lime);
+    }
+
+    .dock-btn-copy:hover {
+      background: var(--lime);
+      color: #000000;
     }
   </style>
 </head>
-<body>
+<body id="body-root">
 
-<div id="obs-wrapper">
-  <!-- HUD MODE -->
-  <div id="hud-bar">
-    <div id="hud-players-wrap" style="display:flex;align-items:center;gap:10px;"></div>
-  </div>
+<div id="obs-root">
 
-  <!-- GRID MODE -->
-  <div id="grid-panel">
-    <div class="grid-panel-header">
-      <div style="display:flex;align-items:center;gap:8px;">
-        <span id="gp-avatar" style="font-size:18px;">⚽</span>
-        <strong id="gp-name" style="font-size:0.85rem;">Joueur</strong>
-        <span id="gp-club" style="font-size:0.7rem;color:#64748b;"></span>
+  <!-- ================= 1. TOP BAR HUD (SCOREBOARD BAR) ================= -->
+  <div id="obs-topbar" class="obs-topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#bbf246" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
       </div>
-      <span id="gp-score" style="font-size:0.95rem;font-weight:900;color:#f5a623;">0 PTS</span>
+      <div>
+        <div class="topbar-title">BINGO FOOT</div>
+        <div class="topbar-subtitle">LE DUEL EN DIRECT</div>
+      </div>
     </div>
-    <div class="obs-mini-grid" id="obs-grid"></div>
+
+    <div class="topbar-center" id="topbar-duel">
+      <!-- Player 1 -->
+      <div class="topbar-player p1">
+        <div class="topbar-player-info text-right">
+          <div class="topbar-p-name" id="tb-p1-name">MATHIS_10</div>
+          <div class="topbar-p-lines" id="tb-p1-lines">0 LIGNE COMPLÉTÉE</div>
+        </div>
+        <div class="topbar-score-box is-lime" id="tb-p1-score">00</div>
+      </div>
+
+      <!-- Center VS -->
+      <div class="topbar-vs-wrap">
+        <div class="topbar-status">PARTIE EN COURS</div>
+        <div class="topbar-vs">VS</div>
+      </div>
+
+      <!-- Player 2 -->
+      <div class="topbar-player p2">
+        <div class="topbar-score-box is-dark" id="tb-p2-score">00</div>
+        <div class="topbar-player-info text-left">
+          <div class="topbar-p-name" id="tb-p2-name">LÉA.FOOT</div>
+          <div class="topbar-p-lines" id="tb-p2-lines">0 LIGNE COMPLÉTÉE</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <div class="topbar-meta-item">
+        <div class="meta-label">MANCHE</div>
+        <div class="meta-val" id="tb-meta-round">01 / 01</div>
+      </div>
+      <div class="topbar-meta-item">
+        <div class="meta-label">CHRONO</div>
+        <div class="meta-val" id="tb-meta-chrono">00:00</div>
+      </div>
+    </div>
   </div>
+
+  <!-- ================= 2. WIDGETS CONTAINER (3 FIGMA PRESETS) ================= -->
+  <div id="obs-widgets-container" class="obs-widgets-container">
+
+    <!-- PRESET 1: GRILLES DE BINGO -->
+    <div id="widget-grids" class="obs-widget-card">
+      <div class="widget-header">
+        <div>
+          <div class="widget-tag">VUE GRILLES</div>
+          <div class="widget-title">GRILLES DE BINGO</div>
+        </div>
+        <div class="widget-badge" id="wg-grids-size">5x5</div>
+      </div>
+      <div class="widget-content" id="wg-grids-content">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <!-- PRESET 2: NOMBRE DE POINTS -->
+    <div id="widget-scores" class="obs-widget-card">
+      <div class="widget-header">
+        <div>
+          <div class="widget-tag">VUE SCORES</div>
+          <div class="widget-title">NOMBRE DE POINTS</div>
+        </div>
+        <div class="widget-badge">2 JOUEURS</div>
+      </div>
+      <div class="widget-content" id="wg-scores-content">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <!-- PRESET 3: GRILLES + SCORES (COMPACT DUEL) -->
+    <div id="widget-compact" class="obs-widget-card">
+      <div class="widget-header">
+        <div>
+          <div class="widget-tag">VUE COMPACTE</div>
+          <div class="widget-title">GRILLES + SCORES</div>
+        </div>
+        <div class="widget-badge">2 JOUEURS</div>
+      </div>
+      <div class="widget-content" id="wg-compact-content">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+  </div>
+
 </div>
 
-<!-- ALERTE STREAM - TOUJOURS PRÉSENTE, ANIMÉE PAR JS -->
+<!-- ================= 3. STREAM ALERT ================= -->
 <div id="obs-alert">
   <div id="obs-alert-icon">🎯</div>
   <div id="obs-alert-content">
-    <div id="obs-alert-tag">⚡ DÉFI VALIDÉ !</div>
+    <div id="obs-alert-tag">⚡ DÉFI CARRIÈRE VALIDÉ !</div>
     <div id="obs-alert-title">Titre du défi</div>
     <div id="obs-alert-sub">+2 pts • Joueur</div>
   </div>
   <div id="obs-alert-progress" style="width:100%;"></div>
 </div>
 
-<!-- CONTRÔLES (panel navigateur) -->
-<div id="obs-controls-panel">
-  <div class="ctrl-title">🎥 Overlay OBS — Choisir le mode :</div>
-  <div class="ctrl-row">
-    <a class="ctrl-btn" href="?mode=hud">📊 Scoreboard</a>
-    <a class="ctrl-btn" href="?mode=grid&p=0">🔲 Grille J1</a>
-    <a class="ctrl-btn" href="?mode=grid&p=1">🔲 Grille J2</a>
-    <a class="ctrl-btn" href="?mode=alerts">🔔 Alertes seules</a>
-  </div>
-  <div class="ctrl-row">
-    <a class="ctrl-btn" href="?mode=hud&nocontrols=1">Masquer contrôles</a>
-  </div>
-  <div style="color:#475569;font-size:0.65rem;margin-top:4px;">
-    Dans OBS : Source Navigateur → Cocher "Chroma Key" ou fond transparent
-  </div>
+<!-- ================= 4. STREAMER CONTROLS DOCK ================= -->
+<div id="obs-dock">
+  <span style="font-size:0.75rem;font-weight:900;color:var(--lime);margin-right:4px;">🎥 OBS :</span>
+  <a class="dock-btn" id="btn-mode-showcase" href="?mode=showcase">📺 Tout afficher</a>
+  <a class="dock-btn" id="btn-mode-topbar" href="?mode=topbar">📊 Barre Top (HUD)</a>
+  <a class="dock-btn" id="btn-mode-grids" href="?mode=grids">🔲 Grilles Seules</a>
+  <a class="dock-btn" id="btn-mode-scores" href="?mode=scores">🔢 Scores Seuls</a>
+  <a class="dock-btn" id="btn-mode-compact" href="?mode=compact">⚡ Grilles + Scores</a>
+  <button class="dock-btn dock-btn-copy" onclick="copyCurrentObsUrl(this)">📋 Copier lien OBS</button>
+  <button class="dock-btn" id="btn-mute" onclick="toggleAudioMute()">🔊</button>
 </div>
 
 <script>
   const socket = io();
   const params = new URLSearchParams(window.location.search);
-  const mode = params.get('mode') || 'alerts'; // hud | grid | alerts
+  const mode = params.get('mode') || 'showcase'; // showcase | topbar | grids | scores | compact | alerts
   const roomCode = params.get('room') ? params.get('room').toUpperCase().trim() : null;
-  const targetIdx = parseInt(params.get('p') || '0');
   const noControls = params.has('nocontrols');
 
-  if (noControls) document.getElementById('obs-controls-panel').style.display = 'none';
-
-  // Update controls panel links if in room mode
-  if (roomCode) {
-    const cp = document.getElementById('obs-controls-panel');
-    if (cp) {
-      const roomTag = document.createElement('div');
-      roomTag.style.cssText = 'background:var(--lime,#bbf246);color:#000;font-weight:900;padding:3px 8px;font-size:0.75rem;margin-bottom:8px;border-radius:4px;display:inline-block;';
-      roomTag.textContent = `🔒 SALLE OBS : #${roomCode}`;
-      cp.prepend(roomTag);
-
-      cp.querySelectorAll('.ctrl-btn').forEach(btn => {
-        const url = new URL(btn.href, window.location.origin);
-        url.searchParams.set('room', roomCode);
-        btn.href = url.pathname + url.search;
-      });
-    }
+  if (noControls) {
+    document.getElementById('obs-dock').style.display = 'none';
   }
 
-  const COLOR_MAP = {
-    blue:'#4f8ef7', red:'#ef4444', purple:'#8b5cf6', green:'#10b981',
-    gold:'#f5a623', pink:'#ec4899', cyan:'#06b6d4', orange:'#f97316', lime:'#bbf246'
-  };
+  // Set dark background for showcase mode in browser
+  if (mode === 'showcase' && !noControls) {
+    document.body.classList.add('showcase-bg');
+  }
 
-  // Show right container
-  if (mode === 'hud') {
-    document.getElementById('hud-bar').style.display = 'flex';
-    const activeBtn = document.querySelector('[href*="mode=hud"]');
-    if (activeBtn) activeBtn.classList.add('active-mode');
-  } else if (mode === 'grid') {
-    document.getElementById('grid-panel').style.display = 'block';
+  // Setup mode visibility
+  const elTopbar = document.getElementById('obs-topbar');
+  const elWidgets = document.getElementById('obs-widgets-container');
+  const elWGrids = document.getElementById('widget-grids');
+  const elWScores = document.getElementById('widget-scores');
+  const elWCompact = document.getElementById('widget-compact');
+
+  if (mode === 'topbar' || mode === 'hud') {
+    elTopbar.style.display = 'flex';
+    elWidgets.style.display = 'none';
+    setActiveDockBtn('btn-mode-topbar');
+  } else if (mode === 'grids') {
+    elTopbar.style.display = 'none';
+    elWidgets.style.display = 'flex';
+    elWGrids.style.display = 'flex';
+    elWGrids.style.maxWidth = '880px';
+    elWScores.style.display = 'none';
+    elWCompact.style.display = 'none';
+    setActiveDockBtn('btn-mode-grids');
+  } else if (mode === 'scores') {
+    elTopbar.style.display = 'none';
+    elWidgets.style.display = 'flex';
+    elWGrids.style.display = 'none';
+    elWScores.style.display = 'flex';
+    elWScores.style.maxWidth = '780px';
+    elWCompact.style.display = 'none';
+    setActiveDockBtn('btn-mode-scores');
+  } else if (mode === 'compact') {
+    elTopbar.style.display = 'none';
+    elWidgets.style.display = 'flex';
+    elWGrids.style.display = 'none';
+    elWScores.style.display = 'none';
+    elWCompact.style.display = 'flex';
+    elWCompact.style.maxWidth = '880px';
+    setActiveDockBtn('btn-mode-compact');
+  } else if (mode === 'alerts') {
+    elTopbar.style.display = 'none';
+    elWidgets.style.display = 'none';
   } else {
-    const activeBtn = document.querySelector('[href*="mode=alerts"]');
-    if (activeBtn) activeBtn.classList.add('active-mode');
+    // Default: Showcase
+    elTopbar.style.display = 'flex';
+    elWidgets.style.display = 'flex';
+    elWGrids.style.display = 'flex';
+    elWScores.style.display = 'flex';
+    elWCompact.style.display = 'flex';
+    setActiveDockBtn('btn-mode-showcase');
   }
+
+  function setActiveDockBtn(id) {
+    document.querySelectorAll('#obs-dock .dock-btn').forEach(b => b.classList.remove('active'));
+    const b = document.getElementById(id);
+    if (b) b.classList.add('active');
+  }
+
+  // Update room query params on dock links
+  if (roomCode) {
+    document.querySelectorAll('#obs-dock a.dock-btn').forEach(a => {
+      const u = new URL(a.href, window.location.origin);
+      u.searchParams.set('room', roomCode);
+      a.href = u.pathname + u.search;
+    });
+  }
+
+  function copyCurrentObsUrl(btn) {
+    const u = new URL(window.location.href);
+    u.searchParams.set('nocontrols', '1');
+    navigator.clipboard.writeText(u.toString()).then(() => {
+      const prev = btn.textContent;
+      btn.textContent = '✓ URL Copiée !';
+      setTimeout(() => btn.textContent = prev, 1800);
+    });
+  }
+
+  function toggleAudioMute() {
+    const isMuted = window.soundFx?.toggleMute?.();
+    document.getElementById('btn-mute').textContent = isMuted ? '🔇' : '🔊';
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  // Timer Chrono
+  let gameStartTime = Date.now();
+  setInterval(() => {
+    const sec = Math.floor((Date.now() - gameStartTime) / 1000);
+    const m = String(Math.floor(sec / 60)).padStart(2, '0');
+    const s = String(sec % 60).padStart(2, '0');
+    const el = document.getElementById('tb-meta-chrono');
+    if (el) el.textContent = `${m}:${s}`;
+  }, 1000);
 
   let gameState = null;
 
-  // Socket: Room mode
+  /* =====================================================
+     SOCKET CONNECTION (ROOM OR GLOBAL)
+     ===================================================== */
   if (roomCode) {
     socket.emit('joinRoom', { roomCode, isSpectator: true });
 
     fetch(`/api/rooms/${roomCode}`).then(r => r.json()).then(data => {
       if (data.success && data.room) {
         gameState = data.room;
-        if (mode === 'hud') renderHud(data.room);
-        else if (mode === 'grid') renderGrid(data.room);
+        if (data.room.createdAt) gameStartTime = new Date(data.room.createdAt).getTime();
+        renderAll(data.room);
       }
     }).catch(console.error);
 
     socket.on('roomStateUpdate', (rState) => {
       if (rState.code !== roomCode) return;
       gameState = rState;
-      if (mode === 'hud') renderHud(rState);
-      else if (mode === 'grid') renderGrid(rState);
+      renderAll(rState);
     });
 
     socket.on('roomTileToggled', (ev) => {
       if (!ev.checked) return;
       if (ev.newGrandChelem) {
         window.soundFx?.playGrandChelem();
-        window.launchConfetti?.({ count: 200 });
+        window.launchConfetti?.({ count: 250 });
       } else if (ev.newLineAchieved) {
         window.soundFx?.playBingo();
-        window.launchConfetti?.({ count: 100 });
+        window.launchConfetti?.({ count: 120 });
       } else {
         window.soundFx?.playCheck();
       }
@@ -454,25 +946,29 @@
 
     socket.on('roomWinner', (ev) => {
       window.soundFx?.playGrandChelem();
-      window.launchConfetti?.({ count: 300 });
+      window.launchConfetti?.({ count: 350 });
       triggerWinnerAlert(ev);
     });
   } else {
-    // Normal global mode
+    // Global Match
+    fetch('/api/state').then(r => r.json()).then(data => {
+      gameState = data;
+      renderAll(data);
+    }).catch(console.error);
+
     socket.on('stateUpdate', (data) => {
       gameState = data;
-      if (mode === 'hud') renderHud(data);
-      else if (mode === 'grid') renderGrid(data);
+      renderAll(data);
     });
 
     socket.on('tileToggled', (ev) => {
       if (!ev.checked) return;
       if (ev.newGrandChelem) {
         window.soundFx?.playGrandChelem();
-        window.launchConfetti?.({ count: 200 });
+        window.launchConfetti?.({ count: 250 });
       } else if (ev.newLineAchieved) {
         window.soundFx?.playBingo();
-        window.launchConfetti?.({ count: 100 });
+        window.launchConfetti?.({ count: 120 });
       } else {
         window.soundFx?.playCheck();
       }
@@ -480,15 +976,253 @@
     });
   }
 
-  function triggerWinnerAlert(ev) {
-    document.getElementById('obs-alert-icon').innerHTML = '👑';
-    document.getElementById('obs-alert-tag').textContent = '🏆 VAINQUEUR DE LA PARTIE !';
-    document.getElementById('obs-alert-title').textContent = `${ev.winner?.name || 'Un joueur'} REMPORTE LA VICTOIRE !`;
-    document.getElementById('obs-alert-sub').textContent = ev.reason || 'Victoire validée !';
-    
+  /* =====================================================
+     RENDER FUNCTION: TOPBAR + 3 WIDGETS
+     ===================================================== */
+  function renderAll(data) {
+    const { players, stats, grids, activeGrid } = data;
+    const ids = Object.keys(players || {});
+    if (!ids.length) return;
+
+    const challenges = grids?.find(g => g.id === activeGrid)?.challenges || data.challenges || [];
+    const N = Math.round(Math.sqrt(challenges.length)) || 5;
+    const totalTiles = challenges.length || 25;
+
+    // Sort players by score
+    const sorted = ids.map(id => ({
+      id,
+      p: players[id],
+      s: stats?.[id] || {},
+      checked: players[id].grids?.[activeGrid] || data.checked?.[id] || Array(totalTiles).fill(false)
+    })).sort((a, b) => (b.s.totalPoints || 0) - (a.s.totalPoints || 0));
+
+    // Compute lines for each player
+    sorted.forEach(item => {
+      const completedLines = item.s.completedLines || [];
+      const lineIndices = new Set();
+      completedLines.forEach(l => {
+        if (l.type === 'row') for (let c = 0; c < N; c++) lineIndices.add(l.index * N + c);
+        if (l.type === 'col') for (let r = 0; r < N; r++) lineIndices.add(r * N + l.index);
+        if (l.type === 'diag' && l.index === 0) for (let i = 0; i < N; i++) lineIndices.add(i * N + i);
+        if (l.type === 'diag' && l.index === 1) for (let i = 0; i < N; i++) lineIndices.add(i * N + (N - 1 - i));
+      });
+      item.lineIndices = lineIndices;
+    });
+
+    const p1 = sorted[0];
+    const p2 = sorted[1] || sorted[0];
+
+    /* ---- 1. RENDER TOP BAR ---- */
+    renderTopBar(p1, p2, N);
+
+    /* ---- 2. RENDER WIDGET 1 (GRILLES DE BINGO) ---- */
+    renderGridsWidget(p1, p2, challenges, N);
+
+    /* ---- 3. RENDER WIDGET 2 (NOMBRE DE POINTS) ---- */
+    renderScoresWidget(p1, p2, N);
+
+    /* ---- 4. RENDER WIDGET 3 (GRILLES + SCORES COMPACT) ---- */
+    renderCompactWidget(p1, p2, challenges, N);
+  }
+
+  /* ---- TOPBAR RENDERER ---- */
+  function renderTopBar(p1, p2, N) {
+    const s1 = p1.s, s2 = p2.s;
+    const pts1 = s1.totalPoints || 0;
+    const pts2 = s2.totalPoints || 0;
+
+    document.getElementById('tb-p1-name').textContent = p1.p.name.toUpperCase();
+    const l1 = s1.completedLines?.length || 0;
+    document.getElementById('tb-p1-lines').textContent = `${l1} LIGNE${l1 > 1 ? 'S' : ''} COMPLÉTÉE${l1 > 1 ? 'S' : ''}`;
+
+    const scoreBox1 = document.getElementById('tb-p1-score');
+    scoreBox1.textContent = String(pts1).padStart(2, '0');
+
+    document.getElementById('tb-p2-name').textContent = p2.p.name.toUpperCase();
+    const l2 = s2.completedLines?.length || 0;
+    document.getElementById('tb-p2-lines').textContent = `${l2} LIGNE${l2 > 1 ? 'S' : ''} COMPLÉTÉE${l2 > 1 ? 'S' : ''}`;
+
+    const scoreBox2 = document.getElementById('tb-p2-score');
+    scoreBox2.textContent = String(pts2).padStart(2, '0');
+
+    // Highlight leader with lime box
+    if (pts1 >= pts2 && pts1 > 0) {
+      scoreBox1.className = 'topbar-score-box is-lime';
+      scoreBox2.className = 'topbar-score-box is-dark';
+    } else if (pts2 > pts1) {
+      scoreBox1.className = 'topbar-score-box is-dark';
+      scoreBox2.className = 'topbar-score-box is-lime';
+    } else {
+      scoreBox1.className = 'topbar-score-box is-lime';
+      scoreBox2.className = 'topbar-score-box is-dark';
+    }
+
+    // Manche
+    document.getElementById('tb-meta-round').textContent = '02 / 03';
+  }
+
+  /* ---- WIDGET 1: GRILLES DE BINGO ---- */
+  function renderGridsWidget(p1, p2, challenges, N) {
+    document.getElementById('wg-grids-size').textContent = `${N}x${N}`;
+    const wrap = document.getElementById('wg-grids-content');
+
+    const renderCard = (item, roleText) => {
+      const { p, s, checked, lineIndices } = item;
+      const checkedCount = checked.filter(Boolean).length;
+      const linesCount = s.completedLines?.length || 0;
+
+      const tilesHtml = challenges.map((ch, idx) => {
+        const isChecked = !!checked[idx];
+        const isLine = lineIndices.has(idx);
+        return `
+          <div class="duel-tile ${isChecked ? 'is-checked' : ''} ${isLine ? 'is-line' : ''}" title="${escapeHtml(ch.title)}">
+            <span class="duel-tile-text">${escapeHtml(ch.title)}</span>
+          </div>
+        `;
+      }).join('');
+
+      return `
+        <div class="duel-player-card">
+          <div class="duel-card-header">
+            <div>
+              <div class="player-role-tag">${roleText}</div>
+              <div class="player-card-name">${escapeHtml(p.name)}</div>
+            </div>
+            <div class="player-card-lines">${linesCount}/${N} LIGNES</div>
+          </div>
+          <div class="duel-grid-wrap">
+            <div class="duel-grid grid-${N}">
+              ${tilesHtml}
+            </div>
+          </div>
+          <div class="duel-card-footer">
+            <span>&lt; ${checkedCount} CASES COCHÉES</span>
+            <span>${N}x${N}</span>
+          </div>
+        </div>
+      `;
+    };
+
+    wrap.innerHTML = renderCard(p1, 'JOUEUR 1 — DOMICILE') + renderCard(p2, 'JOUEUR 2 — EXTÉRIEUR');
+  }
+
+  /* ---- WIDGET 2: NOMBRE DE POINTS ---- */
+  function renderScoresWidget(p1, p2, N) {
+    const wrap = document.getElementById('wg-scores-content');
+    const pts1 = p1.s.totalPoints || 0;
+    const pts2 = p2.s.totalPoints || 0;
+    const maxPts = Math.max(pts1, pts2, 1);
+
+    const renderScoreCard = (item, roleText, isLeader) => {
+      const { p, s } = item;
+      const pts = s.totalPoints || 0;
+      const linesCount = s.completedLines?.length || 0;
+      const pct = Math.min(100, Math.round((pts / maxPts) * 100));
+
+      return `
+        <div class="duel-player-card">
+          <div class="duel-card-header">
+            <div>
+              <div class="player-role-tag">${roleText}</div>
+              <div class="player-card-name">${escapeHtml(p.name)}</div>
+            </div>
+            <div class="player-card-lines">${linesCount}/${N} LIGNES</div>
+          </div>
+          <div class="duel-score-body">
+            <div class="score-capsule-label">POINTS</div>
+            <div class="score-capsule ${isLeader ? 'is-lime' : 'is-dark'}">
+              <div class="score-capsule-num">${String(pts).padStart(2, '0')}</div>
+              <div class="score-capsule-bar" style="width:${pct}%;"></div>
+            </div>
+          </div>
+        </div>
+      `;
+    };
+
+    const isP1Leader = pts1 >= pts2;
+    wrap.innerHTML = renderScoreCard(p1, 'JOUEUR 1 — DOMICILE', isP1Leader) +
+                     renderScoreCard(p2, 'JOUEUR 2 — EXTÉRIEUR', !isP1Leader);
+  }
+
+  /* ---- WIDGET 3: GRILLES + SCORES (COMPACT) ---- */
+  function renderCompactWidget(p1, p2, challenges, N) {
+    const wrap = document.getElementById('wg-compact-content');
+    const pts1 = p1.s.totalPoints || 0;
+    const pts2 = p2.s.totalPoints || 0;
+
+    const renderCompactCard = (item, roleText, isLeader) => {
+      const { p, s, checked, lineIndices } = item;
+      const pts = s.totalPoints || 0;
+      const linesCount = s.completedLines?.length || 0;
+
+      const tilesHtml = challenges.map((ch, idx) => {
+        const isChecked = !!checked[idx];
+        const isLine = lineIndices.has(idx);
+        return `
+          <div class="duel-tile ${isChecked ? 'is-checked' : ''} ${isLine ? 'is-line' : ''}" title="${escapeHtml(ch.title)}">
+            <span class="duel-tile-text">${escapeHtml(ch.title)}</span>
+          </div>
+        `;
+      }).join('');
+
+      return `
+        <div class="duel-compact-card">
+          <div class="duel-card-header">
+            <div>
+              <div class="player-role-tag">${roleText}</div>
+              <div class="player-card-name">${escapeHtml(p.name)}</div>
+            </div>
+            <div class="player-card-lines">${linesCount}/${N} LIGNES</div>
+          </div>
+          <div class="duel-grid-wrap">
+            <div class="duel-grid grid-${N}">
+              ${tilesHtml}
+            </div>
+          </div>
+          <div class="duel-score-body">
+            <div class="score-capsule-label">POINTS</div>
+            <div class="score-capsule ${isLeader ? 'is-lime' : 'is-dark'}">
+              <div class="score-capsule-num">${String(pts).padStart(2, '0')}</div>
+            </div>
+          </div>
+        </div>
+      `;
+    };
+
+    const isP1Leader = pts1 >= pts2;
+    wrap.innerHTML = renderCompactCard(p1, 'JOUEUR 1 — DOMICILE', isP1Leader) +
+                     renderCompactCard(p2, 'JOUEUR 2 — EXTÉRIEUR', !isP1Leader);
+  }
+
+  /* =====================================================
+     STREAM ALERTS (ANIMATION SANS CONFLIT)
+     ===================================================== */
+  let alertVisible = false;
+  let alertHideTimer = null;
+  let progressTimer = null;
+  let progressStart = null;
+  const ALERT_DURATION = 4800;
+
+  const alertEl = document.getElementById('obs-alert');
+  const progressEl = document.getElementById('obs-alert-progress');
+
+  function triggerAlert(playerName, challenge, isLine, isGrandChelem) {
+    document.getElementById('obs-alert-icon').innerHTML =
+      isGrandChelem ? '🏆' : isLine ? '⭐' : renderAvatar(challenge?.icon || '🎯');
+
+    document.getElementById('obs-alert-tag').textContent =
+      isGrandChelem ? '👑 GRAND CHELEM !' :
+      isLine ? '⭐ BINGO ! LIGNE COMPLÉTÉE' : '⚡ DÉFI CARRIÈRE VALIDÉ !';
+
+    document.getElementById('obs-alert-title').textContent = challenge?.title || 'Défi validé';
+
+    document.getElementById('obs-alert-sub').textContent =
+      `+${challenge?.points || 0} pts • ${playerName}` +
+      (isLine ? ' • Bonus Bingo' : '') +
+      (isGrandChelem ? ' • Victoire Finale' : '');
+
     clearInterval(progressTimer);
     clearTimeout(alertHideTimer);
-    progressEl.style.transition = 'none';
     progressEl.style.width = '100%';
 
     if (!alertVisible) {
@@ -496,11 +1230,10 @@
       alertEl.classList.add('show');
     }
 
-    const WIN_DURATION = 8000;
     progressStart = Date.now();
     progressTimer = setInterval(() => {
       const elapsed = Date.now() - progressStart;
-      const pct = Math.max(0, 100 - (elapsed / WIN_DURATION) * 100);
+      const pct = Math.max(0, 100 - (elapsed / ALERT_DURATION) * 100);
       progressEl.style.width = pct + '%';
       if (pct <= 0) clearInterval(progressTimer);
     }, 16);
@@ -509,151 +1242,38 @@
       alertEl.classList.remove('show');
       alertVisible = false;
       clearInterval(progressTimer);
-    }, WIN_DURATION);
+    }, ALERT_DURATION);
   }
 
-  /* ======== HUD SCOREBOARD ======== */
-  function renderHud(data) {
-    const { players, stats } = data;
-    const ids = data.playerIds || Object.keys(players || {});
-    const sorted = ids.map(id => ({ id, p: players[id], s: stats?.[id] }))
-      .filter(x => x.p)
-      .sort((a, b) => (b.s?.totalPoints || 0) - (a.s?.totalPoints || 0));
+  function triggerWinnerAlert(ev) {
+    document.getElementById('obs-alert-icon').innerHTML = '👑';
+    document.getElementById('obs-alert-tag').textContent = '🏆 VICTOIRE DE LA PARTIE !';
+    document.getElementById('obs-alert-title').textContent = `${ev.winner?.name || 'Un joueur'} REMPORTE LE MATCH !`;
+    document.getElementById('obs-alert-sub').textContent = ev.reason || 'Félicitations au vainqueur !';
 
-    const total = sorted.reduce((acc, x) => acc + (x.s?.totalPoints || 0), 0) || 1;
-    const wrap = document.getElementById('hud-players-wrap');
-
-    let html = '';
-    sorted.forEach((item, idx) => {
-      const { p, s } = item;
-      const c = COLOR_MAP[p.color] || '#4f8ef7';
-      const pct = Math.round(((s?.totalPoints || 0) / total) * 100);
-
-      if (idx > 0) {
-        html += `<div class="hud-vs">
-          <span class="hud-vs-label">VS</span>
-          <div class="hud-progress">
-            <div style="height:100%;width:${Math.round((sorted[0].s?.totalPoints||0)/total*100)}%;background:${COLOR_MAP[sorted[0].p.color]||'#4f8ef7'};"></div>
-            <div style="height:100%;width:${100-Math.round((sorted[0].s?.totalPoints||0)/total*100)}%;background:${c};"></div>
-          </div>
-        </div>`;
-      }
-
-      html += `<div class="hud-player">
-        <div class="hud-avatar" style="border-color:${c};background:${c}18;">${renderAvatar(p.avatar)}</div>
-        <div style="margin-right:6px;">
-          <div style="font-size:0.75rem;font-weight:800;color:${c};">${p.name}</div>
-          <div style="font-size:0.6rem;color:#64748b;">${s?.tilesCompleted||0}/${s?.totalTiles || 25} · ${s?.completedLines?.length||0} lig.</div>
-        </div>
-        <div class="hud-score" style="color:${c};">${s?.totalPoints||0}</div>
-        <div style="font-size:0.55rem;color:#64748b;align-self:flex-end;margin-bottom:3px;margin-left:2px;">pts</div>
-      </div>`;
-    });
-
-    wrap.innerHTML = html;
-  }
-
-  /* ======== COMPACT GRID ======== */
-  function renderGrid(data) {
-    const ids = data.playerIds || Object.keys(data.players || {});
-    const pid = ids[targetIdx] || ids[0];
-    if (!pid) return;
-
-    const p = data.players[pid];
-    if (!p) return;
-    const s = data.stats?.[pid];
-    const c = COLOR_MAP[p.color] || '#4f8ef7';
-    const challenges = data.challenges || data.grids?.find(g => g.id === data.activeGrid)?.challenges || [];
-    const N = Math.round(Math.sqrt(challenges.length)) || 5;
-    const totalTiles = challenges.length || 25;
-    const checked = data.checked?.[pid] || p.grids?.[data.activeGrid] || Array(totalTiles).fill(false);
-
-    document.getElementById('gp-avatar').innerHTML = renderAvatar(p.avatar);
-    document.getElementById('gp-name').textContent = p.name;
-    document.getElementById('gp-name').style.color = c;
-    document.getElementById('gp-club').textContent = `${p.club} (${s?.tilesCompleted||0}/${totalTiles})`;
-    document.getElementById('gp-score').textContent = `${s?.totalPoints||0} PTS`;
-    document.getElementById('gp-score').style.color = c;
-
-    const lineIndices = new Set();
-    (s?.completedLines || []).forEach(l => {
-      if (l.type === 'row') for (let col = 0; col < N; col++) lineIndices.add(l.index * N + col);
-      if (l.type === 'col') for (let row = 0; row < N; row++) lineIndices.add(row * N + l.index);
-      if (l.type === 'diag' && l.index === 0) for (let i = 0; i < N; i++) lineIndices.add(i * N + i);
-      if (l.type === 'diag' && l.index === 1) for (let i = 0; i < N; i++) lineIndices.add(i * N + (N - 1 - i));
-    });
-
-    const obsGrid = document.getElementById('obs-grid');
-    const tileW = N === 3 ? '85px' : (N === 4 ? '70px' : '62px');
-    obsGrid.style.gridTemplateColumns = `repeat(${N}, ${tileW})`;
-
-    obsGrid.innerHTML = challenges.map((ch, idx) => {
-      const isChecked = !!checked[idx];
-      const isLine = lineIndices.has(idx);
-      return `<div class="obs-tile ${isChecked ? 'checked-tile c-' + p.color : ''} ${isLine ? 'line-tile' : ''}">
-        <div class="obs-tile-emoji">${renderAvatar(ch.icon || '🎯')}</div>
-        <div class="obs-tile-pts">+${ch.points}</div>
-      </div>`;
-    }).join('');
-  }
-
-  /* ======== ALERTE STREAM — VERSION FINALE SANS BUG ======== */
-
-  let alertVisible = false;
-  let alertHideTimer = null;
-  let progressTimer = null;
-  let progressStart = null;
-  const ALERT_DURATION = 5000; // ms
-
-  const alertEl    = document.getElementById('obs-alert');
-  const progressEl = document.getElementById('obs-alert-progress');
-
-  function triggerAlert(playerName, challenge, isLine, isGrandChelem) {
-    // 1. Mettre à jour le contenu
-    document.getElementById('obs-alert-icon').innerHTML =
-      isGrandChelem ? '🏆' : isLine ? '⭐' : renderAvatar(challenge?.icon || '🎯');
-
-    document.getElementById('obs-alert-tag').textContent =
-      isGrandChelem ? '👑 GRAND CHELEM !' :
-      isLine         ? '⭐ BINGO ! LIGNE COMPLÉTÉE' :
-                       '⚡ DÉFI CARRIÈRE VALIDÉ !';
-
-    document.getElementById('obs-alert-title').textContent = challenge?.title || '?';
-
-    document.getElementById('obs-alert-sub').textContent =
-      `+${challenge?.points || 0} pts · ${playerName}` +
-      (isLine ? ' · +5 pts bonus ligne' : '') +
-      (isGrandChelem ? ' · +10 pts Grand Chelem' : '');
-
-    // 2. Réinitialiser la barre de progression
     clearInterval(progressTimer);
     clearTimeout(alertHideTimer);
-    progressEl.style.transition = 'none';
     progressEl.style.width = '100%';
 
-    // 3. Montrer l'alerte (top: 16px)
     if (!alertVisible) {
       alertVisible = true;
       alertEl.classList.add('show');
     }
 
-    // 4. Animer la barre de progression via JS (setInterval, pas d'animation CSS)
+    const WIN_DUR = 8000;
     progressStart = Date.now();
     progressTimer = setInterval(() => {
       const elapsed = Date.now() - progressStart;
-      const pct = Math.max(0, 100 - (elapsed / ALERT_DURATION) * 100);
+      const pct = Math.max(0, 100 - (elapsed / WIN_DUR) * 100);
       progressEl.style.width = pct + '%';
-      if (pct <= 0) {
-        clearInterval(progressTimer);
-      }
+      if (pct <= 0) clearInterval(progressTimer);
     }, 16);
 
-    // 5. Cacher après ALERT_DURATION
     alertHideTimer = setTimeout(() => {
       alertEl.classList.remove('show');
       alertVisible = false;
       clearInterval(progressTimer);
-    }, ALERT_DURATION);
+    }, WIN_DUR);
   }
 </script>
 </body>
