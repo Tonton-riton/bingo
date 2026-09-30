@@ -319,6 +319,30 @@
         if (data.success && data.room) {
           roomState = data.room;
           renderRoomUI(data.room);
+        } else {
+          // Salle introuvable — afficher un message d'erreur clair
+          const rBanner = document.getElementById('room-banner');
+          if (rBanner) {
+            rBanner.style.background = '#1a0a0a';
+            rBanner.style.borderColor = '#ef4444';
+            rBanner.style.boxShadow = '0 0 20px rgba(239,68,68,0.2)';
+            rBanner.innerHTML = `
+              <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <div style="font-size:2rem;">❌</div>
+                  <div>
+                    <div style="font-weight:900;font-size:1rem;color:#fff;">Salle <span style="color:#ef4444;">#${roomCode}</span> introuvable</div>
+                    <div style="font-size:0.8rem;color:#94a3b8;margin-top:3px;">Cette salle n'existe pas ou a expiré. Crée-en une nouvelle ou joue en mode libre.</div>
+                  </div>
+                </div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                  <button class="btn btn-lime btn-sm" onclick="SocialHub.openCreateRoomModal()" style="font-weight:900;">🎮 Créer une salle</button>
+                  <a href="/player.html" class="btn btn-secondary-dark btn-sm">🎯 Mode libre</a>
+                </div>
+              </div>`;
+          }
+          // Charger quand même la grille globale en mode libre
+          socket.emit('getState');
         }
       } catch (err) {
         console.error('Failed to load room:', err);
