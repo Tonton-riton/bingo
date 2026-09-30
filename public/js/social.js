@@ -585,29 +585,16 @@ const SocialHub = (function() {
 
     const user = getCurrentUser();
     if (!user) {
-      slot.innerHTML = `
-        <button class="btn btn-sm btn-primary" onclick="SocialHub.openModal('modal-social-register')" style="font-weight:900;">
-          ✨ CRÉER UN COMPTE
-        </button>
-        <button class="btn btn-sm" onclick="SocialHub.openModal('modal-social-login')">
-          🔑 CONNEXION
-        </button>
-      `;
+      slot.innerHTML = '';
     } else {
       const av = typeof renderAvatar === 'function' ? renderAvatar(user.avatar) : (user.avatar || '⚽');
-      const friendCount = user.friends ? user.friends.length : 0;
       slot.innerHTML = `
         <div style="display:flex; align-items:center; gap:6px;">
-          <a href="/player.html?p=${user.id}" class="btn btn-sm" style="display:flex; align-items:center; gap:8px; border-color:var(--accent); background:rgba(255,85,0,0.12);">
-            <div style="width:22px; height:22px; display:flex; align-items:center; justify-content:center; font-size:14px;">${av}</div>
-            <span style="font-weight:800; color:#fff;">${user.name}</span>
+          <a href="/player.html?p=${user.id}" title="Mon Profil: ${user.name}" style="display:inline-flex; align-items:center; gap:6px; background:#111622; border:1px solid #232c38; border-radius:20px; padding:4px 10px 4px 6px; text-decoration:none;">
+            <div style="width:24px; height:24px; border-radius:50%; background:var(--lime); display:flex; align-items:center; justify-content:center; font-size:13px; color:#000; overflow:hidden;">${av}</div>
+            <span style="font-weight:700; color:#ffffff; font-size:0.82rem;">${user.name}</span>
           </a>
-          <button class="btn btn-sm" onclick="SocialHub.openFriendsModal()" title="Mes Amis & Communauté" style="border-color:rgba(255,255,255,0.2);">
-            👥 <span class="badge-mini" style="background:var(--accent); color:#fff; font-size:0.65rem; padding:1px 5px; font-weight:900; margin-left:2px;">${friendCount}</span>
-          </button>
-          <button class="btn btn-sm btn-danger" onclick="SocialHub.logout()" title="Déconnexion" style="padding:5px 8px;">
-            🚪
-          </button>
+          <button onclick="SocialHub.logout()" title="Déconnexion" style="background:transparent; border:none; color:#71717a; font-size:0.85rem; cursor:pointer; padding:2px 4px;">✕</button>
         </div>
       `;
     }

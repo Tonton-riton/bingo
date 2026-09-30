@@ -165,27 +165,36 @@
 
   <!-- HEADER -->
   <header class="app-header">
-    <a href="/" class="logo-link">
-      <div class="logo-icon-wrap" style="background:var(--lime);border-radius:6px;width:34px;height:34px;color:#000;font-weight:900;font-size:18px;">🏆</div>
-      <div class="logo-text">
-        <div style="font-family:var(--font-display);font-size:1.7rem;letter-spacing:0.04em;color:#ffffff;line-height:1;">BINGOLIVE</div>
-      </div>
-    </a>
+    <div class="header-left">
+      <a href="/" class="logo-link">
+        <div class="logo-bf">BF</div>
+        <div class="logo-title-text">BINGO FOOT</div>
+      </a>
+    </div>
 
-    <nav class="header-nav" style="display:flex;align-items:center;gap:12px;">
-      <a href="/" class="btn btn-sm">🏠 Accueil</a>
-      <a href="/spectator.html" class="btn btn-sm">📺 Spectateur</a>
-      <button class="btn btn-sm" onclick="SocialHub.openJoinRoomModal()" style="border-color:#2a3645;color:var(--lime);font-weight:800;">
-        🔑 Rejoindre avec code
-      </button>
-      <button class="btn btn-sm" onclick="SocialHub.openFriendsModal()" style="border-color:#2a3645;color:#fff;font-weight:800;">
-        👥 Mes Amis
-      </button>
-      <div id="auth-nav-slot"></div>
-      <button class="btn btn-lime btn-sm" onclick="SocialHub.openCreateRoomModal()">
-        + CRÉER UNE PARTIE
-      </button>
+    <nav class="header-nav-center">
+      <a href="/#modes">Modes</a>
+      <a href="/#concept">Comment jouer</a>
+      <a href="/leaderboard.html" style="color:var(--lime);">Classement</a>
+      <a href="/#faq">FAQ</a>
     </nav>
+
+    <div class="header-nav-right">
+      <div id="auth-nav-slot"></div>
+
+      <button class="btn-rejoindre" onclick="SocialHub.openJoinRoomModal()" title="Rejoindre avec un code">
+        <span>Rejoindre</span>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+          <polyline points="10 17 15 12 10 7"></polyline>
+          <line x1="15" y1="12" x2="3" y2="12"></line>
+        </svg>
+      </button>
+
+      <button class="btn-creer-partie" onclick="SocialHub.openCreateRoomModal()" title="Créer une partie">
+        Créer une partie +
+      </button>
+    </div>
   </header>
 
   <main class="container" style="max-width:1200px;padding-top:24px;padding-bottom:60px;">

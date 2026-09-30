@@ -14,13 +14,19 @@
 <body>
   <!-- HEADER -->
   <header class="app-header">
-    <a href="/" class="logo-link">
-      <div class="logo-icon-wrap" id="hdr-avatar" style="background:var(--lime);color:#000;font-size:20px;border-radius:8px;">⚽</div>
-      <div class="logo-text">
-        <div class="t1" id="hdr-name">Chargement…</div>
-        <div class="t2" id="hdr-club"></div>
+    <div class="header-left">
+      <a href="/" class="logo-link">
+        <div class="logo-bf">BF</div>
+        <div class="logo-title-text" style="font-size:1.5rem;">BINGO FOOT</div>
+      </a>
+      <div style="display:flex;align-items:center;gap:8px;margin-left:14px;padding-left:14px;border-left:1px solid #1e293b;">
+        <div class="logo-icon-wrap" id="hdr-avatar" style="width:28px;height:28px;font-size:14px;border-radius:6px;">⚽</div>
+        <div class="logo-text">
+          <div class="t1" id="hdr-name" style="font-size:0.88rem;">Chargement…</div>
+          <div class="t2" id="hdr-club" style="font-size:0.65rem;"></div>
+        </div>
       </div>
-    </a>
+    </div>
     <div class="header-nav">
       <button class="btn btn-icon" id="btn-sound" title="Son">🔊</button>
       <button class="btn btn-sm" onclick="SocialHub.openJoinRoomModal()" style="border-color:var(--lime);color:var(--lime);font-weight:800;" title="Rejoindre avec un code">🔑 Code</button>

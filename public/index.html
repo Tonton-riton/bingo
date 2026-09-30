@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BINGOLIVE | Chaque action peut faire Bingo</title>
+  <title>Bingo Foot — Site web</title>
   <link rel="stylesheet" href="/css/style.css">
   <script src="/socket.io/socket.io.js"></script>
   <script src="/js/avatar.js"></script>
@@ -12,38 +12,41 @@
 <body>
 
   <!-- ==========================================
-       HEADER (FIGMA ATHLETIC NAVBAR)
+       HEADER (FIGMA BINGO FOOT NAVIGATION)
        ========================================== -->
   <header class="app-header">
-    <a href="/" class="logo-link">
-      <div class="logo-icon-wrap" style="background:var(--lime);border-radius:6px;width:34px;height:34px;color:#000;font-weight:900;font-size:18px;">⚽</div>
-      <div class="logo-text">
-        <div style="font-family:var(--font-display);font-size:1.7rem;letter-spacing:0.04em;color:#ffffff;line-height:1;">BINGOLIVE</div>
-      </div>
-    </a>
+    <div class="header-left">
+      <a href="/" class="logo-link">
+        <div class="logo-bf">BF</div>
+        <div class="logo-title-text">BINGO FOOT</div>
+      </a>
+    </div>
 
-    <nav class="header-nav" style="display:flex;align-items:center;gap:12px;">
-      <a href="#soirees" class="btn btn-sm" style="background:transparent;border:none;color:#94a3b8;font-weight:700;">Soirées</a>
-      <a href="#grille-live" class="btn btn-sm" style="background:transparent;border:none;color:#94a3b8;font-weight:700;">Expérience</a>
-      <a href="/leaderboard.html" class="btn btn-sm" style="border-color:#2a3645;color:var(--gold);font-weight:800;" title="Classement Général">🏆 Classement</a>
-      <button class="btn btn-sm" onclick="SocialHub.openJoinRoomModal()" style="border-color:var(--lime);color:var(--lime);font-weight:800;" title="Rejoindre avec un code">
-        🔑 Code
-      </button>
-      <button class="btn btn-sm" onclick="SocialHub.openCreateRoomModal()" style="border-color:#2a3645;color:#e2e8f0;font-weight:700;" title="Créer une salle privée">
-        🎮 Salle Privée
-      </button>
-      <button class="btn btn-sm" onclick="SocialHub.openFriendsModal()" style="border-color:#2a3645;color:var(--lime);font-weight:800;">
-        👥 Mes Amis
-      </button>
+    <nav class="header-nav-center">
+      <a href="#modes">Modes</a>
+      <a href="#concept">Comment jouer</a>
+      <a href="/leaderboard.html">Classement</a>
+      <a href="#faq">FAQ</a>
+    </nav>
 
+    <div class="header-nav-right">
       <div id="auth-nav-slot">
         <!-- Dynamique via social.js -->
       </div>
 
-      <a href="/admin.html" class="btn btn-lime btn-sm" style="padding:7px 16px;">
-        + CRÉER GRILLE
-      </a>
-    </nav>
+      <button class="btn-rejoindre" onclick="SocialHub.openJoinRoomModal()" title="Rejoindre avec un code de partie">
+        <span>Rejoindre</span>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+          <polyline points="10 17 15 12 10 7"></polyline>
+          <line x1="15" y1="12" x2="3" y2="12"></line>
+        </svg>
+      </button>
+
+      <button class="btn-creer-partie" onclick="SocialHub.openCreateRoomModal()" title="Créer une partie privée ou personnalisée">
+        Créer une partie +
+      </button>
+    </div>
   </header>
 
   <main class="container" style="max-width:1240px;padding-top:20px;">
@@ -514,19 +517,20 @@
   <footer class="figma-footer">
     <div class="container" style="max-width:1240px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px;">
       <div style="display:flex;align-items:center;gap:10px;">
-        <div style="width:28px;height:28px;background:var(--lime);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#000;font-weight:900;">⚽</div>
-        <span style="font-family:var(--font-display);font-size:1.4rem;color:#fff;">BINGOLIVE</span>
+        <div class="logo-bf" style="width:28px;height:28px;font-size:0.85rem;border-radius:6px;">BF</div>
+        <span style="font-family:var(--font-display);font-size:1.4rem;color:#fff;">BINGO FOOT</span>
       </div>
 
       <div style="display:flex;gap:18px;font-size:0.8rem;font-weight:700;">
         <a href="/player.html" style="color:#71717a;text-decoration:none;">Joueur</a>
         <a href="/spectator.html" style="color:#71717a;text-decoration:none;">Spectateur</a>
         <a href="/obs.html" style="color:#71717a;text-decoration:none;">Overlay OBS</a>
+        <a href="/leaderboard.html" style="color:#71717a;text-decoration:none;">Classement</a>
         <a href="/admin.html" style="color:#71717a;text-decoration:none;">Administration</a>
       </div>
 
       <div style="font-size:0.75rem;color:#52525b;">
-        © 2026 BINGOLIVE • Propulsé par Node.js & Socket.io
+        © 2026 BINGO FOOT • Propulsé par Node.js & Socket.io
       </div>
     </div>
   </footer>
