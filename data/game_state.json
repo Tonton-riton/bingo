@@ -3,231 +3,283 @@
   "grids": {
     "grid_default_s1": {
       "id": "grid_default_s1",
-      "name": "Bingo Carrière Saison 1",
-      "description": "La grille officielle de la saison 1.",
+      "name": "📋 Carrière Football Manager",
+      "size": 5,
+      "description": "Calibrée pour vos saisons en club : éclosion de pépites, transferts, tactiques et trophées.",
+      "badge": "MODE SAISON",
       "challenges": [
         {
           "id": 0,
+          "row": 0,
+          "col": 0,
           "icon": "🛡️",
           "title": "Invincibilité Domicile",
-          "description": "0 défaite à domicile en championnat",
           "points": 2,
+          "description": "0 défaite à domicile en championnat",
           "constraint": "1 saison | D2",
           "category": "Défense"
         },
         {
           "id": 1,
+          "row": 0,
+          "col": 1,
           "icon": "💰",
           "title": "Balance Positive",
-          "description": "Bénéfice transferts >= +10M€",
           "points": 1,
+          "description": "Bénéfice transferts >= +10M€",
           "constraint": "1 saison | D2",
           "category": "Finance"
         },
         {
           "id": 2,
+          "row": 0,
+          "col": 2,
           "icon": "🌱",
           "title": "Éclosion Académie",
-          "description": "3 jeunes promus (10+ matchs)",
           "points": 1,
+          "description": "3 jeunes promus (10+ matchs)",
           "constraint": "1 saison | D2",
           "category": "Formation"
         },
         {
           "id": 3,
+          "row": 0,
+          "col": 3,
           "icon": "📋",
           "title": "Tactique Immuable",
-          "description": "Même dispositif 100% des matchs",
           "points": 1,
+          "description": "Même dispositif 100% des matchs",
           "constraint": "1 saison | D2",
           "category": "Tactique"
         },
         {
           "id": 4,
+          "row": 0,
+          "col": 4,
           "icon": "🟥",
           "title": "Discipline & Podium",
-          "description": "5+ cartons rouges & Top 5 ligue",
           "points": 2,
+          "description": "5+ cartons rouges & Top 5 ligue",
           "constraint": "1 saison | D2",
           "category": "Discipline"
         },
         {
           "id": 5,
+          "row": 1,
+          "col": 0,
           "icon": "🎯",
           "title": "Attaque Mitraillette",
-          "description": "80+ buts marqués en championnat",
           "points": 2,
+          "description": "80+ buts marqués en championnat",
           "constraint": "1 saison | D2",
           "category": "Attaque"
         },
         {
           "id": 6,
+          "row": 1,
+          "col": 1,
           "icon": "📈",
           "title": "Plus-Value x3",
-          "description": "Revendre un joueur >= 3x son achat",
           "points": 3,
+          "description": "Revendre un joueur >= 3x son achat",
           "constraint": "1-3 saisons | D2",
           "category": "Transferts"
         },
         {
           "id": 7,
+          "row": 1,
+          "col": 2,
           "icon": "⭐",
           "title": "Pépite Générationnelle",
-          "description": "Amener un jeune du centre à 80+ GEN",
           "points": 3,
+          "description": "Amener un jeune du centre à 80+ GEN",
           "constraint": "2-4 saisons | D2",
           "category": "Formation"
         },
         {
           "id": 8,
+          "row": 1,
+          "col": 3,
           "icon": "🧱",
           "title": "Forteresse Défensive",
-          "description": "Meilleure défense (< 30 buts pris)",
           "points": 2,
+          "description": "Meilleure défense (< 30 buts pris)",
           "constraint": "1 saison | D2",
           "category": "Défense"
         },
         {
           "id": 9,
+          "row": 1,
+          "col": 4,
           "icon": "🔒",
           "title": "Mercato Totalement Gelé",
-          "description": "0 achat et 0 prêt entrant",
           "points": 2,
+          "description": "0 achat et 0 prêt entrant",
           "constraint": "1 saison | D2",
           "category": "Transferts"
         },
         {
           "id": 10,
+          "row": 2,
+          "col": 0,
           "icon": "🚀",
           "title": "Montée Directe",
-          "description": "Promotion en D1 (1er ou 2ème)",
           "points": 2,
+          "description": "Promotion en D1 (1er ou 2ème)",
           "constraint": "1-2 saisons | D2",
           "category": "Succès"
         },
         {
           "id": 11,
+          "row": 2,
+          "col": 1,
           "icon": "💎",
           "title": "Vente Galactique",
-          "description": "Vente sèche d'un joueur >= 50M€",
           "points": 2,
+          "description": "Vente sèche d'un joueur >= 50M€",
           "constraint": "1-3 saisons | D2/D1",
           "category": "Transferts"
         },
         {
           "id": 12,
+          "row": 2,
+          "col": 2,
           "icon": "🃏",
           "title": "JOKER ADVERSAIRE",
-          "description": "Défi imposé par le rival",
           "points": 2,
+          "description": "Défi imposé par le rival",
           "constraint": "1 saison | Choix rival",
           "category": "Spécial"
         },
         {
           "id": 13,
+          "row": 2,
+          "col": 3,
           "icon": "🎓",
           "title": "Onze 100% Formation",
-          "description": "Titulariser 7+ joueurs de l'académie",
           "points": 3,
+          "description": "Titulariser 7+ joueurs de l'académie",
           "constraint": "1-3 saisons | D2",
           "category": "Formation"
         },
         {
           "id": 14,
+          "row": 2,
+          "col": 4,
           "icon": "👑",
           "title": "Sacrifice du Capitaine",
-          "description": "Vendre son meilleur GEN sans chuter",
           "points": 1,
+          "description": "Vendre son meilleur GEN sans chuter",
           "constraint": "1 saison | D2",
           "category": "Tactique"
         },
         {
           "id": 15,
+          "row": 3,
+          "col": 0,
           "icon": "🏆",
           "title": "Épopée en Coupe",
-          "description": "Atteindre le dernier carré (demi-finale)",
           "points": 3,
+          "description": "Atteindre le dernier carré (demi-finale)",
           "constraint": "1-2 saisons | D2/D1",
           "category": "Coupe"
         },
         {
           "id": 16,
+          "row": 3,
+          "col": 1,
           "icon": "📉",
           "title": "Rigueur Salariale",
-          "description": "Baisser masse salariale de 20% & Top",
           "points": 1,
+          "description": "Baisser masse salariale de 20% & Top",
           "constraint": "1 saison | D2",
           "category": "Finance"
         },
         {
           "id": 17,
+          "row": 3,
+          "col": 2,
           "icon": "🌍",
           "title": "Vocation Internationale",
-          "description": "Un joueur formé appelé en sélection",
           "points": 1,
+          "description": "Un joueur formé appelé en sélection",
           "constraint": "1-3 saisons | D2",
           "category": "Formation"
         },
         {
           "id": 18,
+          "row": 3,
+          "col": 3,
           "icon": "👟",
           "title": "Roi de la Passe",
-          "description": "Meilleur passeur ligue (15+ passes)",
           "points": 1,
+          "description": "Meilleur passeur ligue (15+ passes)",
           "constraint": "1 saison | D2",
           "category": "Performance"
         },
         {
           "id": 19,
+          "row": 3,
+          "col": 4,
           "icon": "👔",
           "title": "Confiance Totale",
-          "description": "Note Conseil d'Admin > 85 fin d'année",
           "points": 1,
+          "description": "Note Conseil d'Admin > 85 fin d'année",
           "constraint": "1 saison | D2",
           "category": "Gestion"
         },
         {
           "id": 20,
+          "row": 4,
+          "col": 0,
           "icon": "🥇",
           "title": "Titre Suprême D1",
-          "description": "Être sacré Champion de D1",
           "points": 5,
+          "description": "Être sacré Champion de D1",
           "constraint": "2-4 saisons | D1",
           "category": "Succès"
         },
         {
           "id": 21,
+          "row": 4,
+          "col": 1,
           "icon": "🏦",
           "title": "Coffre-Fort 100M€",
-          "description": "100M€ budget transfert disponible",
           "points": 2,
+          "description": "100M€ budget transfert disponible",
           "constraint": "2-4 saisons | D2/D1",
           "category": "Finance"
         },
         {
           "id": 22,
+          "row": 4,
+          "col": 2,
           "icon": "🌟",
           "title": "Trophée Continental / BO",
-          "description": "Joueur dans l'Équipe de l'Année / BO",
           "points": 5,
+          "description": "Joueur dans l'Équipe de l'Année / BO",
           "constraint": "2-4 saisons | D1",
           "category": "Trophée"
         },
         {
           "id": 23,
+          "row": 4,
+          "col": 3,
           "icon": "⚽",
           "title": "Soulier d'Or Club",
-          "description": "Meilleur buteur du championnat (25+ buts)",
           "points": 2,
+          "description": "Meilleur buteur du championnat (25+ buts)",
           "constraint": "1 saison | D2",
           "category": "Attaque"
         },
         {
           "id": 24,
+          "row": 4,
+          "col": 4,
           "icon": "⚔️",
           "title": "Maître du Derby",
-          "description": "Battre son club rival historique x2",
           "points": 3,
+          "description": "Battre son club rival historique x2",
           "constraint": "1 saison | D2",
           "category": "Rivalité"
         }
@@ -322,6 +374,505 @@
         }
       ],
       "createdAt": "2026-09-29T23:21:29.455Z"
+    },
+    "grid_live_match": {
+      "id": "grid_live_match",
+      "name": "⚽ Match en Direct 90'",
+      "size": 5,
+      "description": "La grille officielle des grands soirs de foot : tirs, poteaux, VAR, cartons et actions folles.",
+      "badge": "★ POPULAIRE",
+      "challenges": [
+        {
+          "id": 0,
+          "icon": "🧤",
+          "title": "Arrêt Décisif",
+          "points": 1,
+          "description": "Le gardien sauve un tir cadré dangereux",
+          "category": "Gardien"
+        },
+        {
+          "id": 1,
+          "icon": "🚩",
+          "title": "Hors-jeu Sifflé",
+          "points": 1,
+          "description": "Un attaquant pris au piège du hors-jeu",
+          "category": "Arbitrage"
+        },
+        {
+          "id": 2,
+          "icon": "💥",
+          "title": "Poteau ou Barre",
+          "points": 2,
+          "description": "Frappe sur les montants du but",
+          "category": "Attaque"
+        },
+        {
+          "id": 3,
+          "icon": "🎯",
+          "title": "But en Lucarne",
+          "points": 3,
+          "description": "Tir imparable dans le coin supérieur",
+          "category": "Attaque"
+        },
+        {
+          "id": 4,
+          "icon": "📺",
+          "title": "Intervention VAR",
+          "points": 2,
+          "description": "L’arbitre consulte l’écran sur le bord du terrain",
+          "category": "Arbitrage"
+        },
+        {
+          "id": 5,
+          "icon": "🟥",
+          "title": "Carton Rouge",
+          "points": 3,
+          "description": "Expulsion directe ou 2e carton jaune",
+          "category": "Discipline"
+        },
+        {
+          "id": 6,
+          "icon": "⚡",
+          "title": "Contre-Attaque Éclair",
+          "points": 1,
+          "description": "But ou occasion en moins de 3 passes",
+          "category": "Tactique"
+        },
+        {
+          "id": 7,
+          "icon": "👟",
+          "title": "Passe Décisive",
+          "points": 1,
+          "description": "Caviar qui mène directement au but",
+          "category": "Attaque"
+        },
+        {
+          "id": 8,
+          "icon": "⚽",
+          "title": "Penalty Concédé",
+          "points": 2,
+          "description": "Faute ou main sanctionnée dans la surface",
+          "category": "Arbitrage"
+        },
+        {
+          "id": 9,
+          "icon": "🛡️",
+          "title": "Tacle Glissé Propre",
+          "points": 1,
+          "description": "Interception défensive nette sur le ballon",
+          "category": "Défense"
+        },
+        {
+          "id": 10,
+          "icon": "🦁",
+          "title": "Capitaine Buteur",
+          "points": 2,
+          "description": "Le joueur au brassard marque un but",
+          "category": "Général"
+        },
+        {
+          "id": 11,
+          "icon": "🔁",
+          "title": "Coaching Gagnant",
+          "points": 2,
+          "description": "Un remplaçant entre et marque ou passe",
+          "category": "Tactique"
+        },
+        {
+          "id": 12,
+          "icon": "🔥",
+          "title": "Double But en 5 Min",
+          "points": 3,
+          "description": "Deux buts consécutifs très rapprochés",
+          "category": "Intensité"
+        },
+        {
+          "id": 13,
+          "icon": "🚀",
+          "title": "Frappe Hors Surface",
+          "points": 2,
+          "description": "Tir des 20-25 mètres cadré ou but",
+          "category": "Attaque"
+        },
+        {
+          "id": 14,
+          "icon": "🟨",
+          "title": "Carton Jaune Précoce",
+          "points": 1,
+          "description": "Avertissement avant la 30e minute",
+          "category": "Discipline"
+        },
+        {
+          "id": 15,
+          "icon": "🤕",
+          "title": "Arrêt de Jeu Blessure",
+          "points": 1,
+          "description": "Soigneurs sur le terrain plus d’une minute",
+          "category": "Temps"
+        },
+        {
+          "id": 16,
+          "icon": "📐",
+          "title": "But Coup de Pied Arrêté",
+          "points": 2,
+          "description": "Corner ou coup franc direct transformé",
+          "category": "Attaque"
+        },
+        {
+          "id": 17,
+          "icon": "😤",
+          "title": "Altercation Joueurs",
+          "points": 1,
+          "description": "Tension ou bousculade entre adversaires",
+          "category": "Discipline"
+        },
+        {
+          "id": 18,
+          "icon": "⏱️",
+          "title": "5+ Min Temps Additionnel",
+          "points": 1,
+          "description": "Temps additionnel généreux affiché",
+          "category": "Temps"
+        },
+        {
+          "id": 19,
+          "icon": "🌟",
+          "title": "Dribble Humiliant",
+          "points": 1,
+          "description": "Petit pont, roulette ou grand pont réussi",
+          "category": "Spectacle"
+        },
+        {
+          "id": 20,
+          "icon": "🥶",
+          "title": "Immanquable Raté",
+          "points": 2,
+          "description": "Face à face ou but vide manqué",
+          "category": "Fait de jeu"
+        },
+        {
+          "id": 21,
+          "icon": "🧱",
+          "title": "Mur Infranchissable",
+          "points": 2,
+          "description": "Clean sheet maintenu à la 75e minute",
+          "category": "Défense"
+        },
+        {
+          "id": 22,
+          "icon": "🔄",
+          "title": "Remontada / Égalisation",
+          "points": 3,
+          "description": "Équipe menée qui recolle au score",
+          "category": "Intensité"
+        },
+        {
+          "id": 23,
+          "icon": "🎩",
+          "title": "Doublé d’un Joueur",
+          "points": 2,
+          "description": "Un joueur inscrit 2 buts dans le match",
+          "category": "Attaque"
+        },
+        {
+          "id": 24,
+          "icon": "🏆",
+          "title": "But Décisif 90e+",
+          "points": 3,
+          "description": "But décisif inscrit dans les arrêts de jeu",
+          "category": "Climax"
+        }
+      ]
+    },
+    "grid_derby": {
+      "id": "grid_derby",
+      "name": "⚔️ Derby & Grand Match",
+      "size": 5,
+      "description": "Haute intensité, duels rugueux, décisions arbitrales sous tension et suspense jusqu’au bout.",
+      "badge": "HAUTE TENSION",
+      "challenges": [
+        {
+          "id": 0,
+          "icon": "😤",
+          "title": "Bagarre / Bousculade",
+          "points": 2,
+          "description": "Altercation générale entre les deux équipes",
+          "category": "Tension"
+        },
+        {
+          "id": 1,
+          "icon": "🟥",
+          "title": "Carton Rouge Direct",
+          "points": 3,
+          "description": "Tacle violent ou geste d’humeur sanctionné",
+          "category": "Discipline"
+        },
+        {
+          "id": 2,
+          "icon": "📺",
+          "title": "But Annulé par la VAR",
+          "points": 2,
+          "description": "Joie coupée net par le visionnage vidéo",
+          "category": "Arbitrage"
+        },
+        {
+          "id": 3,
+          "icon": "⚽",
+          "title": "Penalty Contesté",
+          "points": 2,
+          "description": "Faute sifflée avec vives contestations",
+          "category": "Arbitrage"
+        },
+        {
+          "id": 4,
+          "icon": "💥",
+          "title": "Double Frappe Poteau",
+          "points": 3,
+          "description": "Deux montants touchés dans le match",
+          "category": "Spectacle"
+        },
+        {
+          "id": 5,
+          "icon": "🧤",
+          "title": "Penalty Arrêté",
+          "points": 3,
+          "description": "Le gardien stoppe la tentative adverse",
+          "category": "Gardien"
+        },
+        {
+          "id": 6,
+          "icon": "🟨",
+          "title": "6+ Cartons Jaunes",
+          "points": 2,
+          "description": "Match très engagé avec pluie d’avertissements",
+          "category": "Discipline"
+        },
+        {
+          "id": 7,
+          "icon": "🔥",
+          "title": "But Contre Son Camp",
+          "points": 2,
+          "description": "Grosse bourde d’un défenseur dans son but",
+          "category": "Fait de jeu"
+        },
+        {
+          "id": 8,
+          "icon": "🦁",
+          "title": "Capitaine Héroïque",
+          "points": 2,
+          "description": "Le capitaine marque ou réalise un sauvetage",
+          "category": "Leadership"
+        },
+        {
+          "id": 9,
+          "icon": "🚀",
+          "title": "Missile Pleine Lucarne",
+          "points": 3,
+          "description": "Frappe surpuissante de loin imparable",
+          "category": "Attaque"
+        },
+        {
+          "id": 10,
+          "icon": "⚡",
+          "title": "Contre en Supériorité",
+          "points": 1,
+          "description": "Occasion gâchée à 3 contre 1 ou 2",
+          "category": "Tactique"
+        },
+        {
+          "id": 11,
+          "icon": "🛡️",
+          "title": "Sauvetage sur la Ligne",
+          "points": 2,
+          "description": "Défenseur qui repousse le ballon in extremis",
+          "category": "Défense"
+        },
+        {
+          "id": 12,
+          "icon": "🔄",
+          "title": "Changement Avant Mi-Temps",
+          "points": 2,
+          "description": "Remplacement tactique ou blessure précoce",
+          "category": "Coaching"
+        },
+        {
+          "id": 13,
+          "icon": "🌟",
+          "title": "Petit Pont Provocateur",
+          "points": 1,
+          "description": "Geste technique chambrant près de la touche",
+          "category": "Spectacle"
+        },
+        {
+          "id": 14,
+          "icon": "⏱️",
+          "title": "Gain de Temps Notif",
+          "points": 1,
+          "description": "Gardien ou joueur averti pour gain de temps",
+          "category": "Discipline"
+        },
+        {
+          "id": 15,
+          "icon": "🔁",
+          "title": "Remplaçant Décisif",
+          "points": 2,
+          "description": "Entrée en jeu suivie d’un but ou d’une passe",
+          "category": "Coaching"
+        },
+        {
+          "id": 16,
+          "icon": "🧱",
+          "title": "Défense Héroïque",
+          "points": 2,
+          "description": "10 tirs subis sans encaisser de but",
+          "category": "Défense"
+        },
+        {
+          "id": 17,
+          "icon": "📢",
+          "title": "Carton pour le Coach",
+          "points": 2,
+          "description": "L’entraîneur averti sur le banc de touche",
+          "category": "Arbitrage"
+        },
+        {
+          "id": 18,
+          "icon": "📐",
+          "title": "Tête sur Corner",
+          "points": 2,
+          "description": "Coup de casque gagnant sur coup de pied arrêté",
+          "category": "Attaque"
+        },
+        {
+          "id": 19,
+          "icon": "🥶",
+          "title": "Face-à-Face Manqué",
+          "points": 2,
+          "description": "Attaquant seul devant le but qui rate le cadre",
+          "category": "Fait de jeu"
+        },
+        {
+          "id": 20,
+          "icon": "⚡",
+          "title": "But en Moins de 2 Min",
+          "points": 3,
+          "description": "Ouverture du score express d’entrée de jeu",
+          "category": "Intensité"
+        },
+        {
+          "id": 21,
+          "icon": "💥",
+          "title": "Tacle Dangereux",
+          "points": 1,
+          "description": "Gros choc au milieu de terrain",
+          "category": "Intensité"
+        },
+        {
+          "id": 22,
+          "icon": "🎩",
+          "title": "Buteur Étranger",
+          "points": 1,
+          "description": "Un joueur international débloque la rencontre",
+          "category": "Attaque"
+        },
+        {
+          "id": 23,
+          "icon": "🏆",
+          "title": "Score Final 1-0",
+          "points": 2,
+          "description": "Victoire étriquée au terme d’une bataille féroce",
+          "category": "Climax"
+        },
+        {
+          "id": 24,
+          "icon": "👑",
+          "title": "But Victoire Temps Add.",
+          "points": 3,
+          "description": "Délivrance totale au bout du temps additionnel",
+          "category": "Climax"
+        }
+      ]
+    },
+    "grid_sprint_3x3": {
+      "id": "grid_sprint_3x3",
+      "name": "⚡ Sprint Express 3x3",
+      "size": 3,
+      "description": "Format rapide de 9 défis. Idéal pour une mi-temps ou les 20 dernières minutes d’un match.",
+      "badge": "EXPRESS 45'",
+      "challenges": [
+        {
+          "id": 0,
+          "icon": "🧤",
+          "title": "Arrêt Décisif",
+          "points": 1,
+          "description": "Le gardien sauve un tir cadré dangereux",
+          "category": "Gardien"
+        },
+        {
+          "id": 1,
+          "icon": "🚩",
+          "title": "Hors-jeu Sifflé",
+          "points": 1,
+          "description": "Un attaquant pris au piège du hors-jeu",
+          "category": "Arbitrage"
+        },
+        {
+          "id": 2,
+          "icon": "💥",
+          "title": "Poteau ou Barre",
+          "points": 2,
+          "description": "Frappe sur les montants du but",
+          "category": "Attaque"
+        },
+        {
+          "id": 3,
+          "icon": "🎯",
+          "title": "But en Lucarne",
+          "points": 3,
+          "description": "Tir imparable dans le coin supérieur",
+          "category": "Attaque"
+        },
+        {
+          "id": 4,
+          "icon": "📺",
+          "title": "Intervention VAR",
+          "points": 2,
+          "description": "L’arbitre consulte l’écran sur le bord du terrain",
+          "category": "Arbitrage"
+        },
+        {
+          "id": 5,
+          "icon": "🟥",
+          "title": "Carton Rouge",
+          "points": 3,
+          "description": "Expulsion directe ou 2e carton jaune",
+          "category": "Discipline"
+        },
+        {
+          "id": 6,
+          "icon": "⚡",
+          "title": "Contre-Attaque Éclair",
+          "points": 1,
+          "description": "But ou occasion en moins de 3 passes",
+          "category": "Tactique"
+        },
+        {
+          "id": 7,
+          "icon": "👟",
+          "title": "Passe Décisive",
+          "points": 1,
+          "description": "Caviar qui mène directement au but",
+          "category": "Attaque"
+        },
+        {
+          "id": 8,
+          "icon": "⚽",
+          "title": "Penalty Concédé",
+          "points": 2,
+          "description": "Faute ou main sanctionnée dans la surface",
+          "category": "Arbitrage"
+        }
+      ]
     }
   },
   "players": {
@@ -488,6 +1039,24 @@
         "gamesPlayed": 12,
         "careerPoints": 114
       }
+    },
+    "player_1790777672442_ip27vn": {
+      "id": "player_1790777672442_ip27vn",
+      "name": "Joueur 484",
+      "club": "FC Direct",
+      "avatar": "⚽",
+      "color": "lime",
+      "pin": "",
+      "friends": [],
+      "grids": {},
+      "createdAt": "2026-09-30T14:14:32.442Z",
+      "stats": {
+        "wins": 0,
+        "grandChelems": 0,
+        "bingos": 0,
+        "gamesPlayed": 1,
+        "careerPoints": 0
+      }
     }
   },
   "settings": {
@@ -497,6 +1066,21 @@
   },
   "history": [],
   "rooms": {
+    "1234": {
+      "code": "1234",
+      "name": "Partie #1234",
+      "gridId": "grid_default_s1",
+      "hostId": null,
+      "isPrivate": true,
+      "status": "waiting",
+      "winCondition": "first_bingo",
+      "playerIds": [],
+      "checked": {},
+      "winnerId": null,
+      "winningReason": null,
+      "createdAt": "2026-09-30T14:14:04.488Z",
+      "history": []
+    },
     "RDQM84": {
       "code": "RDQM84",
       "name": "Stream Ligue 1",
@@ -811,6 +1395,51 @@
           "action": "check"
         }
       ]
+    },
+    "TONTON": {
+      "code": "TONTON",
+      "name": "Partie #TONTON",
+      "gridId": "grid_derby",
+      "hostId": null,
+      "isPrivate": true,
+      "status": "waiting",
+      "winCondition": "first_bingo",
+      "playerIds": [
+        "player_1790777672442_ip27vn"
+      ],
+      "checked": {
+        "player_1790777672442_ip27vn": [
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false,
+          false
+        ]
+      },
+      "winnerId": null,
+      "winningReason": null,
+      "createdAt": "2026-09-30T14:14:32.441Z",
+      "history": []
     }
   }
 }

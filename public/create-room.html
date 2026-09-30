@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Créer une Salle — Bingo Foot</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/avatar.js"></script>
+  <script src="/js/social.js"></script>
+  <style>
+    .create-page-grid {
+      display: grid;
+      grid-template-columns: 1.25fr 0.75fr;
+      gap: 32px;
+      align-items: start;
+    }
+
+    .grid-option-card {
+      background: #0d121c;
+      border: 1px solid #1f2c3e;
+      border-radius: 14px;
+      padding: 18px 20px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+    }
+
+    .grid-option-card:hover {
+      background: #141c2c;
+      border-color: var(--lime);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6), 0 0 16px var(--lime-soft);
+    }
+
+    .grid-option-card.selected {
+      background: #121a28;
+      border: 2px solid var(--lime) !important;
+      box-shadow: 0 0 24px rgba(187, 242, 70, 0.25) !important;
+    }
+
+    .grid-option-card.selected::before {
+      content: '✓ SÉLECTIONNÉ';
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      background: var(--lime);
+      color: #000;
+      font-size: 0.65rem;
+      font-weight: 900;
+      padding: 2px 7px;
+      border-radius: 4px;
+      letter-spacing: 0.05em;
+    }
+
+    @media (max-width: 960px) {
+      .create-page-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==========================================
+       HEADER
+       ========================================== -->
+  <header class="app-header">
+    <div class="header-left">
+      <a href="/" class="logo-link" title="Retour à l'accueil">
+        <div class="logo-bf">BF</div>
+        <div class="logo-title-text" style="font-size:1.5rem;">BINGO FOOT</div>
+      </a>
+      <span style="font-size:0.75rem;font-weight:900;color:var(--lime);background:rgba(187,242,70,0.12);border:1px solid rgba(187,242,70,0.3);padding:3px 9px;border-radius:4px;letter-spacing:0.04em;">
+        🎮 CRÉATION DE SALLE
+      </span>
+    </div>
+
+    <div class="header-nav">
+      <a href="/" class="btn btn-sm btn-secondary-slate">🏠 Accueil</a>
+      <a href="/leaderboard.html" class="btn btn-sm btn-secondary-dark">🏆 Classement</a>
+      <div id="auth-nav-slot"></div>
+    </div>
+  </header>
+
+  <main class="container" style="max-width:1240px;padding-top:36px;padding-bottom:80px;">
+
+    <!-- TITRE HERO DE LA PAGE -->
+    <div style="margin-bottom:32px;">
+      <div class="section-label">Configuration du Match</div>
+      <h1 style="font-family:var(--font-display);font-size:3.8rem;color:#ffffff;line-height:0.95;letter-spacing:0.02em;">
+        CRÉER VOTRE SALLE DE BINGO
+      </h1>
+      <p style="font-size:1rem;color:#94a3b8;max-width:680px;line-height:1.55;margin-top:10px;">
+        Choisissez le format de votre partie, prévisualisez les défis et personnalisez les règles. Vous obtiendrez un code unique et un lien instantané pour jouer entre amis.
+      </p>
+    </div>
+
+    <!-- FORMULAIRE PRINCIPAL -->
+    <form id="create-room-form" onsubmit="handleCreateRoomSubmit(event)">
+      <div class="create-page-grid">
+
+        <!-- COLONNE GAUCHE : CHOIX DE LA GRILLE -->
+        <div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <div style="font-family:var(--font-display);font-size:1.6rem;color:#ffffff;letter-spacing:0.04em;">
+              1. CHOISISSEZ VOTRE GRILLE
+            </div>
+            <button type="button" class="btn btn-sm btn-lime" onclick="openAiGridModal()" style="font-weight:900;">
+              ✨ Créer avec l'IA
+            </button>
+          </div>
+
+          <!-- LISTE DES CARTES DE GRILLES -->
+          <div id="grids-catalog" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:14px;margin-bottom:24px;">
+            <!-- Rendu dynamique par JS -->
+            <div style="color:#64748b;font-size:0.85rem;padding:20px;grid-column:1/-1;">Chargement des grilles disponibles…</div>
+          </div>
+
+          <!-- PRÉVISUALISATION DE LA GRILLE SÉLECTIONNÉE -->
+          <div style="background:#0c1017;border:1px solid #1a2430;border-radius:16px;padding:20px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+              <div>
+                <span style="font-size:0.7rem;font-weight:900;color:var(--lime);letter-spacing:0.08em;text-transform:uppercase;">APERÇU DE LA GRILLE CHOISIE</span>
+                <div style="font-family:var(--font-display);font-size:1.3rem;color:#fff;margin-top:2px;" id="preview-grid-name">Chargement…</div>
+              </div>
+              <span id="preview-grid-count" class="live-dot"><span class="pulse"></span> 25 DÉFIS</span>
+            </div>
+
+            <div class="bingo-grid" id="preview-grid-container" style="gap:6px;">
+              <!-- Tuiles d'aperçu -->
+            </div>
+          </div>
+        </div>
+
+        <!-- COLONNE DROITE : RÉGLAGES DU MATCH -->
+        <div style="background:#0c1017;border:1px solid #1a2430;border-radius:18px;padding:28px;position:sticky;top:90px;">
+          <div style="font-family:var(--font-display);font-size:1.6rem;color:#ffffff;letter-spacing:0.04em;margin-bottom:18px;border-bottom:1px solid #1a2430;padding-bottom:12px;">
+            2. PARAMÈTRES DU MATCH
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Nom du salon / du match *</label>
+            <input type="text" class="form-input" id="room-name-input" required maxlength="50" placeholder="Ex: Soirée Derby OM-PSG" style="font-weight:800;font-size:1rem;">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Condition de Victoire</label>
+            <select class="form-input" id="room-win-condition" style="font-weight:700;">
+              <option value="first_bingo" selected>🎯 Premier Bingo (1ère ligne complétée = Victoire)</option>
+              <option value="grand_chelem">👑 Grand Chelem (100% de la grille requise)</option>
+              <option value="most_points">⭐ Plus grand nombre de points</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Code personnalisé (Optionnel)</label>
+            <input type="text" class="form-input" id="room-custom-code" maxlength="12" placeholder="Ex: TONTON, 1234, DERBY" style="font-weight:900;letter-spacing:0.12em;text-transform:uppercase;">
+            <div style="font-size:0.73rem;color:#64748b;margin-top:4px;">Laissez vide pour un code automatique aléatoire.</div>
+          </div>
+
+          <div class="form-group" style="margin-top:20px;border-top:1px solid #1a2430;padding-top:16px;">
+            <div style="font-size:0.75rem;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;">
+              INCLUS DANS VOTRE SALLE :
+            </div>
+            <div style="display:flex;flex-direction:column;gap:6px;font-size:0.8rem;color:#cbd5e1;">
+              <span>✓ Synchronisation multijoueur temps réel</span>
+              <span>✓ Lien spectateur pour TV / Grand Écran</span>
+              <span>✓ Overlay transparent calibré OBS Studio</span>
+              <span>✓ Changement de grille possible en cours de partie</span>
+            </div>
+          </div>
+
+          <div id="create-error-msg" style="display:none;color:#ef4444;font-size:0.82rem;font-weight:800;margin-top:14px;background:rgba(239,68,68,0.1);padding:10px 14px;border-radius:8px;border:1px solid rgba(239,68,68,0.3);"></div>
+
+          <button type="submit" id="btn-submit-create" class="btn btn-lime btn-full" style="padding:16px;font-size:1rem;font-weight:900;letter-spacing:0.05em;margin-top:22px;box-shadow:0 0 30px var(--lime-glow);">
+            🚀 LANCER LE SALON EN DIRECT ➔
+          </button>
+        </div>
+
+      </div>
+    </form>
+
+  </main>
+
+  <!-- ==========================================
+       MODAL : GÉNÉRATEUR IA SUR-MESURE
+       ========================================== -->
+  <div class="modal-overlay" id="modal-ai-generator">
+    <div class="modal-box" style="background:#0d121c;border:1px solid #233246;border-radius:18px;max-width:540px;">
+      <div class="modal-header" style="border-bottom:1px solid #1b2636;padding-bottom:14px;">
+        <div class="modal-title" style="color:#ffffff;font-weight:900;">
+          ✨ GÉNÉRATEUR DE BINGO IA
+        </div>
+        <button class="modal-close" onclick="closeAiModal()">✕</button>
+      </div>
+
+      <form onsubmit="handleAiGenerate(event)" style="margin-top:18px;">
+        <div class="form-group">
+          <label class="form-label">Thème ou Contexte de la Grille *</label>
+          <input type="text" class="form-input" id="ai-theme-input" placeholder="Ex: Choc Ligue des Champions, Soirée PSG vs Real, Match de D2..." required style="font-weight:700;">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Format de la grille</label>
+            <select class="form-input" id="ai-size-input">
+              <option value="5" selected>5x5 (25 Défis - Standard)</option>
+              <option value="4">4x4 (16 Défis - Équilibré)</option>
+              <option value="3">3x3 (9 Défis - Express)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Style de défis</label>
+            <select class="form-input" id="ai-style-input">
+              <option value="balanced" selected>Équilibré & Varié</option>
+              <option value="intense">Forte Intensité (Cartons & Duels)</option>
+              <option value="fun">Spectaculaire & Gestes Fous</option>
+              <option value="hardcore">Hardcore & Rares</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="ai-loading" style="display:none;text-align:center;padding:16px;color:var(--lime);font-weight:800;font-size:0.9rem;">
+          ⚙️ Génération de 25 défis par l'IA en cours…
+        </div>
+
+        <div class="form-actions" style="margin-top:20px;">
+          <button type="button" class="btn btn-secondary-slate btn-full" onclick="closeAiModal()">Annuler</button>
+          <button type="submit" class="btn btn-lime btn-full" style="font-weight:900;">⚡ GÉNÉRER & SÉLECTIONNER</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+
+  <!-- SCRIPT DE GESTION DE LA PAGE DE CRÉATION -->
+  <script>
+    let allGrids = [];
+    let selectedGridId = null;
+
+    // Charger les grilles disponibles
+    async function loadGridsCatalog() {
+      const catalogEl = document.getElementById('grids-catalog');
+      try {
+        const res = await fetch('/api/grids');
+        allGrids = await res.json();
+
+        if (!allGrids || !allGrids.length) {
+          catalogEl.innerHTML = '<div style="color:#ef4444;padding:20px;">Aucune grille trouvée sur le serveur.</div>';
+          return;
+        }
+
+        // Par défaut, sélectionner la 1ère ou celle marquée live
+        selectedGridId = allGrids.find(g => g.id.includes('live'))?.id || allGrids[0].id;
+
+        renderCatalog();
+        updatePreview();
+      } catch (err) {
+        console.error('Erreur de chargement des grilles:', err);
+      }
+    }
+
+    function renderCatalog() {
+      const catalogEl = document.getElementById('grids-catalog');
+      catalogEl.innerHTML = allGrids.map(g => {
+        const isSelected = g.id === selectedGridId;
+        const total = g.challenges?.length || (g.size * g.size) || 25;
+        const badge = g.badge || `${g.size || 5}x${g.size || 5}`;
+
+        return `
+          <div class="grid-option-card ${isSelected ? 'selected' : ''}" onclick="selectGrid('${g.id}')">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+              <span style="font-size:0.65rem;font-weight:900;background:rgba(255,255,255,0.06);border:1px solid #233144;color:#94a3b8;padding:2px 7px;border-radius:4px;">
+                ${badge}
+              </span>
+              <span style="font-size:0.65rem;color:var(--lime);font-weight:800;">${total} DÉFIS</span>
+            </div>
+            <div style="font-family:var(--font-display);font-size:1.35rem;color:#ffffff;line-height:1.15;margin-bottom:6px;">
+              ${g.name}
+            </div>
+            <div style="font-size:0.78rem;color:#94a3b8;line-height:1.45;flex:1;">
+              ${g.description || 'Grille officielle calibrée pour le football.'}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function selectGrid(id) {
+      selectedGridId = id;
+      renderCatalog();
+      updatePreview();
+    }
+
+    function updatePreview() {
+      const grid = allGrids.find(g => g.id === selectedGridId);
+      if (!grid) return;
+
+      document.getElementById('preview-grid-name').textContent = grid.name;
+      const count = grid.challenges?.length || (grid.size * g.size) || 25;
+      document.getElementById('preview-grid-count').innerHTML = `<span class="pulse"></span> ${count} DÉFIS`;
+
+      const container = document.getElementById('preview-grid-container');
+      const size = grid.size || Math.round(Math.sqrt(count)) || 5;
+      container.style.gridTemplateColumns = `repeat(${size}, minmax(0, 1fr))`;
+
+      const challenges = grid.challenges || [];
+      container.innerHTML = challenges.map((ch, idx) => `
+        <div class="tile read-only" style="min-height:85px;padding:8px;font-size:0.75rem;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">
+            <span style="font-size:1.1rem;">${renderAvatar(ch.icon || '🎯')}</span>
+            <span class="pts pts-${ch.points || 1}" style="font-size:0.62rem;">+${ch.points || 1}pt</span>
+          </div>
+          <div class="tile-title" style="font-size:0.72rem;line-height:1.2;">${ch.title}</div>
+          <div class="tile-desc" style="font-size:0.64rem;">${ch.description ? ch.description.slice(0, 40) + '…' : ''}</div>
+        </div>
+      `).join('');
+    }
+
+    // Modal IA
+    function openAiGridModal() {
+      document.getElementById('modal-ai-generator').classList.add('open');
+    }
+    function closeAiModal() {
+      document.getElementById('modal-ai-generator').classList.remove('open');
+    }
+
+    async function handleAiGenerate(e) {
+      e.preventDefault();
+      const theme = document.getElementById('ai-theme-input').value.trim();
+      const size = parseInt(document.getElementById('ai-size-input').value) || 5;
+      const style = document.getElementById('ai-style-input').value;
+
+      document.getElementById('ai-loading').style.display = 'block';
+
+      try {
+        const res = await fetch('/api/ai/generate-grid', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ theme, size, difficulty: style })
+        });
+        const data = await res.json();
+        document.getElementById('ai-loading').style.display = 'none';
+
+        if (data.success && data.grid) {
+          allGrids.unshift(data.grid);
+          selectedGridId = data.grid.id;
+          closeAiModal();
+          renderCatalog();
+          updatePreview();
+        } else {
+          alert('Erreur lors de la génération IA.');
+        }
+      } catch (err) {
+        document.getElementById('ai-loading').style.display = 'none';
+        alert('Erreur de connexion avec le générateur IA.');
+      }
+    }
+
+    // Soumission du formulaire de création de salle
+    async function handleCreateRoomSubmit(e) {
+      e.preventDefault();
+      const errEl = document.getElementById('create-error-msg');
+      errEl.style.display = 'none';
+
+      const name = document.getElementById('room-name-input').value.trim();
+      const winCondition = document.getElementById('room-win-condition').value;
+      const customCode = document.getElementById('room-custom-code').value.trim().toUpperCase();
+
+      const user = window.SocialHub?.getCurrentUser();
+      const hostId = user ? user.id : null;
+
+      const submitBtn = document.getElementById('btn-submit-create');
+      submitBtn.disabled = true;
+      submitBtn.textContent = '⚡ CRÉATION DE LA SALLE EN COURS…';
+
+      try {
+        const res = await fetch('/api/rooms', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name,
+            gridId: selectedGridId,
+            hostId,
+            winCondition,
+            customCode
+          })
+        });
+
+        const data = await res.json();
+        if (!data.success) {
+          errEl.textContent = '❌ ' + (data.message || 'Impossible de créer la salle.');
+          errEl.style.display = 'block';
+          submitBtn.disabled = false;
+          submitBtn.textContent = '🚀 LANCER LE SALON EN DIRECT ➔';
+          return;
+        }
+
+        // Rediriger immédiatement vers la salle de jeu
+        const roomCode = data.code;
+        const playerUrl = hostId
+          ? `/player.html?room=${roomCode}&p=${hostId}`
+          : `/player.html?room=${roomCode}`;
+
+        window.location.href = playerUrl;
+      } catch (err) {
+        errEl.textContent = '❌ Erreur de communication avec le serveur.';
+        errEl.style.display = 'block';
+        submitBtn.disabled = false;
+        submitBtn.textContent = '🚀 LANCER LE SALON EN DIRECT ➔';
+      }
+    }
+
+    // Charger les grilles au chargement
+    document.addEventListener('DOMContentLoaded', () => {
+      loadGridsCatalog();
+    });
+  </script>
+</body>
+</html>

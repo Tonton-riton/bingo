@@ -188,32 +188,113 @@ function saveState() {
 
 // ─── Bootstrap default grid from challenges.json ──────────────────────────────
 
+// Flagship built-in live match challenges
+const LIVE_MATCH_CHALLENGES = [
+  { id: 0, icon: '🧤', title: 'Arrêt Décisif', points: 1, description: 'Le gardien sauve un tir cadré dangereux', category: 'Gardien' },
+  { id: 1, icon: '🚩', title: 'Hors-jeu Sifflé', points: 1, description: 'Un attaquant pris au piège du hors-jeu', category: 'Arbitrage' },
+  { id: 2, icon: '💥', title: 'Poteau ou Barre', points: 2, description: 'Frappe sur les montants du but', category: 'Attaque' },
+  { id: 3, icon: '🎯', title: 'But en Lucarne', points: 3, description: 'Tir imparable dans le coin supérieur', category: 'Attaque' },
+  { id: 4, icon: '📺', title: 'Intervention VAR', points: 2, description: 'L’arbitre consulte l’écran sur le bord du terrain', category: 'Arbitrage' },
+  { id: 5, icon: '🟥', title: 'Carton Rouge', points: 3, description: 'Expulsion directe ou 2e carton jaune', category: 'Discipline' },
+  { id: 6, icon: '⚡', title: 'Contre-Attaque Éclair', points: 1, description: 'But ou occasion en moins de 3 passes', category: 'Tactique' },
+  { id: 7, icon: '👟', title: 'Passe Décisive', points: 1, description: 'Caviar qui mène directement au but', category: 'Attaque' },
+  { id: 8, icon: '⚽', title: 'Penalty Concédé', points: 2, description: 'Faute ou main sanctionnée dans la surface', category: 'Arbitrage' },
+  { id: 9, icon: '🛡️', title: 'Tacle Glissé Propre', points: 1, description: 'Interception défensive nette sur le ballon', category: 'Défense' },
+  { id: 10, icon: '🦁', title: 'Capitaine Buteur', points: 2, description: 'Le joueur au brassard marque un but', category: 'Général' },
+  { id: 11, icon: '🔁', title: 'Coaching Gagnant', points: 2, description: 'Un remplaçant entre et marque ou passe', category: 'Tactique' },
+  { id: 12, icon: '🔥', title: 'Double But en 5 Min', points: 3, description: 'Deux buts consécutifs très rapprochés', category: 'Intensité' },
+  { id: 13, icon: '🚀', title: 'Frappe Hors Surface', points: 2, description: 'Tir des 20-25 mètres cadré ou but', category: 'Attaque' },
+  { id: 14, icon: '🟨', title: 'Carton Jaune Précoce', points: 1, description: 'Avertissement avant la 30e minute', category: 'Discipline' },
+  { id: 15, icon: '🤕', title: 'Arrêt de Jeu Blessure', points: 1, description: 'Soigneurs sur le terrain plus d’une minute', category: 'Temps' },
+  { id: 16, icon: '📐', title: 'But Coup de Pied Arrêté', points: 2, description: 'Corner ou coup franc direct transformé', category: 'Attaque' },
+  { id: 17, icon: '😤', title: 'Altercation Joueurs', points: 1, description: 'Tension ou bousculade entre adversaires', category: 'Discipline' },
+  { id: 18, icon: '⏱️', title: '5+ Min Temps Additionnel', points: 1, description: 'Temps additionnel généreux affiché', category: 'Temps' },
+  { id: 19, icon: '🌟', title: 'Dribble Humiliant', points: 1, description: 'Petit pont, roulette ou grand pont réussi', category: 'Spectacle' },
+  { id: 20, icon: '🥶', title: 'Immanquable Raté', points: 2, description: 'Face à face ou but vide manqué', category: 'Fait de jeu' },
+  { id: 21, icon: '🧱', title: 'Mur Infranchissable', points: 2, description: 'Clean sheet maintenu à la 75e minute', category: 'Défense' },
+  { id: 22, icon: '🔄', title: 'Remontada / Égalisation', points: 3, description: 'Équipe menée qui recolle au score', category: 'Intensité' },
+  { id: 23, icon: '🎩', title: 'Doublé d’un Joueur', points: 2, description: 'Un joueur inscrit 2 buts dans le match', category: 'Attaque' },
+  { id: 24, icon: '🏆', title: 'But Décisif 90e+', points: 3, description: 'But décisif inscrit dans les arrêts de jeu', category: 'Climax' }
+];
+
+const DERBY_CHALLENGES = [
+  { id: 0, icon: '😤', title: 'Bagarre / Bousculade', points: 2, description: 'Altercation générale entre les deux équipes', category: 'Tension' },
+  { id: 1, icon: '🟥', title: 'Carton Rouge Direct', points: 3, description: 'Tacle violent ou geste d’humeur sanctionné', category: 'Discipline' },
+  { id: 2, icon: '📺', title: 'But Annulé par la VAR', points: 2, description: 'Joie coupée net par le visionnage vidéo', category: 'Arbitrage' },
+  { id: 3, icon: '⚽', title: 'Penalty Contesté', points: 2, description: 'Faute sifflée avec vives contestations', category: 'Arbitrage' },
+  { id: 4, icon: '💥', title: 'Double Frappe Poteau', points: 3, description: 'Deux montants touchés dans le match', category: 'Spectacle' },
+  { id: 5, icon: '🧤', title: 'Penalty Arrêté', points: 3, description: 'Le gardien stoppe la tentative adverse', category: 'Gardien' },
+  { id: 6, icon: '🟨', title: '6+ Cartons Jaunes', points: 2, description: 'Match très engagé avec pluie d’avertissements', category: 'Discipline' },
+  { id: 7, icon: '🔥', title: 'But Contre Son Camp', points: 2, description: 'Grosse bourde d’un défenseur dans son but', category: 'Fait de jeu' },
+  { id: 8, icon: '🦁', title: 'Capitaine Héroïque', points: 2, description: 'Le capitaine marque ou réalise un sauvetage', category: 'Leadership' },
+  { id: 9, icon: '🚀', title: 'Missile Pleine Lucarne', points: 3, description: 'Frappe surpuissante de loin imparable', category: 'Attaque' },
+  { id: 10, icon: '⚡', title: 'Contre en Supériorité', points: 1, description: 'Occasion gâchée à 3 contre 1 ou 2', category: 'Tactique' },
+  { id: 11, icon: '🛡️', title: 'Sauvetage sur la Ligne', points: 2, description: 'Défenseur qui repousse le ballon in extremis', category: 'Défense' },
+  { id: 12, icon: '🔄', title: 'Changement Avant Mi-Temps', points: 2, description: 'Remplacement tactique ou blessure précoce', category: 'Coaching' },
+  { id: 13, icon: '🌟', title: 'Petit Pont Provocateur', points: 1, description: 'Geste technique chambrant près de la touche', category: 'Spectacle' },
+  { id: 14, icon: '⏱️', title: 'Gain de Temps Notif', points: 1, description: 'Gardien ou joueur averti pour gain de temps', category: 'Discipline' },
+  { id: 15, icon: '🔁', title: 'Remplaçant Décisif', points: 2, description: 'Entrée en jeu suivie d’un but ou d’une passe', category: 'Coaching' },
+  { id: 16, icon: '🧱', title: 'Défense Héroïque', points: 2, description: '10 tirs subis sans encaisser de but', category: 'Défense' },
+  { id: 17, icon: '📢', title: 'Carton pour le Coach', points: 2, description: 'L’entraîneur averti sur le banc de touche', category: 'Arbitrage' },
+  { id: 18, icon: '📐', title: 'Tête sur Corner', points: 2, description: 'Coup de casque gagnant sur coup de pied arrêté', category: 'Attaque' },
+  { id: 19, icon: '🥶', title: 'Face-à-Face Manqué', points: 2, description: 'Attaquant seul devant le but qui rate le cadre', category: 'Fait de jeu' },
+  { id: 20, icon: '⚡', title: 'But en Moins de 2 Min', points: 3, description: 'Ouverture du score express d’entrée de jeu', category: 'Intensité' },
+  { id: 21, icon: '💥', title: 'Tacle Dangereux', points: 1, description: 'Gros choc au milieu de terrain', category: 'Intensité' },
+  { id: 22, icon: '🎩', title: 'Buteur Étranger', points: 1, description: 'Un joueur international débloque la rencontre', category: 'Attaque' },
+  { id: 23, icon: '🏆', title: 'Score Final 1-0', points: 2, description: 'Victoire étriquée au terme d’une bataille féroce', category: 'Climax' },
+  { id: 24, icon: '👑', title: 'But Victoire Temps Add.', points: 3, description: 'Délivrance totale au bout du temps additionnel', category: 'Climax' }
+];
+
 function bootstrapDefaultGrid() {
-  const gridId = 'grid_default_s1';
-  if (!gameState.grids[gridId] || !Array.isArray(gameState.grids[gridId].challenges) || gameState.grids[gridId].challenges.length === 0) {
-    if (rawChallenges && rawChallenges.length > 0) {
-      gameState.grids[gridId] = {
-        id: gridId,
-        name: 'Bingo Carrière Saison 1',
-        size: 5,
-        description: 'La grille officielle de la saison 1 (25 défis carrière).',
-        challenges: rawChallenges.map((c, i) => ({
-          id:          c.id !== undefined ? c.id : i,
-          icon:        c.icon        || '🎯',
-          title:       c.title       || `Défi ${i + 1}`,
-          description: c.description || '',
-          points:      typeof c.points === 'number' ? c.points : 1,
-          constraint:  c.constraint  || '',
-          category:    c.category    || 'Général'
-        }))
-      };
-    }
-  }
+  // 1. Grille Live Match 90'
+  const liveGridId = 'grid_live_match';
+  gameState.grids[liveGridId] = {
+    id: liveGridId,
+    name: '⚽ Match en Direct 90\'',
+    size: 5,
+    description: 'La grille officielle des grands soirs de foot : tirs, poteaux, VAR, cartons et actions folles.',
+    badge: '★ POPULAIRE',
+    challenges: LIVE_MATCH_CHALLENGES
+  };
+
+  // 2. Grille Carrière Football Manager
+  const careerGridId = 'grid_default_s1';
+  gameState.grids[careerGridId] = {
+    id: careerGridId,
+    name: '📋 Carrière Football Manager',
+    size: 5,
+    description: 'Calibrée pour vos saisons en club : éclosion de pépites, transferts, tactiques et trophées.',
+    badge: 'MODE SAISON',
+    challenges: (rawChallenges && rawChallenges.length > 0) ? rawChallenges : LIVE_MATCH_CHALLENGES
+  };
+
+  // 3. Grille Derby Clasico
+  const derbyGridId = 'grid_derby';
+  gameState.grids[derbyGridId] = {
+    id: derbyGridId,
+    name: '⚔️ Derby & Grand Match',
+    size: 5,
+    description: 'Haute intensité, duels rugueux, décisions arbitrales sous tension et suspense jusqu’au bout.',
+    badge: 'HAUTE TENSION',
+    challenges: DERBY_CHALLENGES
+  };
+
+  // 4. Grille Sprint Express 3x3
+  const sprintGridId = 'grid_sprint_3x3';
+  gameState.grids[sprintGridId] = {
+    id: sprintGridId,
+    name: '⚡ Sprint Express 3x3',
+    size: 3,
+    description: 'Format rapide de 9 défis. Idéal pour une mi-temps ou les 20 dernières minutes d’un match.',
+    badge: 'EXPRESS 45\'',
+    challenges: LIVE_MATCH_CHALLENGES.slice(0, 9)
+  };
+
   if (!gameState.activeGridId || !gameState.grids[gameState.activeGridId]) {
-    gameState.activeGridId = Object.keys(gameState.grids)[0] || gridId;
+    gameState.activeGridId = liveGridId;
   }
   saveState();
-  console.log('[BINGO] Default grid verified (active: ' + gameState.activeGridId + ').');
+  console.log('[BINGO] Preset grids verified (active: ' + gameState.activeGridId + ', total grids: ' + Object.keys(gameState.grids).length + ').');
 }
 
 bootstrapDefaultGrid();
@@ -617,6 +698,23 @@ app.post('/api/grids', (req, res) => {
     createdAt:   new Date().toISOString()
   };
 
+  if (req.body.roomCode) {
+    const cleanCode = String(req.body.roomCode).trim().toUpperCase();
+    const room = gameState.rooms?.[cleanCode];
+    if (room) {
+      room.gridId = gridId;
+      room.checked = {};
+      const totalTiles = sanitized.length;
+      (room.playerIds || []).forEach(pId => {
+        room.checked[pId] = new Array(totalTiles).fill(false);
+      });
+      room.winnerId = null;
+      room.winningReason = null;
+      room.status = 'waiting';
+      io.to('room_' + cleanCode).emit('roomStateUpdate', getComputedRoomState(cleanCode));
+    }
+  }
+
   saveState();
   io.emit('stateUpdate', getComputedState());
   res.json({ success: true, grid: gameState.grids[gridId] });
@@ -627,7 +725,48 @@ app.post('/api/grids', (req, res) => {
 app.post('/api/ai/generate-grid', (req, res) => {
   try {
     const result = aiGenerator.generateGrid(req.body);
-    res.json({ success: true, ...result });
+    const gridId = `grid_${makeId()}`;
+    const sanitized = result.challenges.map((c, i) => ({
+      id:          c.id !== undefined ? c.id : i,
+      icon:        c.icon        || '🎯',
+      title:       (c.title      || `Défi ${i + 1}`).trim(),
+      description: (c.description || '').trim(),
+      points:      typeof c.points === 'number' ? Math.max(1, Math.min(10, c.points)) : 1,
+      constraint:  (c.constraint  || '').trim(),
+      category:    (c.category    || 'Général').trim()
+    }));
+
+    const newGrid = {
+      id:          gridId,
+      name:        result.name || 'Bingo IA Sur-Mesure',
+      size:        result.size || 5,
+      description: result.description || 'Grille générée par l’assistant IA.',
+      challenges:  sanitized,
+      createdAt:   new Date().toISOString()
+    };
+
+    gameState.grids[gridId] = newGrid;
+
+    if (req.body.roomCode) {
+      const cleanCode = String(req.body.roomCode).trim().toUpperCase();
+      const room = gameState.rooms?.[cleanCode];
+      if (room) {
+        room.gridId = gridId;
+        room.checked = {};
+        const totalTiles = sanitized.length;
+        (room.playerIds || []).forEach(pId => {
+          room.checked[pId] = new Array(totalTiles).fill(false);
+        });
+        room.winnerId = null;
+        room.winningReason = null;
+        room.status = 'waiting';
+        io.to('room_' + cleanCode).emit('roomStateUpdate', getComputedRoomState(cleanCode));
+      }
+    }
+
+    saveState();
+    io.emit('stateUpdate', getComputedState());
+    res.json({ success: true, gridId, grid: newGrid, ...result });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -1371,6 +1510,47 @@ app.post('/api/rooms/reset', (req, res) => {
   res.json({ success: true, room: roomState });
 });
 
+// Changer la grille d'une salle en direct depuis le salon
+app.post('/api/rooms/grid', (req, res) => {
+  const { code, gridId } = req.body;
+  const cleanCode = String(code || '').trim().toUpperCase();
+  const room = gameState.rooms?.[cleanCode] || getOrCreateRoom(cleanCode);
+  if (!room) return res.status(404).json({ success: false, message: 'Partie introuvable.' });
+
+  if (!gridId || !gameState.grids[gridId]) {
+    return res.status(400).json({ success: false, message: 'Grille introuvable.' });
+  }
+
+  room.gridId = gridId;
+  const grid = gameState.grids[gridId];
+  const totalTiles = grid.challenges?.length || 25;
+
+  room.checked = {};
+  (room.playerIds || []).forEach(pId => {
+    room.checked[pId] = new Array(totalTiles).fill(false);
+  });
+  room.winnerId = null;
+  room.winningReason = null;
+  room.status = 'waiting';
+
+  saveState();
+
+  const roomState = getComputedRoomState(cleanCode);
+  io.to('room_' + cleanCode).emit('roomStateUpdate', roomState);
+  io.to('room_' + cleanCode).emit('roomGridChanged', {
+    gridId,
+    gridName: grid.name,
+    challenges: grid.challenges
+  });
+
+  res.json({ success: true, room: roomState });
+});
+
+// Route conviviale vers la page de création de salle
+app.get(['/create-room', '/create-room.html', '/creer-salle'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'create-room.html'));
+});
+
 // ─── Socket.io ────────────────────────────────────────────────────────────────
 
 io.on('connection', (socket) => {
@@ -1388,6 +1568,33 @@ io.on('connection', (socket) => {
 
     const rState = getComputedRoomState(cleanCode);
     socket.emit('roomStateUpdate', rState);
+  });
+
+  // Changement de grille en direct dans le salon
+  socket.on('roomChangeGrid', ({ code, gridId }) => {
+    const cleanCode = String(code || socket.roomCode || '').trim().toUpperCase();
+    const room = gameState.rooms?.[cleanCode];
+    if (!room || !gridId || !gameState.grids[gridId]) return;
+
+    room.gridId = gridId;
+    const grid = gameState.grids[gridId];
+    const totalTiles = grid.challenges?.length || 25;
+    room.checked = {};
+    (room.playerIds || []).forEach(pId => {
+      room.checked[pId] = new Array(totalTiles).fill(false);
+    });
+    room.winnerId = null;
+    room.winningReason = null;
+    room.status = 'waiting';
+
+    saveState();
+    const roomState = getComputedRoomState(cleanCode);
+    io.to('room_' + cleanCode).emit('roomStateUpdate', roomState);
+    io.to('room_' + cleanCode).emit('roomGridChanged', {
+      gridId,
+      gridName: grid.name,
+      challenges: grid.challenges
+    });
   });
 
   socket.on('leaveRoom', ({ roomCode }) => {

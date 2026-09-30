@@ -115,11 +115,17 @@
           <button onclick="copyInviteLink()" class="btn btn-sm btn-lime" id="btn-copy-link-main" style="font-weight:900;">
             📋 Copier lien d'invitation
           </button>
-          <a href="/spectator.html" id="btn-link-spec" target="_blank" class="btn btn-sm btn-secondary-dark">
+          <button onclick="openChangeGridModal()" class="btn btn-sm btn-secondary-dark" style="font-weight:800;color:var(--lime);border-color:var(--lime);" title="Choisir un autre bingo pour cette partie">
+            🎮 Changer de Grille
+          </button>
+          <button onclick="openCreateBingoInRoomModal()" class="btn btn-sm btn-secondary-dark" style="font-weight:800;color:#ffffff;" title="Créer une nouvelle grille sur-mesure avec l'IA">
+            ✨ Créer un Bingo
+          </button>
+          <a href="/spectator.html" id="btn-link-spec" target="_blank" class="btn btn-sm btn-secondary-slate">
             📺 Vue Spectateur
           </a>
           <button onclick="resetMyGrid()" class="btn btn-sm btn-danger" style="margin-left:auto;">
-            🔄 Réinitialiser ma grille
+            🔄 Réinitialiser
           </button>
         </div>
       </div>
@@ -262,6 +268,89 @@
         <div class="form-actions" style="margin-top:20px;">
           <button type="button" class="btn btn-secondary-slate btn-full" onclick="closeModal('modal-profile')">Annuler</button>
           <button type="submit" class="btn btn-lime btn-full" style="font-weight:900;">💾 Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL : CHANGER DE GRILLE DANS LE SALON
+       ========================================== -->
+  <div class="modal-overlay" id="modal-change-grid">
+    <div class="modal-box" style="background:#0d121c;border:1px solid #233246;border-radius:18px;max-width:680px;">
+      <div class="modal-header" style="border-bottom:1px solid #1b2636;padding-bottom:14px;">
+        <div class="modal-title" style="color:#ffffff;font-weight:900;">
+          🎮 CHOISIR UN AUTRE BINGO POUR CE MATCH
+        </div>
+        <button class="modal-close" onclick="closeModal('modal-change-grid')">✕</button>
+      </div>
+
+      <div style="margin-top:16px;">
+        <div style="font-size:0.8rem;color:#94a3b8;margin-bottom:14px;">
+          Sélectionnez la grille à appliquer immédiatement pour tous les joueurs de cette salle :
+        </div>
+
+        <div id="room-grids-list" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:12px;max-height:360px;overflow-y:auto;padding-right:4px;">
+          <!-- Injecté dynamiquement par JS -->
+        </div>
+
+        <div style="display:flex;gap:10px;margin-top:20px;">
+          <button type="button" class="btn btn-secondary-slate btn-full" onclick="closeModal('modal-change-grid')">Fermer</button>
+          <button type="button" class="btn btn-lime btn-full" id="btn-confirm-change-grid" onclick="confirmChangeGrid()" style="font-weight:900;">
+            ⚡ APPLIQUER AU MATCH
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       MODAL : CRÉER UN BINGO SUR-MESURE DANS LE SALON
+       ========================================== -->
+  <div class="modal-overlay" id="modal-create-bingo-in-room">
+    <div class="modal-box" style="background:#0d121c;border:1px solid #233246;border-radius:18px;max-width:540px;">
+      <div class="modal-header" style="border-bottom:1px solid #1b2636;padding-bottom:14px;">
+        <div class="modal-title" style="color:#ffffff;font-weight:900;">
+          ✨ GÉNÉRER UN BINGO POUR CE MATCH
+        </div>
+        <button class="modal-close" onclick="closeModal('modal-create-bingo-in-room')">✕</button>
+      </div>
+
+      <form onsubmit="handleCreateBingoInRoom(event)" style="margin-top:16px;">
+        <div class="form-group">
+          <label class="form-label">Thème du Match ou de la Grille *</label>
+          <input type="text" class="form-input" id="in-room-ai-theme" placeholder="Ex: Choc PSG vs OM, Fautes & Tensions, Gaffes de gardiens..." required style="font-weight:700;">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Format de la grille</label>
+            <select class="form-input" id="in-room-ai-size">
+              <option value="5" selected>5x5 (25 Défis - Standard)</option>
+              <option value="4">4x4 (16 Défis - Équilibré)</option>
+              <option value="3">3x3 (9 Défis - Express)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Style de jeu</label>
+            <select class="form-input" id="in-room-ai-style">
+              <option value="balanced" selected>Équilibré & Varié</option>
+              <option value="intense">Forte Intensité (Cartons & Tacles)</option>
+              <option value="fun">Spectacle & Gestes Fous</option>
+              <option value="hardcore">Hardcore</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="in-room-ai-loading" style="display:none;text-align:center;padding:14px;color:var(--lime);font-weight:800;font-size:0.88rem;">
+          ⚙️ Génération des défis en cours par l'IA…
+        </div>
+
+        <div class="form-actions" style="margin-top:18px;">
+          <button type="button" class="btn btn-secondary-slate btn-full" onclick="closeModal('modal-create-bingo-in-room')">Annuler</button>
+          <button type="submit" class="btn btn-lime btn-full" id="btn-submit-in-room-ai" style="font-weight:900;">
+            🚀 GÉNÉRER & APPLIQUER (3s)
+          </button>
         </div>
       </form>
     </div>
@@ -757,6 +846,158 @@
     document.getElementById('btn-sound').addEventListener('click', () => {
       const m = window.soundFx?.toggleMute?.();
       document.getElementById('btn-sound').textContent = m ? '🔇' : '🔊';
+    });
+
+    // ==========================================
+    // GESTION DU CHANGEMENT DE GRILLE DANS LE SALON
+    // ==========================================
+    let availableGrids = [];
+    let selectedRoomGridId = null;
+
+    async function openChangeGridModal() {
+      openModal('modal-change-grid');
+      const listEl = document.getElementById('room-grids-list');
+      listEl.innerHTML = '<div style="color:#64748b;font-size:0.85rem;padding:20px;">Chargement des grilles…</div>';
+
+      try {
+        const res = await fetch('/api/grids');
+        availableGrids = await res.json();
+        selectedRoomGridId = roomState?.grid?.id || roomState?.gridId || availableGrids[0]?.id;
+        renderRoomGridsList();
+      } catch (err) {
+        listEl.innerHTML = '<div style="color:#ef4444;font-size:0.85rem;padding:20px;">Erreur lors du chargement des grilles.</div>';
+      }
+    }
+
+    function renderRoomGridsList() {
+      const listEl = document.getElementById('room-grids-list');
+      listEl.innerHTML = availableGrids.map(g => {
+        const isSelected = g.id === selectedRoomGridId;
+        const total = g.challenges?.length || (g.size * g.size) || 25;
+        const badge = g.badge || `${g.size || 5}x${g.size || 5}`;
+
+        return `
+          <div class="grid-option-card ${isSelected ? 'selected' : ''}" onclick="selectRoomGrid('${g.id}')" style="background:#111622;border:1px solid ${isSelected ? 'var(--lime)' : '#1e2b3c'};border-radius:10px;padding:14px;cursor:pointer;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+              <span style="font-size:0.65rem;font-weight:900;background:rgba(255,255,255,0.06);color:var(--lime);padding:2px 6px;border-radius:4px;">
+                ${badge} · ${total} DÉFIS
+              </span>
+              ${isSelected ? '<span style="font-size:0.65rem;font-weight:900;color:var(--lime);">✓ CHOISIE</span>' : ''}
+            </div>
+            <div style="font-weight:900;font-size:1.05rem;color:#ffffff;line-height:1.2;margin-bottom:4px;">
+              ${g.name}
+            </div>
+            <div style="font-size:0.75rem;color:#94a3b8;line-height:1.4;">
+              ${g.description || ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function selectRoomGrid(id) {
+      selectedRoomGridId = id;
+      renderRoomGridsList();
+    }
+
+    async function confirmChangeGrid() {
+      if (!selectedRoomGridId) return;
+      const btn = document.getElementById('btn-confirm-change-grid');
+      btn.disabled = true;
+      btn.textContent = '⚡ Application en cours…';
+
+      try {
+        if (isRoomMode) {
+          const res = await fetch('/api/rooms/grid', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code: roomCode, gridId: selectedRoomGridId })
+          });
+          const data = await res.json();
+          if (data.success && data.room) {
+            applyRoomState(data.room);
+          }
+        } else {
+          socket.emit('gridActivated', { gridId: selectedRoomGridId });
+        }
+        closeModal('modal-change-grid');
+        showSuccessToast('Grille appliquée !', 'Tous les joueurs du match jouent maintenant sur cette grille.');
+      } catch (err) {
+        alert('Erreur lors du changement de grille.');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = '⚡ APPLIQUER AU MATCH';
+      }
+    }
+
+    // ==========================================
+    // CRÉER UN BINGO DANS LE SALON (AVEC IA)
+    // ==========================================
+    function openCreateBingoInRoomModal() {
+      openModal('modal-create-bingo-in-room');
+      document.getElementById('in-room-ai-loading').style.display = 'none';
+      document.getElementById('btn-submit-in-room-ai').disabled = false;
+    }
+
+    async function handleCreateBingoInRoom(e) {
+      e.preventDefault();
+      const theme = document.getElementById('in-room-ai-theme').value.trim();
+      const size = parseInt(document.getElementById('in-room-ai-size').value) || 5;
+      const style = document.getElementById('in-room-ai-style').value;
+
+      document.getElementById('in-room-ai-loading').style.display = 'block';
+      const btn = document.getElementById('btn-submit-in-room-ai');
+      btn.disabled = true;
+
+      try {
+        const res = await fetch('/api/ai/generate-grid', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            theme,
+            size,
+            difficulty: style,
+            roomCode: isRoomMode ? roomCode : null
+          })
+        });
+        const data = await res.json();
+        document.getElementById('in-room-ai-loading').style.display = 'none';
+        btn.disabled = false;
+
+        if (data.success && data.grid) {
+          closeModal('modal-create-bingo-in-room');
+          if (isRoomMode) {
+            const rRes = await fetch(`/api/rooms/${roomCode}`);
+            const rData = await rRes.json();
+            if (rData.success && rData.room) applyRoomState(rData.room);
+          } else {
+            currentChallenges = data.grid.challenges;
+            currentChecked = new Array(currentChallenges.length).fill(false);
+            renderGrid(currentChallenges, currentChecked, [], 'lime', playerId);
+            document.getElementById('grid-title').textContent = data.grid.name;
+          }
+          showSuccessToast('🎉 Nouveau Bingo créé !', `Grille "${data.grid.name}" appliquée au match.`);
+        } else {
+          alert('Erreur lors de la génération IA.');
+        }
+      } catch (err) {
+        document.getElementById('in-room-ai-loading').style.display = 'none';
+        btn.disabled = false;
+        alert('Erreur de connexion avec le générateur IA.');
+      }
+    }
+
+    // Écouteur de changement de grille en temps réel pour tous les participants
+    socket.on('roomGridChanged', (ev) => {
+      window.soundFx?.playBingo?.();
+      showSuccessToast('Nouvelle Grille Appliquée !', ev.gridName);
+      if (ev.challenges && ev.challenges.length > 0) {
+        currentChallenges = ev.challenges;
+        currentChecked = new Array(currentChallenges.length).fill(false);
+        renderGrid(currentChallenges, currentChecked, [], 'lime', playerId);
+        updateScoreboard(localPlayer, { totalPoints: 0, tilesCompleted: 0 }, currentChallenges.length);
+        document.getElementById('grid-title').textContent = ev.gridName;
+      }
     });
 
     // Lancement
